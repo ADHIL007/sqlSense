@@ -72,6 +72,8 @@ namespace sqlSense.ViewModels
 
         private DatabaseService? _dbService;
 
+        public DatabaseService? DbService => _dbService;
+
         public MainViewModel()
         {
         }

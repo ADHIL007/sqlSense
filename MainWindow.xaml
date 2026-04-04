@@ -411,6 +411,41 @@
                         </Canvas>
                     </Border>
 
+                    <!-- Central Toolbar (bottom center, overlaid) -->
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                Margin="0,0,0,24">
+                        
+                        <!-- Data Flow Toggle -->
+                        <Border Background="#252526" CornerRadius="8" 
+                                BorderBrush="#3C3C3C" BorderThickness="1"
+                                Margin="0,0,16,0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="12" Opacity="0.5" ShadowDepth="4"/>
+                            </Border.Effect>
+                            <Button x:Name="DataFlowToggleBtn" 
+                                    Content="&#xE14F; DATA FLOW: OFF" FontSize="13" 
+                                    FontWeight="Bold" Foreground="#FF9800"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="20,12" Cursor="Hand"
+                                    Click="DataFlowToggleBtn_Click"/>
+                        </Border>
+
+                        <!-- Sync to DB -->
+                        <Border Background="#252526" CornerRadius="8" 
+                                BorderBrush="#3C3C3C" BorderThickness="1">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="12" Opacity="0.5" ShadowDepth="4"/>
+                            </Border.Effect>
+                            <Button x:Name="SyncDbBtn" 
+                                    Content="&#xE105; SYNC TO DATABASE" FontSize="13"
+                                    FontWeight="Bold" Foreground="#4CAF50"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="20,12" Cursor="Hand"
+                                    Command="{Binding SaveViewChangesCommand}"/>
+                        </Border>
+                    </StackPanel>
+
                     <!-- Zoom Controls (bottom right, overlaid) -->
                     <StackPanel Orientation="Horizontal" 
                                 HorizontalAlignment="Right" VerticalAlignment="Bottom"

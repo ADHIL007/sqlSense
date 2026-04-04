@@ -187,6 +187,29 @@ namespace sqlSense.Services
             return dt;
         }
 
+        public async Task<DataTable> ExecuteQueryAsync(string database, string sqlCommand)
+        {
+            var dt = new DataTable();
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            
+            LoggerService.LogSql(sqlCommand);
+            
+            using var conn = new SqlConnection(connStr);
+            try
+            {
+                await conn.OpenAsync();
+                using var cmd = new SqlCommand(sqlCommand, conn);
+                using var adapter = new SqlDataAdapter(cmd);
+                adapter.Fill(dt);
+                return dt;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError($"ExecuteQueryAsync Failed for Database {database}", ex);
+                throw;
+            }
+        }
+
         // === View Definition / Dependency Analysis ===
 
         /// <summary>
@@ -366,13 +389,38 @@ namespace sqlSense.Services
                     info.Joins.Add(join);
                 }
 
-                // If we didn't get referenced tables from sys.dm_sql_referenced_entities,
-                // use ScriptDom's results
-                if (info.ReferencedTables.Count == 0)
+                info.WhereClause = visitor.WhereClause;
+
+                // Merge aliases and any missing tables from ScriptDom
+                foreach (var tbl in visitor.Tables)
                 {
-                    foreach (var tbl in visitor.Tables)
+                    // Try to find a matching table by full name first, then by name only if schema is dbo/missing
+                    var existing = info.ReferencedTables.FirstOrDefault(t => 
+                        string.Equals(t.Name, tbl.Name, StringComparison.OrdinalIgnoreCase) && 
+                        string.Equals(t.Schema, tbl.Schema, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (existing == null && (string.Equals(tbl.Schema, "dbo", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(tbl.Schema)))
+                    {
+                        existing = info.ReferencedTables.FirstOrDefault(t => 
+                             string.Equals(t.Name, tbl.Name, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (existing != null)
+                    {
+                        existing.Alias = tbl.Alias;
+                    }
+                    else
                     {
                         info.ReferencedTables.Add(tbl);
+                    }
+                }
+
+                // Ensure every table has an Alias (fallback to Name)
+                foreach (var table in info.ReferencedTables)
+                {
+                    if (string.IsNullOrEmpty(table.Alias))
+                    {
+                        table.Alias = table.Name;
                     }
                 }
             }
@@ -399,7 +447,19 @@ namespace sqlSense.Services
     {
         public List<JoinRelationship> Joins { get; } = new();
         public List<ReferencedTable> Tables { get; } = new();
+        public string WhereClause { get; set; } = "";
         private readonly Dictionary<string, string> _aliasToTable = new(StringComparer.OrdinalIgnoreCase);
+
+        public override void Visit(QuerySpecification node)
+        {
+            base.Visit(node);
+            if (node.WhereClause != null)
+            {
+                var scriptGenerator = new Sql160ScriptGenerator(new SqlScriptGeneratorOptions { SqlVersion = SqlVersion.Sql160, KeywordCasing = KeywordCasing.Uppercase });
+                scriptGenerator.GenerateScript(node.WhereClause.SearchCondition, out string whereSql);
+                WhereClause = whereSql;
+            }
+        }
 
         public override void Visit(NamedTableReference node)
         {
