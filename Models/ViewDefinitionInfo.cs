@@ -40,6 +40,21 @@ namespace sqlSense.Models
         public string WhereClause { get; set; } = "";
 
         /// <summary>
+        /// Optional GROUP BY clause
+        /// </summary>
+        public string GroupByClause { get; set; } = "";
+
+        /// <summary>
+        /// Optional HAVING clause
+        /// </summary>
+        public string HavingClause { get; set; } = "";
+
+        /// <summary>
+        /// Optional ORDER BY clause
+        /// </summary>
+        public string OrderByClause { get; set; } = "";
+
+        /// <summary>
         /// Generates the ALTER VIEW SQL statement based on the current state.
         /// </summary>
         public string ToSql()
@@ -66,8 +81,11 @@ namespace sqlSense.Models
             }
 
             string where = string.IsNullOrEmpty(WhereClause) ? "" : $"\nWHERE {WhereClause}";
+            string groupBy = string.IsNullOrEmpty(GroupByClause) ? "" : $"\nGROUP BY {GroupByClause}";
+            string having = string.IsNullOrEmpty(HavingClause) ? "" : $"\nHAVING {HavingClause}";
+            string orderBy = string.IsNullOrEmpty(OrderByClause) ? "" : $"\nORDER BY {OrderByClause}";
 
-            return $"ALTER VIEW [{SchemaName}].[{ViewName}]\nAS\nSELECT\n    {selectCols}\n{fromClause}{where}";
+            return $"ALTER VIEW [{SchemaName}].[{ViewName}]\nAS\nSELECT\n    {selectCols}\n{fromClause}{where}{groupBy}{having}";
         }
     }
 
@@ -98,6 +116,8 @@ namespace sqlSense.Models
     public class JoinRelationship
     {
         public string LeftTableAlias { get; set; } = "";
+        public string LeftTableSchema { get; set; } = "";
+        public string LeftTableName { get; set; } = "";
         public string LeftColumn { get; set; } = "";
         
         public string RightTableSchema { get; set; } = "";

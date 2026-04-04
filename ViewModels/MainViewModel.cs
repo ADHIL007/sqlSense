@@ -191,35 +191,113 @@ namespace sqlSense.ViewModels
             {
                 StatusMessage = "Saving view changes...";
                 string sql = CurrentViewDefinition.ToSql();
-                
-                // Execute the ALTER VIEW script
-                // We'll reuse GetDatabasesAsync's connection logic for a raw execution
-                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(
-                    _dbService.GetType().GetField("_connectionString", 
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(_dbService) as string))
-                {
-                    await conn.OpenAsync();
-                    var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(conn.ConnectionString)
-                    {
-                        InitialCatalog = CurrentViewDefinition.DatabaseName
-                    };
-                    conn.Close();
-                    conn.ConnectionString = builder.ConnectionString;
-                    await conn.OpenAsync();
 
-                    using (var cmd = new Microsoft.Data.SqlClient.SqlCommand(sql, conn))
-                    {
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
+                await _dbService.ExecuteNonQueryAsync(CurrentViewDefinition.DatabaseName, sql);
 
-                StatusMessage = "View synchronized successfully.";
-                SqlText = sql; // show the final script
+                StatusMessage = "✓ View synchronized successfully.";
+                SqlText = sql;
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error saving view: {ex.Message}";
             }
+        }
+
+        /// <summary>
+        /// Generates the current SQL from the view definition and updates the SQL panel live.
+        /// </summary>
+        [RelayCommand]
+        private void GenerateViewSql()
+        {
+            if (CurrentViewDefinition == null) return;
+            SqlText = CurrentViewDefinition.ToSql();
+            StatusMessage = "SQL preview updated.";
+        }
+
+        /// <summary>
+        /// Adds a new source table to the current view definition.
+        /// Called from the UI after the user picks a table.
+        /// </summary>
+        public async Task AddTableToViewAsync(string schema, string tableName)
+        {
+            if (_dbService == null || CurrentViewDefinition == null) return;
+
+            var alias = tableName;
+            // Ensure unique alias
+            int suffix = 2;
+            while (CurrentViewDefinition.ReferencedTables.Any(t => 
+                string.Equals(t.Alias, alias, StringComparison.OrdinalIgnoreCase)))
+            {
+                alias = $"{tableName}{suffix++}";
+            }
+
+            var newTable = new ReferencedTable
+            {
+                Schema = schema,
+                Name = tableName,
+                Alias = alias
+            };
+
+            CurrentViewDefinition.ReferencedTables.Add(newTable);
+
+            // Fetch all columns for the new table
+            var allCols = await _dbService.GetColumnsAsync(
+                CurrentViewDefinition.DatabaseName, schema, tableName);
+            CurrentViewDefinition.SourceTableAllColumns[newTable.FullName] = 
+                allCols.Select(c => c.Name).ToList();
+
+            StatusMessage = $"Added table {schema}.{tableName} as {alias}";
+        }
+
+        /// <summary>
+        /// Adds a JOIN relationship between two tables.
+        /// </summary>
+        public void AddJoinRelationship(string leftAlias, string leftColumn,
+            string rightAlias, string rightColumn, string joinType = "INNER")
+        {
+            if (CurrentViewDefinition == null) return;
+
+            var leftTable = CurrentViewDefinition.ReferencedTables
+                .FirstOrDefault(t => string.Equals(t.Alias, leftAlias, StringComparison.OrdinalIgnoreCase));
+            var rightTable = CurrentViewDefinition.ReferencedTables
+                .FirstOrDefault(t => string.Equals(t.Alias, rightAlias, StringComparison.OrdinalIgnoreCase));
+
+            if (leftTable == null || rightTable == null) return;
+
+            CurrentViewDefinition.Joins.Add(new JoinRelationship
+            {
+                LeftTableAlias = leftAlias,
+                LeftTableSchema = leftTable.Schema,
+                LeftTableName = leftTable.Name,
+                LeftColumn = leftColumn,
+                RightTableAlias = rightAlias,
+                RightTableSchema = rightTable.Schema,
+                RightTableName = rightTable.Name,
+                RightColumn = rightColumn,
+                JoinType = joinType
+            });
+
+            StatusMessage = $"Added {joinType} JOIN: {leftAlias}.{leftColumn} = {rightAlias}.{rightColumn}";
+        }
+
+        /// <summary>
+        /// Removes a JOIN relationship.
+        /// </summary>
+        public void RemoveJoinRelationship(JoinRelationship join)
+        {
+            if (CurrentViewDefinition == null) return;
+            CurrentViewDefinition.Joins.Remove(join);
+            StatusMessage = $"Removed JOIN between {join.LeftTableAlias} and {join.RightTableAlias}";
+        }
+
+        /// <summary>
+        /// Renames the view.
+        /// </summary>
+        public void RenameView(string newName)
+        {
+            if (CurrentViewDefinition == null) return;
+            CurrentViewDefinition.ViewName = newName;
+            StatusMessage = $"View renamed to {newName} (not yet synced)";
         }
 
         // === Canvas Zoom Methods ===

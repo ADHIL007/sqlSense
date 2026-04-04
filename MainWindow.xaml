@@ -47,6 +47,7 @@
             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
             <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+            <EventSetter Event="RequestBringIntoView" Handler="TreeViewItem_RequestBringIntoView"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TreeViewItem">
@@ -98,17 +99,28 @@
         <!-- HierarchicalDataTemplate for tree items with icons -->
         <HierarchicalDataTemplate DataType="{x:Type models:DatabaseTreeItem}" 
                                    ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal" Margin="1,1">
-                <TextBlock Text="{Binding IconGlyph}" 
+            <Grid Margin="1,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="{Binding IconGlyph}" 
                            FontFamily="Segoe MDL2 Assets" FontSize="14"
                            Foreground="{Binding IconColor, Converter={StaticResource StringToBrush}}"
-                           VerticalAlignment="Center" Margin="0,0,6,0"
-                           Width="16" TextAlignment="Center"/>
-                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="12.5"/>
-                <TextBlock Text=" (loading...)" FontSize="10" Foreground="#888888" 
-                           VerticalAlignment="Center"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Opacity="0.9"/>
+                           
+                <TextBlock Grid.Column="1" Text="{Binding Name}" 
+                           VerticalAlignment="Center" FontSize="12.5"
+                           Margin="4,0,0,0"/>
+                           
+                <TextBlock Grid.Column="2" Text=" (loading...)" 
+                           FontSize="10" Foreground="#888888" 
+                           VerticalAlignment="Center" Margin="6,0,0,0"
                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
-            </StackPanel>
+            </Grid>
         </HierarchicalDataTemplate>
 
         <!-- Dot Pattern Background Brush -->
@@ -325,7 +337,9 @@
                               TreeViewItem.Expanded="TreeViewItem_Expanded"
                               SelectedItemChanged="ObjectExplorer_SelectedItemChanged"
                               VirtualizingStackPanel.IsVirtualizing="True"
-                              VirtualizingStackPanel.VirtualizationMode="Recycling"/>
+                              VirtualizingStackPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 </Grid>
             </Border>
 
@@ -425,10 +439,27 @@
                             </Border.Effect>
                             <Button x:Name="DataFlowToggleBtn" 
                                     Content="&#xE14F; DATA FLOW: OFF" FontSize="13" 
+                                    FontFamily="Segoe MDL2 Assets, Segoe UI"
                                     FontWeight="Bold" Foreground="#FF9800"
                                     Background="Transparent" BorderThickness="0"
                                     Padding="20,12" Cursor="Hand"
                                     Click="DataFlowToggleBtn_Click"/>
+                        </Border>
+
+                        <!-- Sync to DB -->
+                        <Border Background="#252526" CornerRadius="8" 
+                                BorderBrush="#3C3C3C" BorderThickness="1"
+                                Margin="0,0,16,0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="12" Opacity="0.5" ShadowDepth="4"/>
+                            </Border.Effect>
+                            <Button x:Name="GenSqlBtn" 
+                                    Content="&#xE943; GENERATE SQL" FontSize="13"
+                                    FontFamily="Segoe MDL2 Assets, Segoe UI"
+                                    FontWeight="Bold" Foreground="#4FC3F7"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="20,12" Cursor="Hand"
+                                    Command="{Binding GenerateViewSqlCommand}"/>
                         </Border>
 
                         <!-- Sync to DB -->
@@ -439,6 +470,7 @@
                             </Border.Effect>
                             <Button x:Name="SyncDbBtn" 
                                     Content="&#xE105; SYNC TO DATABASE" FontSize="13"
+                                    FontFamily="Segoe MDL2 Assets, Segoe UI"
                                     FontWeight="Bold" Foreground="#4CAF50"
                                     Background="Transparent" BorderThickness="0"
                                     Padding="20,12" Cursor="Hand"

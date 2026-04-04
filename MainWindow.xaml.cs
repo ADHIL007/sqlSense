@@ -78,6 +78,12 @@ namespace sqlSense
             }
         }
 
+        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        {
+            // Prevent auto-scrolling when items are selected or expanded
+            e.Handled = true;
+        }
+
         private async void ObjectExplorer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (_viewModel == null) return;

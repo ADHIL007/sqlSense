@@ -430,6 +430,49 @@ namespace sqlSense.Services
             }
         }
 
+        /// <summary>
+        /// Executes a non-query SQL command (e.g. ALTER VIEW).
+        /// </summary>
+        public async Task ExecuteNonQueryAsync(string database, string sql)
+        {
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            LoggerService.LogSql(sql);
+            using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(sql, conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// Returns all user tables in the database (for the "Add Table" picker).
+        /// </summary>
+        public async Task<List<TableInfo>> GetAllTablesForDatabaseAsync(string database)
+        {
+            var tables = new List<TableInfo>();
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(
+                @"SELECT s.name AS SchemaName, t.name AS TableName 
+                  FROM sys.tables t 
+                  JOIN sys.schemas s ON t.schema_id = s.schema_id 
+                  UNION ALL
+                  SELECT s.name, v.name
+                  FROM sys.views v
+                  JOIN sys.schemas s ON v.schema_id = s.schema_id
+                  ORDER BY 1, 2", conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                tables.Add(new TableInfo
+                {
+                    Schema = reader.GetString(0),
+                    Name = reader.GetString(1)
+                });
+            }
+            return tables;
+        }
+
         private static string ChangeDatabaseInConnectionString(string connectionString, string database)
         {
             var builder = new SqlConnectionStringBuilder(connectionString)
