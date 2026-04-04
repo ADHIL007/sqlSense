@@ -1,0 +1,21 @@
+<UserControl x:Class="sqlSense.UI.SqlEditorPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="300">
+    <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="SQL EDITOR" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" Margin="15,15,15,5" FontSize="11"/>
+            <TextBox Grid.Row="1" Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource SuccessBrush}" 
+                     BorderThickness="0" Padding="10" AcceptsReturn="True" AcceptsTab="True" FontFamily="Consolas"
+                     VerticalScrollBarVisibility="Auto"
+                     Text="{Binding SqlText, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+    </Border>
+</UserControl>

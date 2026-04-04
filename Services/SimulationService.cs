@@ -6,7 +6,7 @@ namespace sqlSense.Services
 {
     public interface ISimulationService
     {
-        SimulationResult ProcessSimulation(Graph graph);
+        SimulationResult? ProcessSimulation(Graph graph);
     }
 
     public class RustSimulationService : ISimulationService
@@ -17,14 +17,15 @@ namespace sqlSense.Services
         [DllImport("rust_engine.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "free_string")]
         private static extern void FreeString(IntPtr ptr);
 
-        public SimulationResult ProcessSimulation(Graph graph)
+        public SimulationResult? ProcessSimulation(Graph graph)
         {
             string json = JsonConvert.SerializeObject(graph);
             IntPtr resultPtr = ProcessSimulationNative(json);
             
             try
             {
-                string resultJson = Marshal.PtrToStringAnsi(resultPtr);
+                string? resultJson = Marshal.PtrToStringAnsi(resultPtr);
+                if (resultJson == null) return null;
                 return JsonConvert.DeserializeObject<SimulationResult>(resultJson);
             }
             finally
@@ -46,33 +47,33 @@ namespace sqlSense.Services
     public class Node
     {
         [JsonProperty("id")]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         
         [JsonProperty("node_type")]
-        public string NodeType { get; set; }
+        public string NodeType { get; set; } = string.Empty;
         
         [JsonProperty("metadata")]
-        public string Metadata { get; set; }
+        public string Metadata { get; set; } = string.Empty;
     }
 
     public class Edge
     {
         [JsonProperty("from")]
-        public string From { get; set; }
+        public string From { get; set; } = string.Empty;
         
         [JsonProperty("to")]
-        public string To { get; set; }
+        public string To { get; set; } = string.Empty;
     }
 
     public class SimulationResult
     {
         [JsonProperty("status")]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         
         [JsonProperty("processed_rows")]
         public ulong ProcessedRows { get; set; }
         
         [JsonProperty("flow_data")]
-        public System.Collections.Generic.List<string> FlowData { get; set; }
+        public System.Collections.Generic.List<string> FlowData { get; set; } = new();
     }
 }

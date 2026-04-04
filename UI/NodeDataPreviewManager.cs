@@ -152,7 +152,7 @@ namespace sqlSense.UI
             _currentNode = null;
         }
 
-        public bool IsOwnedElement(DependencyObject originalSource)
+        public bool IsOwnedElement(DependencyObject? originalSource)
         {
             // Traverse up to see if the clicked element is part of THE preview card
             DependencyObject? curr = originalSource;
