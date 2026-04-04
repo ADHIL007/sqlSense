@@ -1,0 +1,233 @@
+<Window x:Class="sqlSense.Views.ConnectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Connect to Server" Height="460" Width="550" 
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#1E1E1E" WindowStyle="None" 
+        BorderBrush="#3C3C3C" BorderThickness="1"
+        x:Name="ThisWindow">
+    <Window.Resources>
+        <!-- Hardcoded colors to avoid theme leaks -->
+        <SolidColorBrush x:Key="InputBackground" Color="#252526"/>
+        <SolidColorBrush x:Key="InputForeground" Color="White"/>
+        <SolidColorBrush x:Key="InputBorder" Color="#3C3C3C"/>
+
+        <!-- 1. Support Templates (Define FIRST) -->
+        <ControlTemplate x:Key="ComboBoxEditableTemplate" TargetType="TextBox">
+            <Border Name="PART_ContentHost" Focusable="False" Background="{TemplateBinding Background}" />
+        </ControlTemplate>
+
+        <!-- 2. Main Styles -->
+        <Style x:Key="DarkComboBox" TargetType="ComboBox">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="{StaticResource InputBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource InputForeground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" 
+                                          BorderBrush="{TemplateBinding BorderBrush}" 
+                                          Background="{TemplateBinding Background}" 
+                                          Foreground="{TemplateBinding Foreground}"
+                                          Grid.Column="2" IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                                          Focusable="false" ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Name="Border" Background="{TemplateBinding Background}" 
+                                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
+                                            <Path Name="Arrow" Fill="{TemplateBinding Foreground}" 
+                                                  HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                                  Margin="0,0,8,0" Data="M 0 0 L 4 4 L 8 0 Z" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#333333" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Name="ContentSite" Margin="8,3,23,3" IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              VerticalAlignment="Center" />
+                            <TextBox x:Name="PART_EditableTextBox" 
+                                     Style="{x:Null}" 
+                                     Template="{StaticResource ComboBoxEditableTemplate}" 
+                                     Margin="3,3,23,3" Focusable="True" Background="Transparent" 
+                                     Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}" 
+                                     Visibility="Hidden" VerticalAlignment="Center" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border Name="DropDownBorder" Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="{TemplateBinding BorderBrush}"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#252526"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border Name="Border" Background="{TemplateBinding Background}" SnapsToDevicePixels="True" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#007ACC" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#094771" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="#252526"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3C3C3C"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+
+        <Style TargetType="PasswordBox">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="#252526"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3C3C3C"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+
+        <Style x:Key="BottomButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="90"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3C3C3C"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#444444"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="34"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#252526" BorderBrush="#3C3C3C" BorderThickness="0,0,0,1" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+            <DockPanel LastChildFill="False" Margin="10,0">
+                <Image Source="https://static-00.iconduck.com/assets.00/sql-server-icon-2048x2048-v6q8y7m2.png" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="Connect to Server" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12"/>
+                <Button Content="✕" DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" BorderThickness="0" Width="34" Click="Exit_Click" FontSize="14"/>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="1" Padding="0,30">
+            <StackPanel>
+                <TextBlock Text="SQL Server" FontSize="36" FontWeight="Light" HorizontalAlignment="Center" Foreground="White"/>
+                <Rectangle Height="2" Width="220" Margin="0,15,0,0">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="#4FC3F7" Offset="0.5"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="50,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Server type:" VerticalAlignment="Center" Foreground="#CCCCCC"/>
+            <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource DarkComboBox}" SelectedIndex="0">
+                <ComboBoxItem Content="Database Engine"/>
+            </ComboBox>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Server name:" VerticalAlignment="Center" Foreground="#CCCCCC"/>
+            <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource DarkComboBox}" IsEditable="True" x:Name="ServerTextBox" Text=""/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Authentication:" VerticalAlignment="Center" Foreground="#CCCCCC"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource DarkComboBox}" x:Name="AuthComboBox" SelectionChanged="AuthComboBox_SelectionChanged">
+                <ComboBoxItem Content="Windows Authentication"/>
+                <ComboBoxItem Content="SQL Server Authentication"/>
+            </ComboBox>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="User name:" VerticalAlignment="Center" Foreground="#666666" x:Name="UserLabel" Margin="25,0,0,0"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Height="36" x:Name="UserTextBox" IsEnabled="False" Text="LAPTOP-50NO702V\SHAH" Opacity="0.5"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Password:" VerticalAlignment="Center" Foreground="#666666" x:Name="PasswordLabel" Margin="25,0,0,0"/>
+            <PasswordBox Grid.Row="4" Grid.Column="1" Height="36" x:Name="PasswordTextBox" IsEnabled="False" Opacity="0.5"/>
+
+            <CheckBox Grid.Row="5" Grid.Column="1" x:Name="RememberCheckBox" Content="Remember password" Foreground="#888888" Margin="0,10,0,0" IsEnabled="False"/>
+        </Grid>
+
+        <Border Grid.Row="3" Background="#252526" BorderBrush="#3C3C3C" BorderThickness="0,1,0,0" Padding="30,20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Connect" Style="{StaticResource BottomButtonStyle}" Background="#4FC3F7" Foreground="Black" FontWeight="Bold" Click="Connect_Click" IsDefault="True"/>
+                <Button Content="Cancel" Style="{StaticResource BottomButtonStyle}" Click="Exit_Click" IsCancel="True"/>
+                <Button Content="Help" Style="{StaticResource BottomButtonStyle}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
