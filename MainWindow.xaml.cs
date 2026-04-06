@@ -36,6 +36,13 @@ namespace sqlSense
                 {
                     _graphRenderer = new ViewGraphRenderer(CanvasPanel.CanvasElement, CanvasPanel.Container, CanvasPanel.Translate, _viewModel);
                     CanvasPanel.GraphRenderer = _graphRenderer;
+
+                    _viewModel.OnNewWorkspaceRequested += () =>
+                    {
+                        _graphRenderer?.ClearViewVisualization();
+                        CanvasPanel.CenterCanvas();
+                    };
+
                     await _viewModel.LoadDatabaseTreeAsync();
                     CanvasPanel.CenterCanvas();
                 };

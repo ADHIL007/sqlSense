@@ -126,7 +126,10 @@ namespace sqlSense.UI
         {
             if (GraphRenderer == null) return;
             GraphRenderer.ToggleDataFlowState();
-            DataFlowToggleBtn.Content = GraphRenderer.IsGlobalDataFlowEnabled ? "\uE14F DATA FLOW: ON" : "\uE14F DATA FLOW: OFF";
+            if (DataFlowState != null)
+            {
+                DataFlowState.Text = GraphRenderer.IsGlobalDataFlowEnabled ? "ON" : "OFF";
+            }
         }
     }
 }

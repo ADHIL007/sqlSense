@@ -171,8 +171,10 @@
         </Border>
 
         <Border Grid.Row="1" Padding="0,30">
-            <StackPanel>
-                <TextBlock Text="SQL Server" FontSize="36" FontWeight="Light" HorizontalAlignment="Center" Foreground="White"/>
+            <StackPanel Height="65" VerticalAlignment="Top">
+                <TextBlock FontSize="36" FontWeight="Bold" HorizontalAlignment="Center">
+    <Run Text="Sql" Foreground="#1E6FA8"/><Run Text="Sense" Foreground="#F57C00"/>
+                </TextBlock>
                 <Rectangle Height="2" Width="220" Margin="0,15,0,0">
                     <Rectangle.Fill>
                         <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">

@@ -9,7 +9,7 @@
         <DockPanel LastChildFill="False" Margin="10,0">
             <Menu Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
                 <MenuItem Header="_File" >
-                    <MenuItem Header="New..." InputGestureText="Ctrl+N" />
+                    <MenuItem Header="New..." Command="{Binding NewWorkspaceCommand}" InputGestureText="Ctrl+N" />
                     <MenuItem Header="Open..." InputGestureText="Ctrl+O" />
                     <Separator />
                     <MenuItem Header="Save View" Command="{Binding SaveViewChangesCommand}" InputGestureText="Ctrl+S" />

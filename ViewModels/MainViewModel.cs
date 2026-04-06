@@ -61,6 +61,8 @@ namespace sqlSense.ViewModels
         [ObservableProperty]
         private bool _isViewLoading;
 
+        public event Action? OnNewWorkspaceRequested;
+
         // === Canvas Zoom ===
         [ObservableProperty]
         private double _canvasZoom = 1.0;
@@ -601,6 +603,21 @@ namespace sqlSense.ViewModels
         private void ShowMetadata()
         {
             StatusMessage = "Refreshing metadata...";
+        }
+
+        [RelayCommand]
+        private void NewWorkspace()
+        {
+            TableData = null;
+            IsPreviewVisible = false;
+
+            CurrentViewDefinition = null;
+            IsViewVisualizationVisible = false;
+
+            SqlText = "-- Select a table from the Object Explorer\n-- to preview its data here";
+            StatusMessage = "New workspace ready.";
+
+            OnNewWorkspaceRequested?.Invoke();
         }
     }
 }
