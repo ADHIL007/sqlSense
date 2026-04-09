@@ -433,9 +433,12 @@ namespace sqlSense.Services
         /// <summary>
         /// Executes a non-query SQL command (e.g. ALTER VIEW).
         /// </summary>
-        public async Task ExecuteNonQueryAsync(string database, string sql)
+        public async Task ExecuteNonQueryAsync(string sql, string? database = null)
         {
-            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            var connStr = string.IsNullOrEmpty(database) 
+                ? _connectionString 
+                : ChangeDatabaseInConnectionString(_connectionString, database);
+            
             LoggerService.LogSql(sql);
             using var conn = new SqlConnection(connStr);
             await conn.OpenAsync();
@@ -606,6 +609,7 @@ namespace sqlSense.Services
                 }
             }
         }
+
     }
 
     public class TableInfo
@@ -637,14 +641,5 @@ namespace sqlSense.Services
         public bool IsIdentity { get; set; }
         public bool IsPrimaryKey { get; set; }
         public bool IsForeignKey { get; set; }
-        public async Task ExecuteNonQueryAsync(string sql, string? database = null)
-        {
-            using var conn = new SqlConnection(_connectionString);
-            await conn.OpenAsync();
-            if (!string.IsNullOrEmpty(database)) await conn.ChangeDatabaseAsync(database);
-
-            using var cmd = new SqlCommand(sql, conn);
-            await cmd.ExecuteNonQueryAsync();
-        }
     }
 }
