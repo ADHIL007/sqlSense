@@ -76,6 +76,33 @@
                     MouseMove="Canvas_MouseMove"
                     MouseRightButtonDown="Canvas_MouseRightButtonDown"
                     MouseRightButtonUp="Canvas_MouseRightButtonUp">
+                
+                <Border.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Add Table" Click="ContextMenuItem_Click" Tag="Table">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Add View" Click="ContextMenuItem_Click" Tag="View">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Toggle Data/Control Flow" Click="ContextMenuItem_Click" Tag="ToggleMode">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Auto Arrange" Click="ContextMenuItem_Click" Tag="Arrange">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE9AC;" FontFamily="Segoe MDL2 Assets"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Border.ContextMenu>
 
                 <Canvas x:Name="FlowCanvas" Width="10000" Height="10000"
                         Background="Transparent"

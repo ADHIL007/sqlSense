@@ -19,7 +19,8 @@ namespace sqlSense.UI.Controls
             Action<string, string> onLeftChanged,
             Action<string, string> onRightChanged,
             Action onChangeType,
-            Action onShowResult)
+            Action onShowResult,
+            Action onDelete)
         {
             var header = new Border
             {
@@ -28,13 +29,35 @@ namespace sqlSense.UI.Controls
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Padding = new Thickness(12, 6, 12, 6)
             };
-            header.Child = new TextBlock
+            var headerGrid = new Grid();
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            headerGrid.Children.Add(new TextBlock
             {
                 Text = $"{join.JoinType} JOIN",
                 FontSize = 10,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(AccentColor)
+                Foreground = new SolidColorBrush(AccentColor),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            var closeBtn = new Button
+            {
+                Content = "\uE711",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 10,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = new SolidColorBrush(TextMuted),
+                Cursor = Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center
             };
+            closeBtn.Click += (s, ev) => onDelete();
+            Grid.SetColumn(closeBtn, 1);
+            headerGrid.Children.Add(closeBtn);
+
+            header.Child = headerGrid;
 
             var body = new StackPanel { Margin = new Thickness(12, 10, 12, 10) };
 
@@ -265,7 +288,7 @@ namespace sqlSense.UI.Controls
             rightPanel.Children.Add(rightBorder);
             Grid.SetColumn(rightPanel, 2);
 
-            Action redrawLeft = () =>
+            void RedrawLeft()
             {
                 leftListPanel.Children.Clear();
                 foreach (var c in leftCols)
@@ -279,9 +302,7 @@ namespace sqlSense.UI.Controls
                     };
                     b.Child = new TextBlock { Text = c, Foreground = isSelected ? Brushes.White : new SolidColorBrush(TextSecondary), FontSize = 11, FontFamily = new FontFamily("Consolas") };
                     var captured = c;
-                    b.PreviewMouseLeftButtonDown += (s, e) => { currentLeftCol = captured; }; // Trigger redraw via external pulse if needed, or define here
-                    // Due to static context and closure limitations, we'll use a local redraw loop
-                    b.PreviewMouseLeftButtonDown += (s, e) => { currentLeftCol = captured; redrawLeft?.Invoke(); };
+                    b.PreviewMouseLeftButtonDown += (s, e) => { currentLeftCol = captured; RedrawLeft(); };
 
                     if (!isSelected) { 
                         b.MouseEnter += (s, e) => b.Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)); 
@@ -289,9 +310,9 @@ namespace sqlSense.UI.Controls
                     }
                     leftListPanel.Children.Add(b);
                 }
-            };
+            }
 
-            Action redrawRight = () =>
+            void RedrawRight()
             {
                 rightListPanel.Children.Clear();
                 foreach (var c in rightCols)
@@ -305,7 +326,7 @@ namespace sqlSense.UI.Controls
                     };
                     b.Child = new TextBlock { Text = c, Foreground = isSelected ? Brushes.White : new SolidColorBrush(TextSecondary), FontSize = 11, FontFamily = new FontFamily("Consolas") };
                     var captured = c;
-                    b.PreviewMouseLeftButtonDown += (s, e) => { currentRightCol = captured; redrawRight?.Invoke(); };
+                    b.PreviewMouseLeftButtonDown += (s, e) => { currentRightCol = captured; RedrawRight(); };
 
                     if (!isSelected) { 
                         b.MouseEnter += (s, e) => b.Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)); 
@@ -313,10 +334,10 @@ namespace sqlSense.UI.Controls
                     }
                     rightListPanel.Children.Add(b);
                 }
-            };
+            }
 
-            redrawLeft();
-            redrawRight();
+            RedrawLeft();
+            RedrawRight();
 
             var centerLabel = new TextBlock { Text = "=", Foreground = new SolidColorBrush(AccentColor), FontWeight = FontWeights.Bold, FontSize = 16, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(12, 16, 12, 0) };
             Grid.SetColumn(centerLabel, 1);
@@ -350,6 +371,64 @@ namespace sqlSense.UI.Controls
 
             mainPanel.Children.Add(btnPanel);
             popup.Child = mainPanel;
+            return popup;
+        }
+
+        public static Border CreateJoinOptionsPicker(ReferencedTable sourceTbl, Action<string> onJoinTypeSelected, Action onCancel)
+        {
+            var popup = new Border
+            {
+                Background = new SolidColorBrush(CardBg),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                BorderThickness = new Thickness(1),
+                Width = 150,
+                Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 15, Opacity = 0.4, ShadowDepth = 0 }
+            };
+            var panel = new StackPanel { Margin = new Thickness(0) };
+            
+            // Header for clarity
+            panel.Children.Add(new Border {
+                Background = new SolidColorBrush(HeaderBg),
+                Padding = new Thickness(12, 6, 12, 6),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                Child = new TextBlock { Text = "SELECT JOIN TYPE", FontSize = 9, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(TextMuted) }
+            });
+
+            string[] types = { "INNER", "LEFT", "RIGHT", "FULL" };
+            foreach (var type in types)
+            {
+                var btn = new Button
+                {
+                    Content = $"{type} JOIN",
+                    Padding = new Thickness(12, 8, 12, 8),
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0, 0, 0, 1),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)),
+                    Foreground = new SolidColorBrush(TextSecondary),
+                    Cursor = Cursors.Hand,
+                    HorizontalContentAlignment = HorizontalAlignment.Left
+                };
+                var captured = type;
+                btn.Click += (s, e) => onJoinTypeSelected(captured);
+                panel.Children.Add(btn);
+            }
+
+            var cancelBtn = new Button
+            {
+                Content = "Cancel",
+                Padding = new Thickness(12, 8, 12, 8),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = new SolidColorBrush(TextMuted),
+                FontSize = 10,
+                Cursor = Cursors.Hand,
+                HorizontalContentAlignment = HorizontalAlignment.Center
+            };
+            cancelBtn.Click += (s, e) => onCancel();
+            panel.Children.Add(cancelBtn);
+
+            popup.Child = panel;
             return popup;
         }
     }

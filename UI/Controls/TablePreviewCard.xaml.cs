@@ -1,3 +1,5 @@
+using System;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace sqlSense.UI.Controls
@@ -17,6 +19,13 @@ namespace sqlSense.UI.Controls
             string colName = e.PropertyName;
             bool isChecked = viewModel.UsedColumns.Contains(colName);
 
+            // Logic: if UsedColumns is populated and HideUnselectedColumns is true, only show those columns.
+            if (viewModel.HideUnselectedColumns && viewModel.UsedColumns.Any() && !isChecked)
+            {
+                e.Column.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             var headerStack = new StackPanel { Orientation = Orientation.Horizontal };
             
             var check = new CheckBox
@@ -29,7 +38,6 @@ namespace sqlSense.UI.Controls
             };
 
             check.Click += (s, ev) => {
-                // We use Click instead of Checked/Unchecked to avoid loops during auto-generation
                 viewModel.OnColumnToggle?.Invoke(colName);
             };
 

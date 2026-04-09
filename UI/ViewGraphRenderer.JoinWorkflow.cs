@@ -30,6 +30,30 @@ namespace sqlSense.UI
             ShowJoinPickerPopup(sourceTable, viewDef, popupX, popupY);
         }
 
+        private void AddItemToCanvasWithDrag(Border element, string id, double x, double y)
+        {
+            element.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Canvas.SetLeft(element, x);
+            Canvas.SetTop(element, y);
+            Panel.SetZIndex(element, 9999);
+            
+            _flowCanvas.Children.Add(element);
+            _viewVisualizationElements.Add(element);
+
+            // Create a temporary NodeCard to enable drag behavior
+            var tempNode = new NodeCard
+            {
+                Id = id,
+                CardElement = element,
+                X = x,
+                Y = y,
+                Width = element.DesiredSize.Width,
+                Height = element.DesiredSize.Height
+            };
+            
+            SetupNodeDrag(element, tempNode);
+        }
+
         private void ShowJoinPickerPopup(ReferencedTable sourceTable, ViewDefinitionInfo viewDef, double x, double y)
         {
             Border? popup = null;
@@ -45,7 +69,7 @@ namespace sqlSense.UI
                     Border? tablePopup = null;
                     tablePopup = TableCardFactory.CreateTablePicker(
                         tables,
-                        viewDef.ReferencedTables.Where(t => t != sourceTable), // existing tables allowed to join EXCEPT self
+                        viewDef.ReferencedTables.Where(t => t != sourceTable),
                         onSelected: async (tableInfo) => {
                             _flowCanvas.Children.Remove(tablePopup);
                             _viewVisualizationElements.Remove(tablePopup!);
@@ -64,9 +88,8 @@ namespace sqlSense.UI
                             _viewVisualizationElements.Remove(tablePopup!);
                         }
                     );
-                    Canvas.SetLeft(tablePopup, x); Canvas.SetTop(tablePopup, y);
-                    Panel.SetZIndex(tablePopup, 9999);
-                    _flowCanvas.Children.Add(tablePopup); _viewVisualizationElements.Add(tablePopup);
+                    
+                    AddItemToCanvasWithDrag(tablePopup, "TablePicker_Temp", x, y);
                 },
                 onCancel: () => {
                     _flowCanvas.Children.Remove(popup);
@@ -74,9 +97,7 @@ namespace sqlSense.UI
                 }
             );
 
-            Canvas.SetLeft(popup, x); Canvas.SetTop(popup, y);
-            Panel.SetZIndex(popup, 9999);
-            _flowCanvas.Children.Add(popup); _viewVisualizationElements.Add(popup);
+            AddItemToCanvasWithDrag(popup, "JoinTypePicker_Temp", x, y);
         }
 
         private void ShowColumnPickerForJoin(ReferencedTable leftTable, ReferencedTable rightTable, string joinType, ViewDefinitionInfo viewDef, double x, double y)
@@ -105,9 +126,7 @@ namespace sqlSense.UI
                 }
             );
 
-            Canvas.SetLeft(popup, x); Canvas.SetTop(popup, y);
-            Panel.SetZIndex(popup, 9999);
-            _flowCanvas.Children.Add(popup); _viewVisualizationElements.Add(popup);
+            AddItemToCanvasWithDrag(popup, "JoinColumnPicker_Temp", x, y);
         }
 
         // ═══════════════════════════════════════════════════════════════

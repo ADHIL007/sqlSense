@@ -21,6 +21,9 @@ namespace sqlSense.ViewModels.Modules
         [ObservableProperty]
         private bool _isLoading;
 
+        [ObservableProperty]
+        private bool _hideUnselectedColumns;
+
         public Action<string>? OnColumnToggle { get; set; }
         public List<string> UsedColumns { get; set; } = new();
 

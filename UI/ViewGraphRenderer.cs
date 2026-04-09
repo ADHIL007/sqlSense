@@ -298,7 +298,7 @@ namespace sqlSense.UI
             );
 
             popup.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            AddItem(popup, cx - (popup.DesiredSize.Width / 2), cy - (popup.DesiredSize.Height / 2));
+            AddItemToCanvasWithDrag(popup, "TablePicker_Main", cx - (popup.DesiredSize.Width / 2), cy - (popup.DesiredSize.Height / 2));
         }
     }
 }

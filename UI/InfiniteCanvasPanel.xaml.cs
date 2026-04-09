@@ -100,8 +100,21 @@ namespace sqlSense.UI
 
         private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            Point currentPos = e.GetPosition(CanvasContainer);
+            double dist = Math.Sqrt(Math.Pow(currentPos.X - _panStart.X, 2) + Math.Pow(currentPos.Y - _panStart.Y, 2));
+            
             StopPan(); 
             CanvasContainer.Cursor = Cursors.Arrow;
+
+            // If it was a quick click (not a drag or pan), show the context menu
+            if (dist < 3)
+            {
+                if (CanvasContainer.ContextMenu != null)
+                {
+                    CanvasContainer.ContextMenu.PlacementTarget = CanvasContainer;
+                    CanvasContainer.ContextMenu.IsOpen = true;
+                }
+            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -139,6 +152,14 @@ namespace sqlSense.UI
         { 
             _isPanning = false; 
             CanvasContainer.ReleaseMouseCapture(); 
+        }
+
+        private void ContextMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item && item.Tag is string shapeType)
+            {
+                ErdToolbar_ShapeRequested(shapeType);
+            }
         }
 
         private void UpdateCoordinates(Point screenPos) 

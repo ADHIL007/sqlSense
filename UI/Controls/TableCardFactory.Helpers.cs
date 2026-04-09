@@ -25,7 +25,8 @@ namespace sqlSense.UI.Controls
                 DataContext = new sqlSense.ViewModels.Modules.TablePreviewViewModel
                 {
                     TableName = title,
-                    IsVisible = true
+                    IsVisible = true,
+                    HideUnselectedColumns = true
                 }
             };
 
@@ -94,7 +95,7 @@ namespace sqlSense.UI.Controls
             };
         }
 
-        public static Border CreateAddJoinButton(ReferencedTable sourceTbl, Action<ReferencedTable> onClick, Thickness margin)
+        public static Button CreateAddJoinButton(ReferencedTable sourceTbl, Action<ReferencedTable> onClick, Thickness margin)
         {
             var btn = new Button
             {
@@ -136,29 +137,69 @@ namespace sqlSense.UI.Controls
             return template;
         }
 
-        public static Border CreateQueryOutputNode(ViewDefinitionInfo viewDef, double minWidth, double x, double y)
+        public static Border CreateQueryOutputCard(
+            ViewDefinitionInfo viewDef, 
+            double minWidth, 
+            Action onPreviewSql,
+            Action onRender,
+            bool isDataFlowMode = false)
         {
-            var card = new sqlSense.UI.Controls.TablePreviewCard
+            if (isDataFlowMode)
             {
-                DataContext = new sqlSense.ViewModels.Modules.TablePreviewViewModel
+                var card = new sqlSense.UI.Controls.TablePreviewCard
                 {
-                    TableName = "Query Output",
-                    IsVisible = true
-                }
+                    DataContext = new sqlSense.ViewModels.Modules.TablePreviewViewModel
+                    {
+                        TableName = "Final Query Output",
+                        IsVisible = true,
+                        HideUnselectedColumns = true
+                    }
+                };
+                
+                return new Border
+                {
+                    Background = new SolidColorBrush(CardBg),
+                    BorderBrush = new SolidColorBrush(AccentColor),
+                    BorderThickness = new Thickness(1),
+                    MinWidth = minWidth,
+                    Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 15, Opacity = 0.4, ShadowDepth = 0 },
+                    Child = card
+                };
+            }
+
+            // Standard mode logic
+            var panel = new StackPanel();
+            var header = new Border 
+            { 
+                Background = new SolidColorBrush(HeaderBg),
+                Padding = new Thickness(12, 8, 12, 8),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                Child = new TextBlock { Text = "QUERY OUTPUT", FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(AccentColor), FontSize = 11 }
             };
+            panel.Children.Add(header);
+
+            var body = new StackPanel { Margin = new Thickness(12) };
             
-            var border = new Border
+            var previewBtn = new Button { Content = "PREVIEW SQL", Padding = new Thickness(12, 6, 12, 6), Background = new SolidColorBrush(AccentColor), Foreground = Brushes.Black, FontWeight = FontWeights.SemiBold, FontSize = 10, Margin = new Thickness(0, 0, 0, 8), Cursor = Cursors.Hand };
+            previewBtn.Click += (s, e) => onPreviewSql();
+            body.Children.Add(previewBtn);
+
+            var renderBtn = new Button { Content = "REFRESH VIEW", Padding = new Thickness(12, 6, 12, 6), Background = Brushes.Transparent, Foreground = new SolidColorBrush(TextSecondary), BorderBrush = new SolidColorBrush(BorderColor), BorderThickness = new Thickness(1), FontSize = 10, Cursor = Cursors.Hand };
+            renderBtn.Click += (s, e) => onRender();
+            body.Children.Add(renderBtn);
+
+            panel.Children.Add(body);
+
+            return new Border
             {
                 Background = new SolidColorBrush(CardBg),
                 BorderBrush = new SolidColorBrush(AccentColor),
                 BorderThickness = new Thickness(1),
                 MinWidth = minWidth,
                 Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 15, Opacity = 0.4, ShadowDepth = 0 },
-                Child = card
+                Child = panel
             };
-            Canvas.SetLeft(border, x);
-            Canvas.SetTop(border, y);
-            return border;
         }
     }
 }
