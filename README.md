@@ -5,7 +5,16 @@
 It enables developers to **understand, build, and debug SQL visually** instead of reading thousands of lines of code.
 
 ---
+new Update 1.5.0.0.1✨
+
+-Enhanced UI ,added FAB buttons <br>
+-implemented Workbook saving <br>
+-implement custom query creation using tables (joining tables)  <br>
+
 <img width="1916" height="1009" alt="image" src="https://github.com/user-attachments/assets/9d621f5e-069b-4929-bd47-0fae4a3e41ed" />
+
+---
+
 <img width="1919" height="988" alt="image" src="https://github.com/user-attachments/assets/d2d23736-5824-4403-ba1f-94e13417319a" />
 <img width="1919" height="989" alt="image" src="https://github.com/user-attachments/assets/d3785a77-f7c3-4c99-90da-46e029744175" />
 
