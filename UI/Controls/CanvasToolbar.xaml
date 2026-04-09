@@ -116,6 +116,11 @@
                     ToolTip="Text Annotation" Click="TextBtn_Click">
                 <TextBlock Text="&#xE8D2;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
             </Button>
+
+            <Button x:Name="ArrangeBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Auto Arrange Layout" Click="ArrangeBtn_Click">
+                <TextBlock Text="&#xE9AC;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
         </StackPanel>
     </Border>
 </UserControl>

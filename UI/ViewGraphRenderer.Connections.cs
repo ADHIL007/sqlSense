@@ -12,8 +12,8 @@ using sqlSense.Models;
 namespace sqlSense.UI
 {
     /// <summary>
-    /// Partial class for ViewGraphRenderer: connection rendering, 
-    /// join badges, path updates, and node drag behavior.
+    /// Partial class for ViewGraphRenderer: connection creation,
+    /// bezier path updates, join badges, port circles, and node removal.
     /// </summary>
     public partial class ViewGraphRenderer
     {
@@ -198,60 +198,46 @@ namespace sqlSense.UI
             }
         }
 
-        /// <summary>
-        /// Sets up drag behavior and hover flow highlighting for a node card.
-        /// </summary>
-        private void SetupNodeDrag(Border card, NodeCard node)
+        // ═══════════════════════════════════════════════════════════════
+        //  NODE & CONNECTION REMOVAL
+        // ═══════════════════════════════════════════════════════════════
+
+        private void RemoveNodeAndConnections(NodeCard node)
         {
-            card.Cursor = Cursors.Hand;
-
-            card.MouseEnter += (s, e) =>
+            // Remove all input connections
+            foreach (var c in node.InputConnections.ToList())
             {
-                _hoveredNode = node;
-                UpdateAllFlowAnimations();
-            };
-            card.MouseLeave += (s, e) =>
-            {
-                if (_hoveredNode == node)
+                _flowCanvas.Children.Remove(c.PathElement);
+                _flowCanvas.Children.Remove(c.FlowPathElement);
+                _viewVisualizationElements.Remove(c.PathElement);
+                _viewVisualizationElements.Remove(c.FlowPathElement);
+                if (c.LabelBadge != null)
                 {
-                    _hoveredNode = null;
-                    UpdateAllFlowAnimations();
+                    _flowCanvas.Children.Remove(c.LabelBadge);
+                    _viewVisualizationElements.Remove(c.LabelBadge);
                 }
-            };
-
-            card.MouseLeftButtonDown += (s, e) =>
+                c.Source.OutputConnections.Remove(c);
+                _nodeConnections.Remove(c);
+            }
+            // Remove all output connections
+            foreach (var c in node.OutputConnections.ToList())
             {
-                IsDraggingNode = true;
-                _draggedNode = node;
-                _dragStart = e.GetPosition(_flowCanvas);
-                _dragNodeStartX = node.X;
-                _dragNodeStartY = node.Y;
-                card.Cursor = Cursors.SizeAll;
-                card.CaptureMouse();
-                e.Handled = true;
-            };
-
-            card.MouseMove += (s, e) =>
-            {
-                if (!IsDraggingNode || _draggedNode != node) return;
-                var cur = e.GetPosition(_flowCanvas);
-                node.X = _dragNodeStartX + (cur.X - _dragStart.X);
-                node.Y = _dragNodeStartY + (cur.Y - _dragStart.Y);
-                Canvas.SetLeft(card, node.X);
-                Canvas.SetTop(card, node.Y);
-                foreach (var c in node.OutputConnections) UpdateConnectionPath(c);
-                foreach (var c in node.InputConnections) UpdateConnectionPath(c);
-            };
-
-            card.MouseLeftButtonUp += (s, e) =>
-            {
-                if (!IsDraggingNode) return;
-                IsDraggingNode = false;
-                _draggedNode = null;
-                card.Cursor = Cursors.Hand;
-                card.ReleaseMouseCapture();
-                e.Handled = true;
-            };
+                _flowCanvas.Children.Remove(c.PathElement);
+                _flowCanvas.Children.Remove(c.FlowPathElement);
+                _viewVisualizationElements.Remove(c.PathElement);
+                _viewVisualizationElements.Remove(c.FlowPathElement);
+                if (c.LabelBadge != null)
+                {
+                    _flowCanvas.Children.Remove(c.LabelBadge);
+                    _viewVisualizationElements.Remove(c.LabelBadge);
+                }
+                c.Target.InputConnections.Remove(c);
+                _nodeConnections.Remove(c);
+            }
+            // Remove card element
+            _flowCanvas.Children.Remove(node.CardElement);
+            _viewVisualizationElements.Remove(node.CardElement);
+            _nodeCards.Remove(node);
         }
     }
 }

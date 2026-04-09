@@ -58,6 +58,9 @@ namespace sqlSense.UI
                 case "View":
                     ViewModel!.StatusMessage = "Select a View from the Object Explorer to visualize it.";
                     break;
+                case "Arrange":
+                    GraphRenderer?.AutoArrange();
+                    break;
                 case "Variable":
                 case "IfElse":
                 case "While":

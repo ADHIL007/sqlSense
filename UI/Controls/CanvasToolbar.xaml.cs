@@ -46,5 +46,8 @@ namespace sqlSense.UI.Controls
 
         private void TextBtn_Click(object sender, RoutedEventArgs e)
             => ShapeRequested?.Invoke("Text");
+
+        private void ArrangeBtn_Click(object sender, RoutedEventArgs e)
+            => ShapeRequested?.Invoke("Arrange");
     }
 }

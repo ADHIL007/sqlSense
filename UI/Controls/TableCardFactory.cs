@@ -291,11 +291,10 @@ namespace sqlSense.UI.Controls
 
             card.Child = wrapper;
 
-            // Show/hide close button & join connector on card hover
             card.MouseEnter += (s, e) =>
             {
                 closeBtn.Opacity = 1;
-                card.BorderBrush = new SolidColorBrush(AccentColor);
+                //card.BorderBrush = new SolidColorBrush(T);
             };
             card.MouseLeave += (s, e) =>
             {
@@ -338,16 +337,16 @@ namespace sqlSense.UI.Controls
                 ToolTip = "Add JOIN"
             };
 
-            circle.MouseEnter += (s, e) =>
+
             {
                 circle.Opacity = 1;
-                // no background change
+                
             };
 
             circle.MouseLeave += (s, e) =>
             {
                 circle.Opacity = 0;
-                // no background change
+               
             };
 
             circle.PreviewMouseLeftButtonDown += (s, e) =>
@@ -408,10 +407,9 @@ namespace sqlSense.UI.Controls
         /// <summary>
         /// Creates the join type picker popup that appears when clicking the "+" connector.
         /// </summary>
-        public static Border CreateJoinTypePicker(
+        public static Border CreateJoinOptionsPicker(   
             ReferencedTable sourceTable,
-            IEnumerable<ReferencedTable> availableTables,
-            Action<string, ReferencedTable> onJoinTypeSelected,
+            Action<string> onJoinTypeSelected,
             Action onCancel)
         {
             var popup = new Border
@@ -420,7 +418,7 @@ namespace sqlSense.UI.Controls
                 BorderBrush = new SolidColorBrush(BorderColor),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(0),
-                MinWidth = 200,
+                MinWidth = 160,
                 MaxHeight = 350,
                 Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 20, Opacity = 0.5 }
             };
@@ -437,7 +435,7 @@ namespace sqlSense.UI.Controls
             };
             headerBorder.Child = new TextBlock
             {
-                Text = $"JOIN from {sourceTable.DisplayName}",
+                Text = $"SELECT JOIN TYPE",
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(TextPrimary),
                 FontSize = 11
@@ -449,56 +447,48 @@ namespace sqlSense.UI.Controls
             foreach (var jt in joinTypes)
             {
                 var jtLabel = $"{jt} JOIN";
-                foreach (var targetTable in availableTables)
+                var itemBtn = new Button
                 {
-                    if (targetTable == sourceTable) continue;
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(12, 8, 12, 8),
+                    Cursor = Cursors.Hand,
+                    HorizontalContentAlignment = HorizontalAlignment.Left
+                };
 
-                    var itemBtn = new Button
-                    {
-                        Background = Brushes.Transparent,
-                        BorderThickness = new Thickness(0),
-                        Padding = new Thickness(12, 6, 12, 6),
-                        Cursor = Cursors.Hand,
-                        HorizontalContentAlignment = HorizontalAlignment.Left
-                    };
+                var itemContent = new StackPanel { Orientation = Orientation.Horizontal };
+                itemContent.Children.Add(new TextBlock
+                {
+                    Text = "\uE811", // Merge icon
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(AccentColor),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 8, 0)
+                });
+                itemContent.Children.Add(new TextBlock
+                {
+                    Text = jtLabel,
+                    FontSize = 11,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush(TextSecondary),
+                    VerticalAlignment = VerticalAlignment.Center
+                });
 
-                    var itemContent = new StackPanel { Orientation = Orientation.Horizontal };
-                    itemContent.Children.Add(new TextBlock
-                    {
-                        Text = jtLabel,
-                        FontSize = 10,
-                        FontWeight = FontWeights.SemiBold,
-                        Foreground = new SolidColorBrush(TextMuted),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Margin = new Thickness(0, 0, 8, 0),
-                        Width = 70
-                    });
-                    itemContent.Children.Add(new TextBlock
-                    {
-                        Text = targetTable.DisplayName,
-                        FontSize = 11,
-                        Foreground = new SolidColorBrush(TextSecondary),
-                        VerticalAlignment = VerticalAlignment.Center
-                    });
+                itemBtn.Content = itemContent;
+                var capturedJt = jt;
+                itemBtn.Click += (s, e) => onJoinTypeSelected(capturedJt);
 
-                    itemBtn.Content = itemContent;
-                    var capturedJt = jt;
-                    var capturedTarget = targetTable;
-                    itemBtn.Click += (s, e) => onJoinTypeSelected(capturedJt, capturedTarget);
+                panel.Children.Add(itemBtn);
 
-                    panel.Children.Add(itemBtn);
-                }
-
-                // Separator between join type groups
                 panel.Children.Add(new Rectangle
                 {
                     Height = 1,
                     Fill = new SolidColorBrush(BorderColor),
-                    Margin = new Thickness(8, 2, 8, 2)
+                    Margin = new Thickness(8, 0, 8, 0)
                 });
             }
 
-            // Cancel button
             var cancelBtn = new Button
             {
                 Content = "Cancel",
@@ -746,7 +736,8 @@ namespace sqlSense.UI.Controls
             Action onDelete,
             Action onChangeType,
             Action<string, string> onLeftChanged,
-            Action<string, string> onRightChanged)
+            Action<string, string> onRightChanged,
+            Action? onShowResult = null)
         {
             // ── Header ──
             var headerGrid = new Grid();
@@ -895,6 +886,48 @@ namespace sqlSense.UI.Controls
             mainPanel.Children.Add(header);
             mainPanel.Children.Add(body);
 
+            var innerGrid = new Grid();
+            innerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            innerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            
+            Grid.SetColumn(mainPanel, 0);
+            innerGrid.Children.Add(mainPanel);
+
+            var showResultBtnGrid = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                BorderThickness = new Thickness(1, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                Padding = new Thickness(8, 0, 8, 0),
+                ToolTip = "Show Joined Result"
+            };
+            var btnContent = new TextBlock
+            {
+                Text = "➔",
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Foreground = new SolidColorBrush(TextSecondary),
+                FontSize = 14
+            };
+            showResultBtnGrid.Child = btnContent;
+            
+            showResultBtnGrid.MouseEnter += (s, e) => {
+                showResultBtnGrid.Background = new SolidColorBrush(AccentColor);
+                btnContent.Foreground = Brushes.Black;
+            };
+            showResultBtnGrid.MouseLeave += (s, e) => {
+                showResultBtnGrid.Background = new SolidColorBrush(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF));
+                btnContent.Foreground = new SolidColorBrush(TextSecondary);
+            };
+            showResultBtnGrid.MouseLeftButtonDown += (s, e) => {
+                e.Handled = true;
+                onShowResult?.Invoke();
+            };
+
+            Grid.SetColumn(showResultBtnGrid, 1);
+            innerGrid.Children.Add(showResultBtnGrid);
+
             var card = new Border
             {
                 Background = new SolidColorBrush(CardBg),
@@ -908,10 +941,240 @@ namespace sqlSense.UI.Controls
                     Opacity = 0.4,
                     ShadowDepth = 0
                 },
-                Child = mainPanel
+                Child = innerGrid
             };
 
             return card;
+        }
+
+        /// <summary>
+        /// Creates a join result preview card using the same TablePreviewCard design.
+        /// Stays visible permanently on canvas and supports "Add JOIN" connectors for chaining.
+        /// </summary>
+        public static Border CreateJoinResultCard(
+            string title,
+            double minWidth,
+            Action onClose,
+            Action<ReferencedTable>? onJoinRequested = null,
+            ReferencedTable? joinSourceTable = null)
+        {
+            var previewCard = new sqlSense.UI.Controls.TablePreviewCard
+            {
+                Margin = new Thickness(0),
+                DataContext = new sqlSense.ViewModels.Modules.TablePreviewViewModel
+                {
+                    TableName = title,
+                    IsVisible = true
+                }
+            };
+
+            var cardGrid = new Grid();
+            cardGrid.Children.Add(previewCard);
+
+            // Close button (top-right, revealed on hover)
+            var closeBtn = new Button
+            {
+                Content = "\uE711",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 10,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = new SolidColorBrush(TextMuted),
+                Cursor = Cursors.Hand,
+                ToolTip = "Close result",
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 8, 8, 0),
+                Opacity = 0
+            };
+            closeBtn.Click += (s, e) => onClose();
+            cardGrid.Children.Add(closeBtn);
+
+            if (onJoinRequested != null && joinSourceTable != null)
+            {
+                var leftJoinBtn = CreateAddJoinButton(joinSourceTable, onJoinRequested, new Thickness(-35, 0, 0, 0));
+                leftJoinBtn.HorizontalAlignment = HorizontalAlignment.Left;
+
+                var rightJoinBtn = CreateAddJoinButton(joinSourceTable, onJoinRequested, new Thickness(0, 0, -35, 0));
+                rightJoinBtn.HorizontalAlignment = HorizontalAlignment.Right;
+
+                cardGrid.Children.Add(leftJoinBtn);
+                cardGrid.Children.Add(rightJoinBtn);
+
+                cardGrid.MouseEnter += (s, e) =>
+                {
+                    closeBtn.Opacity = 1;
+                    leftJoinBtn.Opacity = 1;
+                    rightJoinBtn.Opacity = 1;
+                };
+                cardGrid.MouseLeave += (s, e) =>
+                {
+                    closeBtn.Opacity = 0;
+                    leftJoinBtn.Opacity = 0;
+                    rightJoinBtn.Opacity = 0;
+                };
+            }
+            else
+            {
+                cardGrid.MouseEnter += (s, e) => closeBtn.Opacity = 1;
+                cardGrid.MouseLeave += (s, e) => closeBtn.Opacity = 0;
+            }
+
+            return new Border
+            {
+                Child = cardGrid,
+                MinWidth = minWidth,
+                Effect = new DropShadowEffect
+                {
+                    Color = Colors.Black,
+                    BlurRadius = 15,
+                    Opacity = 0.4,
+                    ShadowDepth = 0
+                }
+            };
+        }
+
+        public static Border CreateJoinColumnPicker(
+            ReferencedTable leftTable,
+            ReferencedTable rightTable,
+            List<string> leftCols,
+            List<string> rightCols,
+            string suggestedLeftCol,
+            string suggestedRightCol,
+            Action<string, string> onConfirmed,
+            Action onCancel)
+        {
+            var popup = new Border
+            {
+                Background = new SolidColorBrush(CardBg),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(0),
+                Width = 450,
+                Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 20, Opacity = 0.5 }
+            };
+
+            var mainPanel = new StackPanel();
+
+            // Header
+            var headerBorder = new Border
+            {
+                Background = new SolidColorBrush(HeaderBg),
+                BorderBrush = new SolidColorBrush(BorderColor),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(12, 8, 12, 8)
+            };
+            headerBorder.Child = new TextBlock
+            {
+                Text = "CONFIGURE JOIN CONDITIONS",
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(TextPrimary),
+                FontSize = 11
+            };
+            mainPanel.Children.Add(headerBorder);
+
+            var bodyGrid = new Grid { Margin = new Thickness(12) };
+            bodyGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            bodyGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            bodyGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            string currentLeftCol = suggestedLeftCol;
+            string currentRightCol = suggestedRightCol;
+
+            var leftPanel = new StackPanel();
+            leftPanel.Children.Add(new TextBlock { Text = leftTable.DisplayName, Foreground = new SolidColorBrush(TextPrimary), FontSize = 11, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0,0,0,4) });
+            var leftListPanel = new StackPanel();
+            var leftScroll = new ScrollViewer { MaxHeight = 150, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = leftListPanel };
+            var leftBorder = new Border { BorderBrush = new SolidColorBrush(BorderColor), BorderThickness = new Thickness(1), Child = leftScroll, Background = new SolidColorBrush(Color.FromArgb(0x10, 0, 0, 0)) };
+            leftPanel.Children.Add(leftBorder);
+            Grid.SetColumn(leftPanel, 0);
+
+            var rightPanel = new StackPanel();
+            rightPanel.Children.Add(new TextBlock { Text = rightTable.DisplayName, Foreground = new SolidColorBrush(TextPrimary), FontSize = 11, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0,0,0,4) });
+            var rightListPanel = new StackPanel();
+            var rightScroll = new ScrollViewer { MaxHeight = 150, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = rightListPanel };
+            var rightBorder = new Border { BorderBrush = new SolidColorBrush(BorderColor), BorderThickness = new Thickness(1), Child = rightScroll, Background = new SolidColorBrush(Color.FromArgb(0x10, 0, 0, 0)) };
+            rightPanel.Children.Add(rightBorder);
+            Grid.SetColumn(rightPanel, 2);
+
+            Action? redrawLeft = null;
+            Action? redrawRight = null;
+
+            redrawLeft = () =>
+            {
+                leftListPanel.Children.Clear();
+                foreach (var c in leftCols)
+                {
+                    bool isSelected = (c == currentLeftCol);
+                    var b = new Border
+                    {
+                        Background = isSelected ? new SolidColorBrush(SelectedRow) : Brushes.Transparent,
+                        Padding = new Thickness(8, 4, 8, 4),
+                        Cursor = Cursors.Hand
+                    };
+                    b.Child = new TextBlock { Text = c, Foreground = isSelected ? Brushes.White : new SolidColorBrush(TextSecondary), FontSize = 11, FontFamily = new FontFamily("Consolas") };
+                    var captured = c;
+                    b.PreviewMouseLeftButtonDown += (s, e) => { currentLeftCol = captured; redrawLeft!(); };
+                    if (!isSelected) { b.MouseEnter += (s, e) => b.Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)); b.MouseLeave += (s, e) => b.Background = Brushes.Transparent; }
+                    leftListPanel.Children.Add(b);
+                }
+            };
+            redrawLeft();
+
+            redrawRight = () =>
+            {
+                rightListPanel.Children.Clear();
+                foreach (var c in rightCols)
+                {
+                    bool isSelected = (c == currentRightCol);
+                    var b = new Border
+                    {
+                        Background = isSelected ? new SolidColorBrush(SelectedRow) : Brushes.Transparent,
+                        Padding = new Thickness(8, 4, 8, 4),
+                        Cursor = Cursors.Hand
+                    };
+                    b.Child = new TextBlock { Text = c, Foreground = isSelected ? Brushes.White : new SolidColorBrush(TextSecondary), FontSize = 11, FontFamily = new FontFamily("Consolas") };
+                    var captured = c;
+                    b.PreviewMouseLeftButtonDown += (s, e) => { currentRightCol = captured; redrawRight!(); };
+                    if (!isSelected) { b.MouseEnter += (s, e) => b.Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)); b.MouseLeave += (s, e) => b.Background = Brushes.Transparent; }
+                    rightListPanel.Children.Add(b);
+                }
+            };
+            redrawRight();
+
+            var centerLabel = new TextBlock { Text = "=", Foreground = new SolidColorBrush(AccentColor), FontWeight = FontWeights.Bold, FontSize = 16, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(12, 16, 12, 0) };
+            Grid.SetColumn(centerLabel, 1);
+
+            bodyGrid.Children.Add(leftPanel);
+            bodyGrid.Children.Add(centerLabel);
+            bodyGrid.Children.Add(rightPanel);
+
+            mainPanel.Children.Add(bodyGrid);
+
+            mainPanel.Children.Add(new TextBlock
+            {
+                Text = "Need multiple? You can add complex ON conditions (A=B AND X=Y) by editing the text box in the Join Node card afterwards.",
+                Foreground = new SolidColorBrush(TextMuted),
+                FontSize = 9.5,
+                Margin = new Thickness(12, 0, 12, 8),
+                TextWrapping = TextWrapping.Wrap
+            });
+
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12, 0, 12, 12) };
+            
+            var cancelBtn = new Button { Content = "Cancel", Margin = new Thickness(0,0,8,0), Padding = new Thickness(12,6,12,6), Background = Brushes.Transparent, Foreground = new SolidColorBrush(TextSecondary), BorderThickness = new Thickness(0), Cursor = Cursors.Hand };
+            cancelBtn.Click += (s, e) => onCancel();
+            
+            var addBtn = new Border { Background = new SolidColorBrush(AccentColor), CornerRadius = new CornerRadius(3), Padding = new Thickness(12,6,12,6), Cursor = Cursors.Hand };
+            addBtn.Child = new TextBlock { Text = "CONFIRM JOIN", Foreground = Brushes.Black, FontWeight = FontWeights.SemiBold, FontSize = 11 };
+            addBtn.PreviewMouseLeftButtonDown += (s, e) => onConfirmed(currentLeftCol, currentRightCol);
+
+            btnPanel.Children.Add(cancelBtn);
+            btnPanel.Children.Add(addBtn);
+
+            mainPanel.Children.Add(btnPanel);
+            popup.Child = mainPanel;
+            return popup;
         }
 
         /// <summary>
