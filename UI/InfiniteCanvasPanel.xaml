@@ -84,6 +84,11 @@
                                 <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets"/>
                             </MenuItem.Icon>
                         </MenuItem>
+                        <MenuItem Header="Create Table" Click="ContextMenuItem_Click" Tag="CreateTable">
+                            <MenuItem.Icon>
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Header="Add View" Click="ContextMenuItem_Click" Tag="View">
                             <MenuItem.Icon>
                                 <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets"/>

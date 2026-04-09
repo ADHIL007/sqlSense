@@ -8,9 +8,19 @@
         xmlns:converters="clr-namespace:sqlSense.Converters"
         xmlns:ui="clr-namespace:sqlSense.UI"
         mc:Ignorable="d"
-        Title="sqlSense - Database Visualization" Height="800" Width="1280"
+        Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
         WindowStyle="SingleBorderWindow">
+    
+    <Window.Style>
+        <Style TargetType="Window">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                    <Setter Property="Title" Value="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0} *'}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Style>
 
     
 

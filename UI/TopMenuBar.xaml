@@ -10,6 +10,7 @@
             <Menu Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
                 <MenuItem Header="_File" >
                     <MenuItem Header="New Workbook" Command="{Binding NewWorkspaceCommand}" InputGestureText="Ctrl+N" />
+                    <MenuItem Header="Create Table..." Command="{Binding ShowCreateTableCommand}" />
                     <MenuItem Header="Open Workbook..." Command="{Binding OpenWorkbookCommand}" InputGestureText="Ctrl+O" />
                     <Separator />
                     <MenuItem Header="Save Workbook" Command="{Binding SaveWorkbookCommand}" InputGestureText="Ctrl+S" />
@@ -19,8 +20,8 @@
                 </MenuItem>
                 
                 <MenuItem Header="_Edit">
-                    <MenuItem Header="Undo" InputGestureText="Ctrl+Z" />
-                    <MenuItem Header="Redo" InputGestureText="Ctrl+Y" />
+                    <MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z" />
+                    <MenuItem Header="Redo" Command="{Binding RedoCommand}" InputGestureText="Ctrl+Y" />
                     <Separator />
                     <MenuItem Header="Cut" InputGestureText="Ctrl+X" />
                     <MenuItem Header="Copy" InputGestureText="Ctrl+C" />
@@ -67,6 +68,7 @@
             <Separator Background="{StaticResource BorderBrush}" Margin="10,5" Width="1"/>
             
             <!-- Quick Action Toolbar -->
+            <Button Command="{Binding ShowCreateTableCommand}" Content="⊕ New Table" Background="Transparent" Foreground="{StaticResource PrimaryAccentBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             <Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             <Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             

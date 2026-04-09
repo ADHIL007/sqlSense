@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.IO;
 using System.Collections.Generic;
 using System.Windows;
+using sqlSense.Views;
 
 namespace sqlSense.ViewModels
 {
@@ -30,6 +31,9 @@ namespace sqlSense.ViewModels
         private ViewDefinitionInfo? _activeWorkbook;
 
         [ObservableProperty]
+        private bool _hasUnsavedChanges;
+
+        [ObservableProperty]
         private string _statusMessage = "Ready";
 
         [ObservableProperty]
@@ -42,6 +46,10 @@ namespace sqlSense.ViewModels
         public DatabaseService? DbService => _dbService;
 
         private readonly WorkbookService _workbookService = new();
+
+        private readonly Stack<string> _undoStack = new();
+        private readonly Stack<string> _redoStack = new();
+        private bool _isPerformingUndoRedo = false;
 
         public event Action? OnNewWorkspaceRequested;
 
@@ -171,7 +179,115 @@ namespace sqlSense.ViewModels
             StatusMessage = "SQL preview updated.";
         }
 
+        [RelayCommand]
+        public async Task ShowCreateTable()
+        {
+            var dialog = new CreateTableWindow();
+            dialog.Owner = Application.Current.MainWindow;
+            
+            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.Script))
+            {
+                try
+                {
+                    StatusMessage = $"Creating table {dialog.TableName}...";
+                    await _dbService!.ExecuteNonQueryAsync(dialog.Script, Explorer.SelectedDatabaseName);
+                    
+                    StatusMessage = $"✓ Table {dialog.TableName} created successfully.";
+                    await LoadDatabaseTreeAsync(); // Refresh Explorer
+                    
+                    // Optionally add it to canvas instantly
+                    await AddTableToViewAsync(dialog.SchemaName ?? "dbo", dialog.TableName!);
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Creation Error: {ex.Message}";
+                    MessageBox.Show($"Failed to create table:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         private bool CanModifyView() => Canvas.CurrentViewDefinition != null;
+
+        public void NotifyModification(bool pushUndo = true)
+        {
+            if (!_isPerformingUndoRedo && pushUndo)
+            {
+                _undoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+                _redoStack.Clear();
+                UndoCommand.NotifyCanExecuteChanged();
+                RedoCommand.NotifyCanExecuteChanged();
+            }
+
+            HasUnsavedChanges = true;
+            GenerateViewSqlCommand.Execute(null);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            if (_undoStack.Count == 0) return;
+
+            _isPerformingUndoRedo = true;
+            _redoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+            
+            var state = _undoStack.Pop();
+            var workbook = JsonSerializer.Deserialize<ViewDefinitionInfo>(state);
+            
+            if (workbook != null)
+            {
+                // Restore state
+                ActiveWorkbook!.ReferencedTables = workbook.ReferencedTables;
+                ActiveWorkbook.Joins = workbook.Joins;
+                ActiveWorkbook.Columns = workbook.Columns;
+                ActiveWorkbook.NodePositions = workbook.NodePositions;
+                ActiveWorkbook.WhereClause = workbook.WhereClause;
+                ActiveWorkbook.GroupByClause = workbook.GroupByClause;
+                ActiveWorkbook.OrderByClause = workbook.OrderByClause;
+                ActiveWorkbook.ViewName = workbook.ViewName;
+
+                // Fire property changed for the whole workbook to trigger renderer
+                OnPropertyChanged(nameof(ActiveWorkbook));
+            }
+            
+            _isPerformingUndoRedo = false;
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanUndo() => _undoStack.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanRedo))]
+        private void Redo()
+        {
+            if (_redoStack.Count == 0) return;
+
+            _isPerformingUndoRedo = true;
+            _undoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+
+            var state = _redoStack.Pop();
+            var workbook = JsonSerializer.Deserialize<ViewDefinitionInfo>(state);
+
+            if (workbook != null)
+            {
+                // Similar restoration as Undo...
+                ActiveWorkbook!.ReferencedTables = workbook.ReferencedTables;
+                ActiveWorkbook.Joins = workbook.Joins;
+                ActiveWorkbook.Columns = workbook.Columns;
+                ActiveWorkbook.NodePositions = workbook.NodePositions;
+                ActiveWorkbook.WhereClause = workbook.WhereClause;
+                ActiveWorkbook.GroupByClause = workbook.GroupByClause;
+                ActiveWorkbook.OrderByClause = workbook.OrderByClause;
+                ActiveWorkbook.ViewName = workbook.ViewName;
+
+                OnPropertyChanged(nameof(ActiveWorkbook));
+            }
+
+            _isPerformingUndoRedo = false;
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanRedo() => _redoStack.Count > 0;
 
         [RelayCommand(CanExecute = nameof(CanModifyView))]
         private void SaveWorkbook()
@@ -196,6 +312,7 @@ namespace sqlSense.ViewModels
                     ActiveWorkbook.CanvasZoom = Canvas.Zoom;
                     
                     _workbookService.SaveWorkbook(ActiveWorkbook, saveDialog.FileName);
+                    HasUnsavedChanges = false;
                     StatusMessage = $"✓ Workbook saved as {newName}.sqv";
                 }
                 catch (Exception ex)
@@ -231,6 +348,7 @@ namespace sqlSense.ViewModels
                     
                     OpenWorkbooks.Add(workbook);
                     ActiveWorkbook = workbook;
+                    HasUnsavedChanges = false;
                     StatusMessage = $"✓ Loaded workbook: {workbook.ViewName}";
                 }
             }
@@ -253,6 +371,7 @@ namespace sqlSense.ViewModels
 
             var newTable = new ReferencedTable { Schema = schema, Name = tableName, Alias = alias };
             Canvas.CurrentViewDefinition.ReferencedTables.Add(newTable);
+            NotifyModification();
 
             var allCols = await _dbService.GetColumnsAsync(Canvas.CurrentViewDefinition.DatabaseName, schema, tableName);
             Canvas.CurrentViewDefinition.SourceTableAllColumns[newTable.FullName] = allCols.Select(c => c.Name).ToList();
@@ -269,12 +388,14 @@ namespace sqlSense.ViewModels
 
             if (leftTable == null || rightTable == null) return;
 
-            Canvas.CurrentViewDefinition.Joins.Add(new JoinRelationship
+            var relationship = new JoinRelationship
             {
                 LeftTableAlias = leftAlias, LeftTableSchema = leftTable.Schema, LeftTableName = leftTable.Name, LeftColumn = leftColumn,
                 RightTableAlias = rightAlias, RightTableSchema = rightTable.Schema, RightTableName = rightTable.Name, RightColumn = rightColumn,
                 JoinType = joinType
-            });
+            };
+            Canvas.CurrentViewDefinition.Joins.Add(relationship);
+            NotifyModification();
 
             StatusMessage = $"Added {joinType} JOIN: {leftAlias}.{leftColumn} = {rightAlias}.{rightColumn}";
         }

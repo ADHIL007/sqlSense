@@ -71,6 +71,13 @@ namespace sqlSense.UI
             card.MouseLeftButtonUp += (s, e) =>
             {
                 if (!IsDraggingNode) return;
+                
+                // If it moved significantly, notify for undo
+                if (Math.Abs(node.X - _dragNodeStartX) > 2 || Math.Abs(node.Y - _dragNodeStartY) > 2)
+                {
+                    _viewModel.NotifyModification();
+                }
+
                 IsDraggingNode = false;
                 _draggedNode = null;
                 card.Cursor = Cursors.Hand;

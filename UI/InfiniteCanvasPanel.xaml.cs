@@ -52,6 +52,9 @@ namespace sqlSense.UI
                 case "ToggleMode":
                     GraphRenderer?.ToggleDataFlowState();
                     break;
+                case "CreateTable":
+                    ViewModel?.ShowCreateTableCommand.Execute(null);
+                    break;
                 case "Table":
                     GraphRenderer?.AddTableCardAtCenter();
                     break;

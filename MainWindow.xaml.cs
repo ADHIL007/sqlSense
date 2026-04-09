@@ -137,6 +137,28 @@ namespace sqlSense
             }
         }
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            if (_viewModel != null && _viewModel.HasUnsavedChanges)
+            {
+                var result = MessageBox.Show(
+                    "You have unsaved changes in your workbook. Do you want to save before closing?",
+                    "Save Changes?",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
 
+                if (result == MessageBoxResult.Yes)
+                {
+                    _viewModel.SaveWorkbookCommand.Execute(null);
+                    // If they saved through the command, they might have cancelled the file dialog
+                    if (_viewModel.HasUnsavedChanges) e.Cancel = true; 
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true;
+                }
+            }
+            base.OnClosing(e);
+        }
     }
 }

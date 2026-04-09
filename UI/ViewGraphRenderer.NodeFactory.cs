@@ -26,6 +26,7 @@ namespace sqlSense.UI
                 onDelete: (tbl) => {
                     _viewModel.Canvas.CurrentViewDefinition!.ReferencedTables.Remove(tbl);
                     _viewModel.Canvas.CurrentViewDefinition.Columns.RemoveAll(c => c.SourceTable == tbl.Alias);
+                    _viewModel.NotifyModification();
                     RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
                 },
                 onColumnToggle: (col, tbl) => {
@@ -38,7 +39,8 @@ namespace sqlSense.UI
                         _viewModel.Canvas.CurrentViewDefinition!.Columns.RemoveAll(
                             c => c.SourceTable == tbl.Alias && c.SourceColumn == col);
                     }
-                    RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition!);
+                    _viewModel.NotifyModification();
+                    RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
                 },
                 onJoinRequested: (sourceTbl) => {
                     HandleJoinRequest(sourceTbl, x + width + 20, y);

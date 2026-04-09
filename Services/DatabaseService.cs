@@ -637,5 +637,14 @@ namespace sqlSense.Services
         public bool IsIdentity { get; set; }
         public bool IsPrimaryKey { get; set; }
         public bool IsForeignKey { get; set; }
+        public async Task ExecuteNonQueryAsync(string sql, string? database = null)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            if (!string.IsNullOrEmpty(database)) await conn.ChangeDatabaseAsync(database);
+
+            using var cmd = new SqlCommand(sql, conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 }
