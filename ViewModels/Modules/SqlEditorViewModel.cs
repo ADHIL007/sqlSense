@@ -9,7 +9,7 @@ namespace sqlSense.ViewModels.Modules
         private string _sqlText = "-- Select a table from the Object Explorer\n-- to preview its data here";
 
         [ObservableProperty]
-        private bool _isVisible = true;
+        private bool _isVisible = false;
 
         [ObservableProperty]
         private bool _isMaximized = false;

@@ -36,6 +36,12 @@ namespace sqlSense.ViewModels
         public MainViewModel()
         {
             Canvas.OnNewWorkspaceRequested += () => OnNewWorkspaceRequested?.Invoke();
+            Canvas.PropertyChanged += (s, e) => {
+                if (e.PropertyName == nameof(Canvas.CurrentViewDefinition)) {
+                    SaveViewChangesCommand.NotifyCanExecuteChanged();
+                    GenerateViewSqlCommand.NotifyCanExecuteChanged();
+                }
+            };
         }
 
         public void InitializeServices(string connectionString, string serverName)
@@ -101,7 +107,7 @@ namespace sqlSense.ViewModels
             finally { Canvas.IsLoading = false; }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
         private async Task SaveViewChanges()
         {
             if (_dbService == null || Canvas.CurrentViewDefinition == null) return;
@@ -116,13 +122,15 @@ namespace sqlSense.ViewModels
             catch (Exception ex) { StatusMessage = $"Error: {ex.Message}"; }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
         private void GenerateViewSql()
         {
             if (Canvas.CurrentViewDefinition == null) return;
             SqlEditor.SqlText = Canvas.CurrentViewDefinition.ToSql();
             StatusMessage = "SQL preview updated.";
         }
+
+        private bool CanModifyView() => Canvas.CurrentViewDefinition != null;
 
         public async Task AddTableToViewAsync(string schema, string tableName)
         {
@@ -161,6 +169,44 @@ namespace sqlSense.ViewModels
             });
 
             StatusMessage = $"Added {joinType} JOIN: {leftAlias}.{leftColumn} = {rightAlias}.{rightColumn}";
+        }
+
+        [RelayCommand]
+        private async Task ShowMetadata()
+        {
+            await LoadDatabaseTreeAsync();
+            StatusMessage = "Database metadata synchronized.";
+        }
+
+        [RelayCommand]
+        private async Task RunQuery()
+        {
+            if (_dbService == null || string.IsNullOrWhiteSpace(SqlEditor.SqlText)) return;
+            
+            TablePreview.IsLoading = true;
+            TablePreview.IsVisible = true;
+            Canvas.IsVisible = false;
+            
+            try
+            {
+                StatusMessage = "Executing query...";
+                var dbName = Canvas.CurrentViewDefinition?.DatabaseName ?? Explorer.SelectedDatabaseName ?? "master";
+                TablePreview.TableData = await _dbService.ExecuteQueryAsync(dbName, SqlEditor.SqlText);
+                TablePreview.TableName = "Query Results";
+                TablePreview.CurrentPage = 1;
+                TablePreview.TotalPages = Math.Max(1, (int)Math.Ceiling((double)TablePreview.TableData.Rows.Count / 10));
+                TablePreview.UpdatePagedData();
+                StatusMessage = $"Query executed. {TablePreview.TableData.Rows.Count} rows returned.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Query Error: {ex.Message}";
+                TablePreview.IsVisible = false;
+            }
+            finally
+            {
+                TablePreview.IsLoading = false;
+            }
         }
 
         [RelayCommand]

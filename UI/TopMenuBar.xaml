@@ -28,11 +28,11 @@
                 </MenuItem>
                 
                 <MenuItem Header="_View">
-                    <MenuItem Header="Zoom In" Command="{Binding ZoomInCommand}" InputGestureText="Ctrl++" />
-                    <MenuItem Header="Zoom Out" Command="{Binding ZoomOutCommand}" InputGestureText="Ctrl+-" />
-                    <MenuItem Header="Reset Zoom" Command="{Binding ZoomResetCommand}" InputGestureText="Ctrl+0" />
+                    <MenuItem Header="Zoom In" Command="{Binding Canvas.ZoomInCommand}" InputGestureText="Ctrl++" />
+                    <MenuItem Header="Zoom Out" Command="{Binding Canvas.ZoomOutCommand}" InputGestureText="Ctrl+-" />
+                    <MenuItem Header="Reset Zoom" Command="{Binding Canvas.ZoomResetCommand}" InputGestureText="Ctrl+0" />
                     <Separator />
-                    <MenuItem Header="Fit to Screen" Command="{Binding ZoomFitCommand}" />
+                    <MenuItem Header="Fit to Screen" Command="{Binding Canvas.ZoomFitCommand}" />
                 </MenuItem>
                 
                 <MenuItem Header="_Run">
@@ -55,12 +55,23 @@
             
             <Separator Background="{StaticResource BorderBrush}" Margin="10,5" Width="1"/>
             
+            <!-- Database Selector (SSMS style) -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
+                <TextBlock Text="&#xE107;" FontFamily="Segoe MDL2 Assets" FontSize="11" 
+                           Foreground="{StaticResource PrimaryAccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox ItemsSource="{Binding Explorer.Databases}" 
+                          SelectedItem="{Binding Explorer.SelectedDatabaseName}"
+                          Width="220" Height="26" VerticalContentAlignment="Center"/>
+            </StackPanel>
+
+            <Separator Background="{StaticResource BorderBrush}" Margin="10,5" Width="1"/>
+            
             <!-- Quick Action Toolbar -->
             <Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             <Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             
             <!-- SQL Editor Toggle -->
-            <Button Command="{Binding ToggleSqlEditorMaximizedCommand}" ToolTip="Maximize SQL Editor" Background="Transparent" BorderThickness="0" Margin="5,0" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right">
+            <Button Command="{Binding SqlEditor.ToggleMaximizedCommand}" ToolTip="Maximize SQL Editor" Background="Transparent" BorderThickness="0" Margin="5,0" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE943;" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
                 </StackPanel>

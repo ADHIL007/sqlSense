@@ -55,11 +55,6 @@ namespace sqlSense
             }
         }
 
-        private void GlobalAddTable_Click(object sender, RoutedEventArgs e)
-        {
-            _graphRenderer?.AddTableCardAtCenter();
-        }
-
         // ═══════════════════════════════════════════════════════════════
         //  TREE EVENTS
         // ═══════════════════════════════════════════════════════════════
@@ -86,15 +81,35 @@ namespace sqlSense
 
                 if (item.NodeType == TreeNodeType.Table)
                 {
-                    _graphRenderer?.ClearViewVisualization();
-                    await _viewModel.LoadTableDataAsync(item.DatabaseName, item.SchemaName, item.Tag);
-                    CanvasPanel.PositionTableCardAtViewCenter();
+                    if (_viewModel.Canvas.CurrentViewDefinition == null)
+                    {
+                        if (string.IsNullOrEmpty(_viewModel.Explorer.SelectedDatabaseName))
+                        {
+                            _viewModel.StatusMessage = "Please select a database from the Object Explorer first.";
+                            return;
+                        }
+
+                        _viewModel.Canvas.CurrentViewDefinition = new ViewDefinitionInfo
+                        {
+                            DatabaseName = _viewModel.Explorer.SelectedDatabaseName,
+                            ViewName = "NewView",
+                            SchemaName = "dbo"
+                        };
+                    }
+                    
+                    _viewModel.Canvas.IsVisible = true;
+                    await _viewModel.AddTableToViewAsync(item.SchemaName, item.Tag);
+                    
+                    if (_viewModel.Canvas.CurrentViewDefinition != null)
+                    {
+                        _graphRenderer?.RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
+                    }
                 }
                 else if (item.NodeType == TreeNodeType.View)
                 {
                     await _viewModel.LoadViewDefinitionAsync(item.DatabaseName, item.SchemaName, item.Tag);
-                    if (_viewModel.CurrentViewDefinition != null)
-                        _graphRenderer?.RenderViewVisualization(_viewModel.CurrentViewDefinition);
+                    if (_viewModel.Canvas.CurrentViewDefinition != null)
+                        _graphRenderer?.RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
                 }
             }
         }

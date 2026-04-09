@@ -18,7 +18,7 @@ namespace sqlSense.UI
 
         public MainViewModel? ViewModel => DataContext as MainViewModel;
 
-        // UI Accessors that ViewGraphRenderer might need
+        // UI Accessors that ViewGraphRenderer uses
         public Canvas CanvasElement => FlowCanvas;
         public Border Container => CanvasContainer;
         public TranslateTransform Translate => CanvasTranslate;
@@ -39,15 +39,40 @@ namespace sqlSense.UI
             }
         }
 
-        public void PositionTableCardAtViewCenter()
+
+
+        // ═══════════════════════════════════════════════════════════════
+        //  TOOLBAR EVENTS
+        // ═══════════════════════════════════════════════════════════════
+
+        private void ErdToolbar_ShapeRequested(string shapeType)
         {
-            if (CanvasContainer == null || TableDataCard == null || ViewModel == null) return;
-            double zoom = ViewModel.Canvas.Zoom;
-            double cx = (CanvasContainer.ActualWidth / 2 - CanvasTranslate.X) / zoom;
-            double cy = (CanvasContainer.ActualHeight / 2 - CanvasTranslate.Y) / zoom;
-            Canvas.SetLeft(TableDataCard, cx - 200);
-            Canvas.SetTop(TableDataCard, cy - 100);
+            switch (shapeType)
+            {
+                case "ToggleMode":
+                    GraphRenderer?.ToggleDataFlowState();
+                    break;
+                case "Table":
+                    GraphRenderer?.AddTableCardAtCenter();
+                    break;
+                case "View":
+                    ViewModel!.StatusMessage = "Select a View from the Object Explorer to visualize it.";
+                    break;
+                case "Variable":
+                case "IfElse":
+                case "While":
+                case "Execute":
+                case "TryCatch":
+                case "Comment":
+                case "Text":
+                    ViewModel!.StatusMessage = $"{shapeType} shape — coming soon.";
+                    break;
+            }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CANVAS NAVIGATION
+        // ═══════════════════════════════════════════════════════════════
 
         private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -120,16 +145,6 @@ namespace sqlSense.UI
             double cx = (screenPos.X - CanvasTranslate.X) / z - 5000;
             double cy = (screenPos.Y - CanvasTranslate.Y) / z - 5000;
             CoordinateLabel.Text = $"{(int)cx}, {(int)cy}  |  {ViewModel.Canvas.ZoomPercentage}";
-        }
-
-        private void DataFlowToggleBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (GraphRenderer == null) return;
-            GraphRenderer.ToggleDataFlowState();
-            if (DataFlowState != null)
-            {
-                DataFlowState.Text = GraphRenderer.IsGlobalDataFlowEnabled ? "ON" : "OFF";
-            }
         }
     }
 }

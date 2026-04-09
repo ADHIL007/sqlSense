@@ -93,7 +93,7 @@
                     <Style TargetType="GridSplitter">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSqlEditorMaximized}" Value="True">
+                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -106,10 +106,10 @@
                     <Style TargetType="GridSplitter">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSqlEditorMaximized}" Value="True">
+                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsSqlEditorVisible}" Value="False">
+                            <DataTrigger Binding="{Binding SqlEditor.IsVisible}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -140,18 +140,7 @@
             </Grid>
         </Border>
 
-        <!-- Global Floating Action Button (+ ADD TABLE) -->
-        <Border Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,24,60" CornerRadius="28" Background="#007ACC"
-                Width="56" Height="56" Cursor="Hand"
-                Effect="{StaticResource NodeShadow}">
-            <Button Background="Transparent" BorderThickness="0" Click="GlobalAddTable_Click">
-                <Grid>
-                    <TextBlock Text="&#xE109;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                               Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Grid>
-            </Button>
-        </Border>
     </Grid>
 </Window>
+
 

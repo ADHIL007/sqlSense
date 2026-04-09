@@ -15,32 +15,40 @@
                 <TextBlock Text="SQL EDITOR" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <!-- Maximize / Restore Toggle -->
-                    <Button Command="{Binding SqlEditor.ToggleMaximizedCommand}" FontFamily="Segoe MDL2 Assets" 
-                            Content="&#xE943;" ToolTip="Maximize Code Editor"
-                            Background="Transparent" BorderThickness="0" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,0,8,0">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
+                    <Button Command="{Binding SqlEditor.ToggleMaximizedCommand}" 
+                            ToolTip="Maximize Code Editor"
+                            Background="Transparent" BorderThickness="0" Margin="0,0,8,0">
+                        <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" 
+                                 FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                 VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Button>
                     <!-- Close -->
-                    <Button Command="{Binding SqlEditor.CloseCommand}" FontFamily="Segoe MDL2 Assets" 
-                            Content="&#xE8BB;" ToolTip="Close Editor"
-                            Background="Transparent" BorderThickness="0" Foreground="{StaticResource MutedBrush}" FontSize="9">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
+                    <Button Command="{Binding SqlEditor.CloseCommand}" 
+                            ToolTip="Close Editor"
+                            Background="Transparent" BorderThickness="0">
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" 
+                                 FontSize="9" Foreground="{StaticResource MutedBrush}"
+                                 VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Button>
                 </StackPanel>
             </Grid>
