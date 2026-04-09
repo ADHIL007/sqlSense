@@ -36,7 +36,11 @@
 
         <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
         <converters:StringToBrushConverter x:Key="StringToBrush"/>
+
+        <!-- Common Effects -->
+        <DropShadowEffect x:Key="NodeShadow" BlurRadius="15" ShadowDepth="0" Opacity="0.4" Color="Black"/>
 
         <!-- Global Styles -->
         <Style TargetType="TextBlock">

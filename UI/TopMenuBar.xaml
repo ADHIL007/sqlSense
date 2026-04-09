@@ -59,6 +59,13 @@
             <Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             <Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
             
+            <!-- SQL Editor Toggle -->
+            <Button Command="{Binding ToggleSqlEditorMaximizedCommand}" ToolTip="Maximize SQL Editor" Background="Transparent" BorderThickness="0" Margin="5,0" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE943;" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Button>
+            
         </DockPanel>
     </Border>
 </UserControl>

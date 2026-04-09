@@ -133,8 +133,8 @@
                     <Canvas.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform x:Name="CanvasScale" 
-                                            ScaleX="{Binding CanvasZoom}" 
-                                            ScaleY="{Binding CanvasZoom}"/>
+                                            ScaleX="{Binding Canvas.Zoom}" 
+                                            ScaleY="{Binding Canvas.Zoom}"/>
                             <TranslateTransform x:Name="CanvasTranslate" X="0" Y="0"/>
                         </TransformGroup>
                     </Canvas.RenderTransform>
@@ -152,7 +152,7 @@
                             Background="{StaticResource PanelBrush}" 
                             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
                             MinWidth="320"
-                            Visibility="{Binding IsPreviewVisible, Converter={StaticResource BoolToVis}}">
+                            Visibility="{Binding TablePreview.IsVisible, Converter={StaticResource BoolToVis}}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -172,7 +172,7 @@
                                     <StackPanel Orientation="Horizontal" Grid.Column="0">
                                         <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="13" 
                                                    Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding PreviewTableName}" FontSize="12" 
+                                        <TextBlock Text="{Binding TablePreview.TableName}" FontSize="12" 
                                                    Foreground="{StaticResource TextPrimaryBrush}" 
                                                    VerticalAlignment="Center" FontWeight="SemiBold"/>
                                     </StackPanel>
@@ -185,7 +185,7 @@
 
                             <!-- DataGrid -->
                             <DataGrid Grid.Row="1" Style="{StaticResource CardDataGrid}"
-                                      ItemsSource="{Binding PagedData}"
+                                      ItemsSource="{Binding TablePreview.PagedData}"
                                       MaxHeight="250" BorderThickness="0"/>
 
                             <!-- Pagination -->
@@ -193,13 +193,13 @@
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button Content="‹" Style="{StaticResource SmallIconBtn}" 
-                                            Command="{Binding PreviousPageCommand}" 
+                                            Command="{Binding TablePreview.PreviousPageCommand}" 
                                             FontFamily="Segoe UI" FontSize="16" Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding PageInfo}" FontSize="10" 
+                                    <TextBlock Text="{Binding TablePreview.PageInfo}" FontSize="10" 
                                                Foreground="{StaticResource MutedBrush}" 
                                                FontFamily="Consolas" VerticalAlignment="Center" Margin="4,0"/>
                                     <Button Content="›" Style="{StaticResource SmallIconBtn}" 
-                                            Command="{Binding NextPageCommand}" 
+                                            Command="{Binding TablePreview.NextPageCommand}" 
                                             FontFamily="Segoe UI" FontSize="16" Margin="6,0,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -272,36 +272,37 @@
                     Margin="0,0,16,16" Padding="2">
                 <StackPanel Orientation="Horizontal">
                     <Button Style="{StaticResource SmallIconBtn}" 
-                            Command="{Binding ZoomOutCommand}" ToolTip="Zoom Out">
+                            Command="{Binding Canvas.ZoomOutCommand}" ToolTip="Zoom Out">
                         <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
 
                     <Border Background="#2D2D30" CornerRadius="3" Padding="8,4" Margin="2,0"
                             MinWidth="48">
-                        <TextBlock Text="{Binding ZoomPercentage}" 
+                        <TextBlock Text="{Binding Canvas.ZoomPercentage}" 
                                    Foreground="{StaticResource TextSecondaryBrush}" FontSize="10"
                                    HorizontalAlignment="Center" FontFamily="Consolas"/>
                     </Border>
 
                     <Button Style="{StaticResource SmallIconBtn}" 
-                            Command="{Binding ZoomInCommand}" ToolTip="Zoom In">
+                            Command="{Binding Canvas.ZoomInCommand}" ToolTip="Zoom In">
                         <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
 
                     <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Margin="4,5"/>
 
                     <Button Style="{StaticResource SmallIconBtn}" 
-                            Command="{Binding ZoomResetCommand}" ToolTip="Reset Zoom">
+                            Command="{Binding Canvas.ZoomResetCommand}" ToolTip="Reset Zoom">
                         <TextBlock Text="1:1" FontFamily="Consolas" FontSize="9" FontWeight="Bold"
                                    Foreground="{StaticResource TextSecondaryBrush}"/>
                     </Button>
 
                     <Button Style="{StaticResource SmallIconBtn}" 
-                            Command="{Binding ZoomFitCommand}" ToolTip="Fit to View">
+                            Command="{Binding Canvas.ZoomFitCommand}" ToolTip="Fit to View">
                         <TextBlock Text="&#xE9A6;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
                 </StackPanel>
             </Border>
+
 
             <!-- Coordinates (bottom left) -->
             <Border Background="{StaticResource PanelBrush}" 

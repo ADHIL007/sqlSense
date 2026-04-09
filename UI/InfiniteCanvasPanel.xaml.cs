@@ -34,15 +34,15 @@ namespace sqlSense.UI
             {
                 double w = CanvasContainer.ActualWidth;
                 double h = CanvasContainer.ActualHeight;
-                CanvasTranslate.X = -(5000 * ViewModel.CanvasZoom) + (w / 2);
-                CanvasTranslate.Y = -(5000 * ViewModel.CanvasZoom) + (h / 2);
+                CanvasTranslate.X = -(5000 * ViewModel.Canvas.Zoom) + (w / 2);
+                CanvasTranslate.Y = -(5000 * ViewModel.Canvas.Zoom) + (h / 2);
             }
         }
 
         public void PositionTableCardAtViewCenter()
         {
             if (CanvasContainer == null || TableDataCard == null || ViewModel == null) return;
-            double zoom = ViewModel.CanvasZoom;
+            double zoom = ViewModel.Canvas.Zoom;
             double cx = (CanvasContainer.ActualWidth / 2 - CanvasTranslate.X) / zoom;
             double cy = (CanvasContainer.ActualHeight / 2 - CanvasTranslate.Y) / zoom;
             Canvas.SetLeft(TableDataCard, cx - 200);
@@ -53,13 +53,13 @@ namespace sqlSense.UI
         {
             if (ViewModel == null) return;
             Point mousePos = e.GetPosition(CanvasContainer);
-            double oldZoom = ViewModel.CanvasZoom;
+            double oldZoom = ViewModel.Canvas.Zoom;
             double delta = e.Delta > 0 ? 0.1 : -0.1;
             double newZoom = Math.Clamp(oldZoom + delta, 0.1, 5.0);
             double sc = newZoom / oldZoom;
             CanvasTranslate.X = mousePos.X - (mousePos.X - CanvasTranslate.X) * sc;
             CanvasTranslate.Y = mousePos.Y - (mousePos.Y - CanvasTranslate.Y) * sc;
-            ViewModel.SetZoom(newZoom); 
+            ViewModel.Canvas.SetZoom(newZoom); 
             UpdateCoordinates(mousePos);
         }
 
@@ -116,10 +116,10 @@ namespace sqlSense.UI
         private void UpdateCoordinates(Point screenPos) 
         {
             if (ViewModel == null || CoordinateLabel == null) return;
-            double z = ViewModel.CanvasZoom;
+            double z = ViewModel.Canvas.Zoom;
             double cx = (screenPos.X - CanvasTranslate.X) / z - 5000;
             double cy = (screenPos.Y - CanvasTranslate.Y) / z - 5000;
-            CoordinateLabel.Text = $"{(int)cx}, {(int)cy}  |  {ViewModel.ZoomPercentage}";
+            CoordinateLabel.Text = $"{(int)cx}, {(int)cy}  |  {ViewModel.Canvas.ZoomPercentage}";
         }
 
         private void DataFlowToggleBtn_Click(object sender, RoutedEventArgs e)

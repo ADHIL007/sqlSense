@@ -27,8 +27,7 @@ namespace sqlSense
             {
                 InitializeComponent();
                 _viewModel = new MainViewModel();
-                _viewModel.ConnectionString = connectWindow.ConnectionString;
-                _viewModel.ServerName = connectWindow.ServerTextBox.Text;
+                _viewModel.InitializeServices(connectWindow.ConnectionString, connectWindow.ServerTextBox.Text);
                 _viewModel.StatusMessage = $"Connected to {connectWindow.ServerTextBox.Text}";
                 DataContext = _viewModel;
 
@@ -44,6 +43,9 @@ namespace sqlSense
                     };
 
                     await _viewModel.LoadDatabaseTreeAsync();
+                    
+                    // Startup State: Auto-initialize as New Workspace
+                    _viewModel.NewWorkspaceCommand.Execute(null);
                     CanvasPanel.CenterCanvas();
                 };
             }
@@ -51,6 +53,11 @@ namespace sqlSense
             {
                 Application.Current.Shutdown();
             }
+        }
+
+        private void GlobalAddTable_Click(object sender, RoutedEventArgs e)
+        {
+            _graphRenderer?.AddTableCardAtCenter();
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -74,6 +81,9 @@ namespace sqlSense
             if (_viewModel == null) return;
             if (e.NewValue is DatabaseTreeItem item)
             {
+                if (!string.IsNullOrEmpty(item.DatabaseName))
+                    _viewModel.Explorer.SelectedDatabaseName = item.DatabaseName;
+
                 if (item.NodeType == TreeNodeType.Table)
                 {
                     _graphRenderer?.ClearViewVisualization();
