@@ -9,11 +9,11 @@
         <DockPanel LastChildFill="False" Margin="10,0">
             <Menu Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
                 <MenuItem Header="_File" >
-                    <MenuItem Header="New..." Command="{Binding NewWorkspaceCommand}" InputGestureText="Ctrl+N" />
-                    <MenuItem Header="Open..." InputGestureText="Ctrl+O" />
+                    <MenuItem Header="New Workbook" Command="{Binding NewWorkspaceCommand}" InputGestureText="Ctrl+N" />
+                    <MenuItem Header="Open Workbook..." Command="{Binding OpenWorkbookCommand}" InputGestureText="Ctrl+O" />
                     <Separator />
-                    <MenuItem Header="Save View" Command="{Binding SaveViewChangesCommand}" InputGestureText="Ctrl+S" />
-                    <MenuItem Header="Save As..." />
+                    <MenuItem Header="Save Workbook" Command="{Binding SaveWorkbookCommand}" InputGestureText="Ctrl+S" />
+                    <MenuItem Header="Save Workbook As..." />
                     <Separator />
                     <MenuItem Header="Exit" InputGestureText="Alt+F4" />
                 </MenuItem>
@@ -57,8 +57,8 @@
             
             <!-- Database Selector (SSMS style) -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                <TextBlock Text="&#xE107;" FontFamily="Segoe MDL2 Assets" FontSize="11" 
-                           Foreground="{StaticResource PrimaryAccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <!--<TextBlock Text="&#xE107;" FontFamily="Segoe MDL2 Assets" FontSize="11"--> 
+                           <!--Foreground="{StaticResource PrimaryAccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>-->
                 <ComboBox ItemsSource="{Binding Explorer.Databases}" 
                           SelectedItem="{Binding Explorer.SelectedDatabaseName}"
                           Width="220" Height="26" VerticalContentAlignment="Center"/>

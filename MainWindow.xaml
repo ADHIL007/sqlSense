@@ -82,7 +82,84 @@
                                     SelectedItemChanged="ObjectExplorer_SelectedItemChanged" />
 
             <!-- CENTER PANEL: Infinite Canvas -->
-            <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="1" />
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Workbook Tabs (VS Code style) -->
+                <ListBox Grid.Row="0" 
+                         ItemsSource="{Binding OpenWorkbooks}"
+                         SelectedItem="{Binding ActiveWorkbook}"
+                         Background="#1E1E1E" 
+                         BorderThickness="0,0,0,1"
+                         BorderBrush="#252526"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="#2D2D2D"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                            <Setter Property="BorderBrush" Value="#252526"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                MinWidth="120" MaxWidth="200">
+                                            <Grid Margin="12,0,8,0" Height="35">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" 
+                                                               FontSize="10" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                               Foreground="{StaticResource PrimaryAccentBrush}"/>
+                                                    <TextBlock Text="{Binding ViewName}" 
+                                                               Foreground="{StaticResource TextSecondaryBrush}" 
+                                                               FontSize="11" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="1" x:Name="closeBtn" 
+                                                        Content="&#xE711;" FontFamily="Segoe MDL2 Assets" 
+                                                        FontSize="8" Background="Transparent" BorderThickness="0"
+                                                        Foreground="{StaticResource MutedBrush}"
+                                                        VerticalAlignment="Center" Margin="8,0,0,0"
+                                                        Cursor="Hand" Visibility="Collapsed"
+                                                        Command="{Binding DataContext.CloseWorkbookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#1E1E1E"/>
+                                                <Setter TargetName="bd" Property="BorderThickness" Value="0,2,1,0"/>
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource PrimaryAccentBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="closeBtn" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+
+                <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Row="1" />
+            </Grid>
 
             <!-- RIGHT PANEL: SQL Editor -->
             <ui:SqlEditorPanel Grid.Column="2" />

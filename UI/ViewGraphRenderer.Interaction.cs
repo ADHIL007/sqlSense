@@ -55,8 +55,12 @@ namespace sqlSense.UI
                 node.X = _dragNodeStartX + (cur.X - _dragStart.X);
                 node.Y = _dragNodeStartY + (cur.Y - _dragStart.Y);
                 
-                // Persist position for re-renders
+                // Persist position for re-renders and model saving
                 _nodePositionCache[node.Id] = new Point(node.X, node.Y);
+                if (_viewModel.Canvas.CurrentViewDefinition != null)
+                {
+                    _viewModel.Canvas.CurrentViewDefinition.NodePositions[node.Id] = (node.X, node.Y);
+                }
 
                 Canvas.SetLeft(card, node.X);
                 Canvas.SetTop(card, node.Y);

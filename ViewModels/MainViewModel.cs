@@ -8,6 +8,11 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Win32;
+using System.Text.Json;
+using System.IO;
+using System.Collections.Generic;
+using System.Windows;
 
 namespace sqlSense.ViewModels
 {
@@ -18,6 +23,11 @@ namespace sqlSense.ViewModels
         public TablePreviewViewModel TablePreview { get; } = new();
         public ViewCanvasViewModel Canvas { get; } = new();
         public DatabaseExplorerViewModel Explorer { get; } = new();
+        
+        public ObservableCollection<ViewDefinitionInfo> OpenWorkbooks { get; } = new();
+
+        [ObservableProperty]
+        private ViewDefinitionInfo? _activeWorkbook;
 
         [ObservableProperty]
         private string _statusMessage = "Ready";
@@ -31,6 +41,8 @@ namespace sqlSense.ViewModels
         private DatabaseService? _dbService;
         public DatabaseService? DbService => _dbService;
 
+        private readonly WorkbookService _workbookService = new();
+
         public event Action? OnNewWorkspaceRequested;
 
         public MainViewModel()
@@ -38,10 +50,35 @@ namespace sqlSense.ViewModels
             Canvas.OnNewWorkspaceRequested += () => OnNewWorkspaceRequested?.Invoke();
             Canvas.PropertyChanged += (s, e) => {
                 if (e.PropertyName == nameof(Canvas.CurrentViewDefinition)) {
-                    SaveViewChangesCommand.NotifyCanExecuteChanged();
+                    SaveWorkbookCommand.NotifyCanExecuteChanged();
                     GenerateViewSqlCommand.NotifyCanExecuteChanged();
+                    
+                    // Keep active workbook in sync if updated from elsewhere
+                    if (Canvas.CurrentViewDefinition != ActiveWorkbook)
+                        ActiveWorkbook = Canvas.CurrentViewDefinition;
                 }
             };
+        }
+
+        partial void OnActiveWorkbookChanged(ViewDefinitionInfo? value)
+        {
+            if (value != null)
+            {
+                if (Canvas.CurrentViewDefinition != value)
+                {
+                    Canvas.CurrentViewDefinition = value;
+                    if (!OpenWorkbooks.Contains(value)) OpenWorkbooks.Add(value);
+                }
+                
+                // Show SQL in editor
+                SqlEditor.SqlText = string.IsNullOrEmpty(value.SqlDefinition) ? value.ToSql() : value.SqlDefinition;
+                Canvas.Zoom = value.CanvasZoom > 0 ? value.CanvasZoom : 1.0;
+            }
+            else
+            {
+                Canvas.CurrentViewDefinition = null;
+                SqlEditor.SqlText = "";
+            }
         }
 
         public void InitializeServices(string connectionString, string serverName)
@@ -95,6 +132,10 @@ namespace sqlSense.ViewModels
             {
                 StatusMessage = $"Analyzing view {schema}.{viewName}...";
                 Canvas.CurrentViewDefinition = await _dbService.GetViewDefinitionAsync(database, schema, viewName);
+                if (!OpenWorkbooks.Any(w => w.ViewName == viewName && w.SchemaName == schema))
+                    OpenWorkbooks.Add(Canvas.CurrentViewDefinition);
+                    
+                ActiveWorkbook = Canvas.CurrentViewDefinition;
                 Canvas.IsVisible = true;
                 SqlEditor.SqlText = Canvas.CurrentViewDefinition.SqlDefinition;
                 StatusMessage = $"View {schema}.{viewName} loaded.";
@@ -131,6 +172,73 @@ namespace sqlSense.ViewModels
         }
 
         private bool CanModifyView() => Canvas.CurrentViewDefinition != null;
+
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
+        private void SaveWorkbook()
+        {
+            if (ActiveWorkbook == null) return;
+
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "SqlSense Workbook (*.sqv)|*.sqv",
+                FileName = ActiveWorkbook.ViewName ?? "Workbook1"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Update model name to match file name before saving
+                    string newName = Path.GetFileNameWithoutExtension(saveDialog.FileName);
+                    ActiveWorkbook.ViewName = newName;
+                    
+                    // Sync current zoom before saving
+                    ActiveWorkbook.CanvasZoom = Canvas.Zoom;
+                    
+                    _workbookService.SaveWorkbook(ActiveWorkbook, saveDialog.FileName);
+                    StatusMessage = $"✓ Workbook saved as {newName}.sqv";
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Save Error: {ex.Message}";
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void OpenWorkbook()
+        {
+            var openDialog = new OpenFileDialog
+            {
+                Filter = "SqlSense Workbook (*.sqv)|*.sqv"
+            };
+
+            if (openDialog.ShowDialog() == true)
+            {
+                LoadWorkbookFromFile(openDialog.FileName);
+            }
+        }
+
+        public void LoadWorkbookFromFile(string path)
+        {
+            try
+            {
+                var workbook = _workbookService.LoadWorkbook(path);
+                if (workbook != null)
+                {
+                    if (string.IsNullOrEmpty(workbook.ViewName)) 
+                        workbook.ViewName = Path.GetFileNameWithoutExtension(path);
+                    
+                    OpenWorkbooks.Add(workbook);
+                    ActiveWorkbook = workbook;
+                    StatusMessage = $"✓ Loaded workbook: {workbook.ViewName}";
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Open Error: {ex.Message}";
+            }
+        }
 
         public async Task AddTableToViewAsync(string schema, string tableName)
         {
@@ -213,9 +321,34 @@ namespace sqlSense.ViewModels
         public void NewWorkspace()
         {
             TablePreview.Reset();
-            Canvas.RequestNewWorkspace();
+            var newView = new ViewDefinitionInfo { ViewName = "New Workbook", DatabaseName = Explorer.SelectedDatabaseName ?? "master" };
+            OpenWorkbooks.Add(newView);
+            ActiveWorkbook = newView;
             SqlEditor.SqlText = "-- New Workspace Ready";
-            StatusMessage = "New workspace ready.";
+            StatusMessage = "New workbook started.";
+        }
+
+        [RelayCommand]
+        public void CloseWorkbook(ViewDefinitionInfo workbook)
+        {
+            if (workbook == null) return;
+            
+            int index = OpenWorkbooks.IndexOf(workbook);
+            bool wasActive = (ActiveWorkbook == workbook);
+            
+            OpenWorkbooks.Remove(workbook);
+            
+            if (wasActive && OpenWorkbooks.Count > 0)
+            {
+                // Try to select the previous neighbor, or the new item at the same index
+                int nextIndex = Math.Clamp(index - 1, 0, OpenWorkbooks.Count - 1);
+                ActiveWorkbook = OpenWorkbooks[nextIndex];
+            }
+            
+            if (OpenWorkbooks.Count == 0)
+            {
+                NewWorkspace();
+            }
         }
     }
 }

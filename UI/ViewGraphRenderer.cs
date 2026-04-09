@@ -127,11 +127,17 @@ namespace sqlSense.UI
                 double nodeX = currentX;
                 double nodeY = currentY;
 
-                // Restore from cache if available
+                // Restore from cache or model if available
                 if (_nodePositionCache.TryGetValue(tableId, out Point cpSrc))
                 {
                     nodeX = cpSrc.X;
                     nodeY = cpSrc.Y;
+                }
+                else if (viewDef.NodePositions.TryGetValue(tableId, out var pos))
+                {
+                    nodeX = pos.X;
+                    nodeY = pos.Y;
+                    _nodePositionCache[tableId] = new Point(nodeX, nodeY);
                 }
 
                 var node = CreateSourceTableNode(refTbl, cardW, nodeX, nodeY);

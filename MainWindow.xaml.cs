@@ -42,10 +42,33 @@ namespace sqlSense
                         CanvasPanel.CenterCanvas();
                     };
 
+                    _viewModel.PropertyChanged += (s, e) => {
+                        if (e.PropertyName == nameof(MainViewModel.ActiveWorkbook))
+                        {
+                            if (_viewModel.ActiveWorkbook != null)
+                                _graphRenderer?.RenderViewVisualization(_viewModel.ActiveWorkbook);
+                            else
+                                _graphRenderer?.ClearViewVisualization();
+                        }
+                    };
+
                     await _viewModel.LoadDatabaseTreeAsync();
                     
-                    // Startup State: Auto-initialize as New Workspace
-                    _viewModel.NewWorkspaceCommand.Execute(null);
+                    // Handle file association (if launched by double-clicking .sqv)
+                    if (Application.Current.Properties.Contains("FilePath"))
+                    {
+                        string path = Application.Current.Properties["FilePath"] as string;
+                        if (!string.IsNullOrEmpty(path))
+                        {
+                            _viewModel.LoadWorkbookFromFile(path);
+                        }
+                    }
+                    else
+                    {
+                        // Startup State: Auto-initialize as New Workspace
+                        _viewModel.NewWorkspaceCommand.Execute(null);
+                    }
+                    
                     CanvasPanel.CenterCanvas();
                 };
             }

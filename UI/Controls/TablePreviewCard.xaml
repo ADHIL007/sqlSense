@@ -73,7 +73,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" Grid.Column="0">
-                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="13" 
+                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="13" 
                                    Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <!-- We bind directly to properties. We expect the DataContext of this UserControl to be a view model like TablePreviewViewModel -->
                         <TextBlock Text="{Binding TableName}" FontSize="12" 
