@@ -128,10 +128,10 @@ namespace sqlSense.UI
                 double nodeY = currentY;
 
                 // Restore from cache if available
-                if (_nodePositionCache.TryGetValue(tableId, out var cachedPos))
+                if (_nodePositionCache.TryGetValue(tableId, out Point cpSrc))
                 {
-                    nodeX = cachedPos.X;
-                    nodeY = cachedPos.Y;
+                    nodeX = cpSrc.X;
+                    nodeY = cpSrc.Y;
                 }
 
                 var node = CreateSourceTableNode(refTbl, cardW, nodeX, nodeY);
@@ -170,10 +170,10 @@ namespace sqlSense.UI
                     string joinId = $"Join_{join.LeftTableAlias}_{join.RightTableAlias}";
 
                     double jx, jy;
-                    if (_nodePositionCache.TryGetValue(joinId, out var cachedPos))
+                    if (_nodePositionCache.TryGetValue(joinId, out Point cpJoin))
                     {
-                        jx = cachedPos.X;
-                        jy = cachedPos.Y;
+                        jx = cpJoin.X;
+                        jy = cpJoin.Y;
                     }
                     else
                     {
@@ -205,18 +205,19 @@ namespace sqlSense.UI
                 }
             }
 
+            /*
             // ── 3. Create view output node card ──
-            double maxOutputX = gridStartX;
+            double maxOutputX = startX;
             foreach (var n in activeOutputNode.Values) {
                 if (n.X + n.Width > maxOutputX) maxOutputX = n.X + n.Width;
             }
             double viewCardX = maxOutputX + 150;
             double viewCardY = cy - 150;
 
-            if (_nodePositionCache.TryGetValue("VIEW_OUTPUT", out var cachedPos))
+            if (_nodePositionCache.TryGetValue("VIEW_OUTPUT", out Point cpOut))
             {
-                viewCardX = cachedPos.X;
-                viewCardY = cachedPos.Y;
+                viewCardX = cpOut.X;
+                viewCardY = cpOut.Y;
             }
 
             var viewNode = CreateQueryOutputNode(viewDef, cardW + 60, viewCardX, viewCardY);
@@ -226,6 +227,7 @@ namespace sqlSense.UI
             {
                 CreateNodeConnection(finalNode, viewNode, null, ConnectionColor);
             }
+            */
             
             AnimateAllElements();
         }

@@ -214,6 +214,41 @@ namespace sqlSense.UI
                     vm.TableData = dt;
                     vm.CurrentPage = 1;
                     vm.TotalPages = Math.Max(1, (int)Math.Ceiling((double)dt.Rows.Count / 5.0));
+                    
+                    // Filter viewDef columns to those belonging to this join branch
+                    var participating = joinNode.ParticipatingTables;
+                    vm.UsedColumns = viewDef.Columns
+                        .Where(c => participating.Contains(c.SourceTable))
+                        .Select(c => c.SourceColumn)
+                        .ToList();
+
+                    vm.OnColumnToggle = (col) => {
+                        // Find which table this column belongs to in this branch
+                        // (Simplification: find first table that has this column used)
+                        var targetTable = viewDef.ReferencedTables.FirstOrDefault(t => 
+                            participating.Contains(t.Alias) && t.UsedColumns.Contains(col));
+                        
+                        // If we didn't find it in UsedColumns (maybe it was just unticked), 
+                        // we'd need to check SourceTableAllColumns.
+                        if (targetTable == null) {
+                            targetTable = viewDef.ReferencedTables.FirstOrDefault(t => 
+                                participating.Contains(t.Alias) && 
+                                viewDef.SourceTableAllColumns.GetValueOrDefault(t.FullName, new()).Contains(col));
+                        }
+
+                        if (targetTable != null) {
+                            // Reuse the existing source table toggle logic (triggering a full re-render is easiest)
+                             if (!targetTable.UsedColumns.Contains(col)) {
+                                targetTable.UsedColumns.Add(col);
+                                viewDef.Columns.Add(new ViewColumnInfo { SourceTable = targetTable.Alias, SourceColumn = col, ColumnName = col });
+                            } else {
+                                targetTable.UsedColumns.Remove(col);
+                                viewDef.Columns.RemoveAll(c => c.SourceTable == targetTable.Alias && c.SourceColumn == col);
+                            }
+                            RenderViewVisualization(viewDef);
+                        }
+                    };
+
                     vm.UpdatePagedData();
                 }
             }

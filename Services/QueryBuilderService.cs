@@ -17,7 +17,10 @@ namespace sqlSense.Services
             if (node.SourceTable != null)
             {
                 var tbl = node.SourceTable;
-                return $"SELECT TOP 50 * FROM [{tbl.Schema}].[{tbl.Name}]";
+                string projection = tbl.UsedColumns.Any() 
+                    ? string.Join(", ", tbl.UsedColumns.Select(c => $"[{c}]")) 
+                    : "*";
+                return $"SELECT TOP 50 {projection} FROM [{tbl.Schema}].[{tbl.Name}]";
             }
 
             if (node.JoinData != null)
@@ -45,7 +48,20 @@ namespace sqlSense.Services
             var firstTable = viewDef.ReferencedTables.FirstOrDefault(t => participating.Contains(t.Alias));
             if (firstTable == null) return "";
 
-            string sql = $"SELECT TOP 50 * \nFROM [{firstTable.Schema}].[{firstTable.Name}] AS [{firstTable.Alias}]";
+            var selectCols = new List<string>();
+            foreach (var alias in participating)
+            {
+                var tbl = viewDef.ReferencedTables.FirstOrDefault(t => string.Equals(t.Alias, alias, StringComparison.OrdinalIgnoreCase));
+                if (tbl != null)
+                {
+                    if (tbl.UsedColumns.Any())
+                        selectCols.AddRange(tbl.UsedColumns.Select(c => $"[{alias}].[{c}]"));
+                }
+            }
+
+            string projection = selectCols.Count > 0 ? string.Join(", ", selectCols) : "*";
+
+            string sql = $"SELECT TOP 50 {projection} \nFROM [{firstTable.Schema}].[{firstTable.Name}] AS [{firstTable.Alias}]";
             var joinedAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { firstTable.Alias };
             
             bool added = true;

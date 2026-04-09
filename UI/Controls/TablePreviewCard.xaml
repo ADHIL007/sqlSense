@@ -88,8 +88,10 @@
             </Border>
 
             <!-- DataGrid -->
-            <DataGrid Grid.Row="1" Style="{StaticResource CardDataGrid}"
+            <DataGrid Grid.Row="1" x:Name="PreviewGrid" 
+                      Style="{StaticResource CardDataGrid}"
                       ItemsSource="{Binding PagedData}"
+                      AutoGeneratingColumn="PreviewGrid_AutoGeneratingColumn"
                       MaxHeight="250" BorderThickness="0"/>
 
             <!-- Pagination -->
