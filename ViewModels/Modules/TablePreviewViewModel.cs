@@ -27,6 +27,9 @@ namespace sqlSense.ViewModels.Modules
         public Action<string>? OnColumnToggle { get; set; }
         public List<string> UsedColumns { get; set; } = new();
 
+        public List<DataRow> ModifiedRows { get; set; } = new();
+        public List<DataRow> InsertedRows { get; set; } = new();
+
         [ObservableProperty]
         private int _currentPage = 1;
 
@@ -45,6 +48,8 @@ namespace sqlSense.ViewModels.Modules
             TableData = null;
             PagedData = null;
             IsVisible = false;
+            ModifiedRows.Clear();
+            InsertedRows.Clear();
         }
 
         public void UpdatePagedData()

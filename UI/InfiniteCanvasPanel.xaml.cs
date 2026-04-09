@@ -53,7 +53,7 @@ namespace sqlSense.UI
                     GraphRenderer?.ToggleDataFlowState();
                     break;
                 case "CreateTable":
-                    ViewModel?.ShowCreateTableCommand.Execute(null);
+                    GraphRenderer?.ShowCreateTableOnCanvas();
                     break;
                 case "Table":
                     GraphRenderer?.AddTableCardAtCenter();

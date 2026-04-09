@@ -84,5 +84,6 @@ namespace sqlSense.Views
         public string Length { get; set; } = "";
         public bool IsNullable { get; set; } = true;
         public bool IsPrimaryKey { get; set; } = false;
+        public bool IsAutoIncrement { get; set; } = false;
     }
 }

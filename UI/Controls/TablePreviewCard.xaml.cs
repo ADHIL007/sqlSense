@@ -1,4 +1,5 @@
-using System;
+using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -6,9 +7,110 @@ namespace sqlSense.UI.Controls
 {
     public partial class TablePreviewCard : UserControl
     {
+        public event Action<string>? OnDataSaveRequested;
+
         public TablePreviewCard()
         {
             InitializeComponent();
+            PreviewGrid.RowEditEnding += PreviewGrid_RowEditEnding;
+        }
+
+        private void PreviewGrid_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
+        {
+            var viewModel = DataContext as ViewModels.Modules.TablePreviewViewModel;
+            if (viewModel == null || e.EditAction != DataGridEditAction.Commit) return;
+
+            if (e.Row.Item is System.Data.DataRowView drv)
+            {
+                // We track modifications directly in the array as requested
+                if (!viewModel.InsertedRows.Contains(drv.Row) && !viewModel.ModifiedRows.Contains(drv.Row))
+                {
+                    viewModel.ModifiedRows.Add(drv.Row);
+                }
+            }
+        }
+
+        private void AddRow_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as ViewModels.Modules.TablePreviewViewModel;
+            if (viewModel?.PagedData == null) return;
+
+            var newDrv = viewModel.PagedData.AddNew();
+            newDrv.EndEdit(); // Commits the new row to the view
+            
+            viewModel.InsertedRows.Add(newDrv.Row);
+            
+            // Scroll to the new row
+            PreviewGrid.ScrollIntoView(newDrv);
+        }
+
+        private void SaveChanges_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as ViewModels.Modules.TablePreviewViewModel;
+            if (viewModel == null) return;
+
+            // Stop any active editing completely
+            PreviewGrid.CommitEdit();
+            PreviewGrid.CommitEdit(); 
+
+            if (!viewModel.InsertedRows.Any() && !viewModel.ModifiedRows.Any())
+            {
+                return; // Nothing to save
+            }
+
+            StringBuilder sb = new StringBuilder();
+            
+            // Assume the first column is the Primary Key if no explicit schema is known
+            string pkColumn = viewModel.TableData?.Columns.Count > 0 ? viewModel.TableData.Columns[0].ColumnName : "Id";
+
+            // Process Updates (modify data with its primary key)
+            foreach (var row in viewModel.ModifiedRows)
+            {
+                var pkValue = row[pkColumn];
+                if (pkValue == DBNull.Value) continue;
+
+                var updates = new List<string>();
+                foreach (System.Data.DataColumn col in row.Table.Columns)
+                {
+                    if (col.ColumnName == pkColumn) continue;
+                    var val = row[col];
+                    string valStr = val == DBNull.Value ? "NULL" : $"'{val.ToString()?.Replace("'", "''")}'";
+                    updates.Add($"[{col.ColumnName}] = {valStr}");
+                }
+
+                if (updates.Any())
+                {
+                    sb.AppendLine($"UPDATE [{viewModel.TableName}] SET {string.Join(", ", updates)} WHERE [{pkColumn}] = '{pkValue}';");
+                }
+            }
+
+            // Process Inserts (insert data separately)
+            foreach (var row in viewModel.InsertedRows)
+            {
+                var columns = new List<string>();
+                var values = new List<string>();
+
+                foreach (System.Data.DataColumn col in row.Table.Columns)
+                {
+                    var val = row[col];
+                    if (val == DBNull.Value && col.ColumnName == pkColumn) continue; // Skip PK on insert if it's null (Identity)
+                    
+                    columns.Add($"[{col.ColumnName}]");
+                    values.Add(val == DBNull.Value ? "NULL" : $"'{val.ToString()?.Replace("'", "''")}'");
+                }
+
+                if (columns.Any())
+                {
+                    sb.AppendLine($"INSERT INTO [{viewModel.TableName}] ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)});");
+                }
+            }
+
+            // Clear arrays after generating script
+            viewModel.ModifiedRows.Clear();
+            viewModel.InsertedRows.Clear();
+
+            // Pass the generated SQL string up to the Canvas/Database service to actually run it
+            OnDataSaveRequested?.Invoke(sb.ToString());
         }
 
         private void PreviewGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)

@@ -146,7 +146,7 @@
                                                         FontSize="8" Background="Transparent" BorderThickness="0"
                                                         Foreground="{StaticResource MutedBrush}"
                                                         VerticalAlignment="Center" Margin="8,0,0,0"
-                                                        Cursor="Hand" Visibility="Collapsed"
+                                                        Cursor="Hand"
                                                         Command="{Binding DataContext.CloseWorkbookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"/>
                                             </Grid>
@@ -156,9 +156,6 @@
                                                 <Setter Property="Background" Value="#1E1E1E"/>
                                                 <Setter TargetName="bd" Property="BorderThickness" Value="0,2,1,0"/>
                                                 <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource PrimaryAccentBrush}"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="closeBtn" Property="Visibility" Value="Visible"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>

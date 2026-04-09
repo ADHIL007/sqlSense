@@ -52,6 +52,7 @@ namespace sqlSense.ViewModels
         private bool _isPerformingUndoRedo = false;
 
         public event Action? OnNewWorkspaceRequested;
+        public event Action? OnCreateTableRequested;
 
         public MainViewModel()
         {
@@ -180,30 +181,10 @@ namespace sqlSense.ViewModels
         }
 
         [RelayCommand]
-        public async Task ShowCreateTable()
+        public void ShowCreateTable()
         {
-            var dialog = new CreateTableWindow();
-            dialog.Owner = Application.Current.MainWindow;
-            
-            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.Script))
-            {
-                try
-                {
-                    StatusMessage = $"Creating table {dialog.TableName}...";
-                    await _dbService!.ExecuteNonQueryAsync(dialog.Script, Explorer.SelectedDatabaseName);
-                    
-                    StatusMessage = $"✓ Table {dialog.TableName} created successfully.";
-                    await LoadDatabaseTreeAsync(); // Refresh Explorer
-                    
-                    // Optionally add it to canvas instantly
-                    await AddTableToViewAsync(dialog.SchemaName ?? "dbo", dialog.TableName!);
-                }
-                catch (Exception ex)
-                {
-                    StatusMessage = $"Creation Error: {ex.Message}";
-                    MessageBox.Show($"Failed to create table:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
+            // Delegate to the canvas-based CreateTableCard
+            OnCreateTableRequested?.Invoke();
         }
 
         private bool CanModifyView() => Canvas.CurrentViewDefinition != null;

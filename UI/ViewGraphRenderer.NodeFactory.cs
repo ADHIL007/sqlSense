@@ -45,6 +45,24 @@ namespace sqlSense.UI
                 onJoinRequested: (sourceTbl) => {
                     HandleJoinRequest(sourceTbl, x + width + 20, y);
                 },
+                onExecuteSql: (sql) => {
+                    if (_viewModel?.DbService != null)
+                    {
+                        var db = _viewModel.Canvas.CurrentViewDefinition?.DatabaseName;
+                        System.Threading.Tasks.Task.Run(async () => {
+                            try {
+                                await _viewModel.DbService.ExecuteNonQueryAsync(sql, db);
+                                Application.Current.Dispatcher.Invoke(() => {
+                                    _viewModel.StatusMessage = "Data changes saved successfully.";
+                                });
+                            } catch (Exception ex) {
+                                Application.Current.Dispatcher.Invoke(() => {
+                                    _viewModel.StatusMessage = $"Save failed: {ex.Message}";
+                                });
+                            }
+                        });
+                    }
+                },
                 isDataFlowMode: IsGlobalDataFlowEnabled
             );
 

@@ -42,6 +42,11 @@ namespace sqlSense
                         CanvasPanel.CenterCanvas();
                     };
 
+                    _viewModel.OnCreateTableRequested += () =>
+                    {
+                        _graphRenderer?.ShowCreateTableOnCanvas();
+                    };
+
                     _viewModel.PropertyChanged += (s, e) => {
                         if (e.PropertyName == nameof(MainViewModel.ActiveWorkbook))
                         {

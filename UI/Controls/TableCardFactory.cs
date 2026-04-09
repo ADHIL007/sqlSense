@@ -37,6 +37,7 @@ namespace sqlSense.UI.Controls
             Action<ReferencedTable> onDelete,
             Action<string, ReferencedTable> onColumnToggle,
             Action<ReferencedTable>? onJoinRequested = null,
+            Action<string>? onExecuteSql = null,
             bool isDataFlowMode = false)
         {
             if (isDataFlowMode)
@@ -52,6 +53,11 @@ namespace sqlSense.UI.Controls
                         OnColumnToggle = (col) => onColumnToggle(col, refTbl)
                     }
                 };
+                
+                if (onExecuteSql != null)
+                {
+                    previewCard.OnDataSaveRequested += onExecuteSql;
+                }
 
                 var cardGrid = new Grid();
                 cardGrid.Children.Add(previewCard);

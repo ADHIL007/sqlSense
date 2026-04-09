@@ -306,5 +306,85 @@ namespace sqlSense.UI
             popup.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             AddItemToCanvasWithDrag(popup, "TablePicker_Main", cx - (popup.DesiredSize.Width / 2), cy - (popup.DesiredSize.Height / 2));
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CREATE TABLE (in-canvas card)
+        // ═══════════════════════════════════════════════════════════════
+
+        internal void ShowCreateTableOnCanvas()
+        {
+            if (_viewModel.DbService == null)
+            {
+                _viewModel.StatusMessage = "Connect to a database first.";
+                return;
+            }
+
+            // Ensure we have a workspace / view definition
+            if (_viewModel.Canvas.CurrentViewDefinition == null)
+            {
+                if (string.IsNullOrEmpty(_viewModel.Explorer.SelectedDatabaseName))
+                {
+                    _viewModel.StatusMessage = "Please select a database from the Object Explorer first.";
+                    return;
+                }
+
+                _viewModel.Canvas.CurrentViewDefinition = new ViewDefinitionInfo
+                {
+                    DatabaseName = _viewModel.Explorer.SelectedDatabaseName,
+                    ViewName = "NewView",
+                    SchemaName = "dbo"
+                };
+            }
+
+            _viewModel.Canvas.IsVisible = true;
+
+            double zoom = _viewModel.Canvas.Zoom;
+            double cx = (_canvasContainer.ActualWidth / 2 - _canvasTranslate.X) / zoom;
+            double cy = (_canvasContainer.ActualHeight / 2 - _canvasTranslate.Y) / zoom;
+
+            var card = new Controls.CreateTableCard();
+
+            // Wrap in a border so AddItemToCanvasWithDrag can manage it
+            var wrapper = new Border
+            {
+                Child = card,
+                Background = System.Windows.Media.Brushes.Transparent,
+                CornerRadius = new CornerRadius(0)
+            };
+
+            card.OnCreateRequested += async (script, tableName, schemaName) =>
+            {
+                try
+                {
+                    _viewModel.StatusMessage = $"Creating table {tableName}...";
+                    await _viewModel.DbService!.ExecuteNonQueryAsync(script, _viewModel.Explorer.SelectedDatabaseName);
+
+                    _viewModel.StatusMessage = $"✓ Table {tableName} created successfully.";
+                    await _viewModel.LoadDatabaseTreeAsync(); // Refresh Explorer
+
+                    // Remove the card from canvas
+                    _flowCanvas.Children.Remove(wrapper);
+                    _viewVisualizationElements.Remove(wrapper);
+
+                    // Add the new table to the canvas view
+                    await _viewModel.AddTableToViewAsync(schemaName, tableName);
+                    if (_viewModel.Canvas.CurrentViewDefinition != null)
+                        RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
+                }
+                catch (Exception ex)
+                {
+                    _viewModel.StatusMessage = $"Creation Error: {ex.Message}";
+                }
+            };
+
+            card.OnCancelled += () =>
+            {
+                _flowCanvas.Children.Remove(wrapper);
+                _viewVisualizationElements.Remove(wrapper);
+            };
+
+            wrapper.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            AddItemToCanvasWithDrag(wrapper, "CreateTable_Card", cx - 220, cy - 200);
+        }
     }
 }
