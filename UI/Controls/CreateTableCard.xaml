@@ -281,11 +281,7 @@
                             <DataGridCheckBoxColumn Header="Null" Binding="{Binding IsNullable}" Width="50"/>
                             <DataGridCheckBoxColumn Header="PK" Binding="{Binding IsPrimaryKey}" Width="40"/>
                             <DataGridCheckBoxColumn Header="A.I" Binding="{Binding IsAutoIncrement}" Width="40">
-                                <DataGridCheckBoxColumn.HeaderStyle>
-                                    <Style TargetType="DataGridColumnHeader">
-                                        <Setter Property="ToolTip" Value="Auto Increment (Identity)"/>
-                                    </Style>
-                                </DataGridCheckBoxColumn.HeaderStyle>
+                               
                             </DataGridCheckBoxColumn>
                         </DataGrid.Columns>
                     </DataGrid>

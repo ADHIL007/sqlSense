@@ -141,14 +141,20 @@
                                                                TextTrimming="CharacterEllipsis"/>
                                                 </StackPanel>
 
-                                                <Button Grid.Column="1" x:Name="closeBtn" 
-                                                        Content="&#xE711;" FontFamily="Segoe MDL2 Assets" 
-                                                        FontSize="8" Background="Transparent" BorderThickness="0"
+                                                <Button Grid.Column="1"
+                                                        x:Name="closeBtn"
+                                                        Content="&#xE8BB;"
+                                                        FontFamily="Segoe MDL2 Assets"
+                                                        FontSize="12"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
                                                         Foreground="{StaticResource MutedBrush}"
-                                                        VerticalAlignment="Center" Margin="8,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Margin="8,0,0,0"
                                                         Cursor="Hand"
+                                                        ToolTip="Close"
                                                         Command="{Binding DataContext.CloseWorkbookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"/>
+                                                        CommandParameter="{Binding}" />
                                             </Grid>
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -203,7 +209,7 @@
         </Grid>
 
         <!-- Bottom Status Bar -->
-        <Border Grid.Row="2" Background="#007ACC" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="{Binding StatusBackground}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

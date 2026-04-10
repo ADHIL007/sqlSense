@@ -63,6 +63,49 @@ namespace sqlSense.UI.Controls
             // Assume the first column is the Primary Key if no explicit schema is known
             string pkColumn = viewModel.TableData?.Columns.Count > 0 ? viewModel.TableData.Columns[0].ColumnName : "Id";
 
+            // Handle schema table name appropriately
+            string fullTableName = viewModel.TableName;
+            string schema = "dbo";
+            string rawTable = fullTableName;
+            if (fullTableName.Contains("."))
+            {
+                var parts = fullTableName.Split(new[] { '.' }, 2);
+                schema = parts[0];
+                rawTable = parts[1];
+            }
+            string safeTablename = $"[{schema}].[{rawTable}]";
+
+            // If we have any inserts, ensure the table exists or auto-create it (Save draft behavior)
+            if (viewModel.InsertedRows.Any() && viewModel.TableData?.Columns != null)
+            {
+                sb.AppendLine($"IF OBJECT_ID('{schema}.{rawTable}', 'U') IS NULL");
+                sb.AppendLine("BEGIN");
+                sb.AppendLine($"    CREATE TABLE {safeTablename} (");
+                
+                var colDefs = new List<string>();
+                foreach (System.Data.DataColumn col in viewModel.TableData.Columns)
+                {
+                    string dbType = col.DataType == typeof(int) ? "INT" :
+                                    col.DataType == typeof(long) ? "BIGINT" :
+                                    col.DataType == typeof(bool) ? "BIT" :
+                                    col.DataType == typeof(DateTime) ? "DATETIME" : "NVARCHAR(MAX)";
+                    
+                    if (col.ColumnName == pkColumn)
+                    {
+                        colDefs.Add($"        [{col.ColumnName}] {dbType} PRIMARY KEY" + (dbType == "INT" ? " IDENTITY(1,1)" : ""));
+                    }
+                    else
+                    {
+                        colDefs.Add($"        [{col.ColumnName}] {dbType} NULL");
+                    }
+                }
+                sb.AppendLine(string.Join(",\n", colDefs));
+                sb.AppendLine("    );");
+                sb.AppendLine("END");
+                sb.AppendLine("GO");
+                sb.AppendLine("");
+            }
+
             // Process Updates (modify data with its primary key)
             foreach (var row in viewModel.ModifiedRows)
             {
@@ -80,7 +123,7 @@ namespace sqlSense.UI.Controls
 
                 if (updates.Any())
                 {
-                    sb.AppendLine($"UPDATE [{viewModel.TableName}] SET {string.Join(", ", updates)} WHERE [{pkColumn}] = '{pkValue}';");
+                    sb.AppendLine($"UPDATE {safeTablename} SET {string.Join(", ", updates)} WHERE [{pkColumn}] = '{pkValue}';");
                 }
             }
 
@@ -101,7 +144,7 @@ namespace sqlSense.UI.Controls
 
                 if (columns.Any())
                 {
-                    sb.AppendLine($"INSERT INTO [{viewModel.TableName}] ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)});");
+                    sb.AppendLine($"INSERT INTO {safeTablename} ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)});");
                 }
             }
 

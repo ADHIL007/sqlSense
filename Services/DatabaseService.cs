@@ -442,8 +442,18 @@ namespace sqlSense.Services
             LoggerService.LogSql(sql);
             using var conn = new SqlConnection(connStr);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
-            await cmd.ExecuteNonQueryAsync();
+
+            // Split script by 'GO' batches to correctly support sequential DDL followed by DML operations
+            string[] batches = System.Text.RegularExpressions.Regex.Split(sql, @"^\s*GO\s*$", 
+                                 System.Text.RegularExpressions.RegexOptions.IgnoreCase | 
+                                 System.Text.RegularExpressions.RegexOptions.Multiline);
+
+            foreach (var batch in batches)
+            {
+                if (string.IsNullOrWhiteSpace(batch)) continue;
+                using var cmd = new SqlCommand(batch, conn);
+                await cmd.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>

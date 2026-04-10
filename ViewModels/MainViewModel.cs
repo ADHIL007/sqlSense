@@ -37,6 +37,32 @@ namespace sqlSense.ViewModels
         private string _statusMessage = "Ready";
 
         [ObservableProperty]
+        private string _statusBackground = "#007ACC";
+
+        partial void OnStatusMessageChanged(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                StatusBackground = "#007ACC";
+                return;
+            }
+
+            var lower = value.ToLower();
+            if (lower.Contains("fail") || lower.Contains("error") || lower.Contains("⚠") || lower.Contains("invalid"))
+            {
+                StatusBackground = "#CA5100"; // MS SQL Server / VS Code dark red
+            }
+            else if (lower.Contains("success") || lower.Contains("saved") || lower.Contains("executed"))
+            {
+                StatusBackground = "#16825D"; // MS SQL Server / VS Code dark green
+            }
+            else
+            {
+                StatusBackground = "#007ACC"; // Default blue
+            }
+        }
+
+        [ObservableProperty]
         private string _connectionString = "";
 
         [ObservableProperty]
