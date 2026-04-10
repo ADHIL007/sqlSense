@@ -3,6 +3,7 @@ using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -36,6 +37,7 @@ namespace sqlSense.UI
                 AutoGenerateColumns = true,
                 MaxHeight = 350,
                 MaxWidth = 700,
+                ColumnWidth = new DataGridLength(150),
                 MinHeight = 60,
                 MinWidth = 150,
                 HeadersVisibility = DataGridHeadersVisibility.Column,
@@ -58,6 +60,27 @@ namespace sqlSense.UI
             columnHeaderStyle.Setters.Add(new Setter(DataGridColumnHeader.PaddingProperty, new Thickness(8, 4, 8, 4)));
             columnHeaderStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
             _dataGrid.Resources.Add(typeof(DataGridColumnHeader), columnHeaderStyle);
+            
+            _dataGrid.AutoGeneratingColumn += (s, e) => {
+                if (e.Column is DataGridTextColumn textColumn)
+                {
+                    var style = new Style(typeof(TextBlock));
+                    style.Setters.Add(new Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis));
+                    style.Setters.Add(new Setter(TextBlock.ToolTipProperty, new Binding("Text") { RelativeSource = RelativeSource.Self }));
+                    textColumn.ElementStyle = style;
+                }
+
+                if (_currentNode?.SourceTable != null)
+                {
+                    var nodeColor = (Color)ColorConverter.ConvertFromString(_currentNode.Color);
+                    var style = new Style(typeof(DataGridColumnHeader));
+                    style.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(nodeColor)));
+                    style.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, Brushes.White));
+                    style.Setters.Add(new Setter(DataGridColumnHeader.PaddingProperty, new Thickness(8,4,8,4)));
+                    style.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                    e.Column.HeaderStyle = style;
+                }
+            };
 
             // 2. Main Card - Very minimal, only padding around the table
             _previewCard = new Border
@@ -79,6 +102,19 @@ namespace sqlSense.UI
 
             // Drag behavior
             _previewCard.MouseLeftButtonDown += (s, e) => {
+                if (e.OriginalSource is DependencyObject depObj)
+                {
+                    DependencyObject? curr = depObj;
+                    while (curr != null && curr != _previewCard)
+                    {
+                        if (curr is Thumb || curr is ScrollBar || curr is RepeatButton || curr is DataGridColumnHeader)
+                        {
+                            return; // Allow column resizing and scrolling
+                        }
+                        curr = VisualTreeHelper.GetParent(curr);
+                    }
+                }
+                
                 _isDragging = true;
                 _dragStart = e.GetPosition(_flowCanvas);
                 _startX = Canvas.GetLeft(_previewCard);
@@ -125,23 +161,6 @@ namespace sqlSense.UI
             {
                 DataTable dt = await db.ExecuteQueryAsync(viewDef.DatabaseName, sql);
                 _dataGrid.ItemsSource = dt.DefaultView;
-                
-                // Highlight columns if we have a single source table
-                if (node.SourceTable != null)
-                {
-                    _dataGrid.AutoGeneratingColumn += (s, e) => {
-                        var style = new Style(typeof(DataGridColumnHeader));
-                        style.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(nodeColor)));
-                        style.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, Brushes.White));
-                        style.Setters.Add(new Setter(DataGridColumnHeader.PaddingProperty, new Thickness(8,4,8,4)));
-                        style.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
-                        e.Column.HeaderStyle = style;
-                    };
-                }
-                else
-                {
-                    // For joins, reset styling or keep system theme
-                }
             }
             catch { /* Handled by DatabaseService Logging */ }
         }

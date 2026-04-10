@@ -2,21 +2,65 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using sqlSense.Models;
 using sqlSense.Services;
+using sqlSense.ViewModels.Modules;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Win32;
+using System.Text.Json;
+using System.IO;
+using System.Collections.Generic;
+using System.Windows;
+using sqlSense.Views;
 
 namespace sqlSense.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
+        // === Sub-ViewModels (Composition) ===
+        public SqlEditorViewModel SqlEditor { get; } = new();
+        public TablePreviewViewModel TablePreview { get; } = new();
+        public ViewCanvasViewModel Canvas { get; } = new();
+        public DatabaseExplorerViewModel Explorer { get; } = new();
+        
+        public ObservableCollection<ViewDefinitionInfo> OpenWorkbooks { get; } = new();
+
         [ObservableProperty]
-        private string _sqlText = "-- Select a table from the Object Explorer\n-- to preview its data here";
+        private ViewDefinitionInfo? _activeWorkbook;
+
+        [ObservableProperty]
+        private bool _hasUnsavedChanges;
 
         [ObservableProperty]
         private string _statusMessage = "Ready";
+
+        [ObservableProperty]
+        private string _statusBackground = "#007ACC";
+
+        partial void OnStatusMessageChanged(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                StatusBackground = "#007ACC";
+                return;
+            }
+
+            var lower = value.ToLower();
+            if (lower.Contains("fail") || lower.Contains("error") || lower.Contains("⚠") || lower.Contains("invalid"))
+            {
+                StatusBackground = "#CA5100"; // MS SQL Server / VS Code dark red
+            }
+            else if (lower.Contains("success") || lower.Contains("saved") || lower.Contains("executed"))
+            {
+                StatusBackground = "#16825D"; // MS SQL Server / VS Code dark green
+            }
+            else
+            {
+                StatusBackground = "#007ACC"; // Default blue
+            }
+        }
 
         [ObservableProperty]
         private string _connectionString = "";
@@ -24,584 +68,415 @@ namespace sqlSense.ViewModels
         [ObservableProperty]
         private string _serverName = "";
 
-        // === Table Data Preview ===
-        [ObservableProperty]
-        private DataTable? _tableData;
-
-        [ObservableProperty]
-        private DataView? _pagedData;
-
-        [ObservableProperty]
-        private string _previewTableName = "";
-
-        [ObservableProperty]
-        private bool _isPreviewVisible;
-
-        [ObservableProperty]
-        private bool _isPreviewLoading;
-
-        [ObservableProperty]
-        private int _currentPage = 1;
-
-        [ObservableProperty]
-        private int _totalPages = 1;
-
-        [ObservableProperty]
-        private string _pageInfo = "Page 1 of 1";
-
-        private const int PageSize = 5;
-
-        // === View Visualization ===
-        [ObservableProperty]
-        private ViewDefinitionInfo? _currentViewDefinition;
-
-        [ObservableProperty]
-        private bool _isViewVisualizationVisible;
-
-        [ObservableProperty]
-        private bool _isViewLoading;
-
-        // === Canvas Zoom ===
-        [ObservableProperty]
-        private double _canvasZoom = 1.0;
-
-        [ObservableProperty]
-        private string _zoomPercentage = "100%";
-
-        public ObservableCollection<DatabaseTreeItem> TreeItems { get; } = new();
-
         private DatabaseService? _dbService;
-
         public DatabaseService? DbService => _dbService;
+
+        private readonly WorkbookService _workbookService = new();
+
+        private readonly Stack<string> _undoStack = new();
+        private readonly Stack<string> _redoStack = new();
+        private bool _isPerformingUndoRedo = false;
+
+        public event Action? OnNewWorkspaceRequested;
+        public event Action? OnCreateTableRequested;
 
         public MainViewModel()
         {
+            Canvas.OnNewWorkspaceRequested += () => OnNewWorkspaceRequested?.Invoke();
+            Canvas.PropertyChanged += (s, e) => {
+                if (e.PropertyName == nameof(Canvas.CurrentViewDefinition)) {
+                    SaveWorkbookCommand.NotifyCanExecuteChanged();
+                    GenerateViewSqlCommand.NotifyCanExecuteChanged();
+                    
+                    // Keep active workbook in sync if updated from elsewhere
+                    if (Canvas.CurrentViewDefinition != ActiveWorkbook)
+                        ActiveWorkbook = Canvas.CurrentViewDefinition;
+                }
+            };
         }
 
-        // === Table Data Preview Methods ===
+        partial void OnActiveWorkbookChanged(ViewDefinitionInfo? value)
+        {
+            if (value != null)
+            {
+                if (Canvas.CurrentViewDefinition != value)
+                {
+                    Canvas.CurrentViewDefinition = value;
+                    if (!OpenWorkbooks.Contains(value)) OpenWorkbooks.Add(value);
+                }
+                
+                // Show SQL in editor
+                SqlEditor.SqlText = string.IsNullOrEmpty(value.SqlDefinition) ? value.ToSql() : value.SqlDefinition;
+                Canvas.Zoom = value.CanvasZoom > 0 ? value.CanvasZoom : 1.0;
+            }
+            else
+            {
+                Canvas.CurrentViewDefinition = null;
+                SqlEditor.SqlText = "";
+            }
+        }
+
+        public void InitializeServices(string connectionString, string serverName)
+        {
+            ConnectionString = connectionString;
+            ServerName = serverName;
+            _dbService = new DatabaseService(connectionString);
+            Explorer.Initialize(_dbService, serverName);
+        }
+
+        // === Orchestration Methods ===
+
+        public async Task LoadDatabaseTreeAsync() => await Explorer.LoadDatabaseTreeAsync();
+        public async Task ExpandDatabaseNodeAsync(DatabaseTreeItem node) => await Explorer.ExpandDatabaseNodeAsync(node);
+        public async Task ExpandTableNodeAsync(DatabaseTreeItem node) => await Explorer.ExpandTableNodeAsync(node);
 
         public async Task LoadTableDataAsync(string database, string schema, string tableName)
         {
             if (_dbService == null) return;
 
-            // Hide view visualization when showing table data
-            IsViewVisualizationVisible = false;
-
-            IsPreviewLoading = true;
-            IsPreviewVisible = true;
-            PreviewTableName = $"{schema}.{tableName}";
+            Canvas.IsVisible = false;
+            TablePreview.IsLoading = true;
+            TablePreview.IsVisible = true;
+            TablePreview.TableName = $"{schema}.{tableName}";
 
             try
             {
                 StatusMessage = $"Loading data from {schema}.{tableName}...";
-                TableData = await _dbService.GetTableDataAsync(database, schema, tableName);
-                CurrentPage = 1;
-                TotalPages = Math.Max(1, (int)Math.Ceiling((double)TableData.Rows.Count / PageSize));
-                UpdatePagedData();
-                StatusMessage = $"{TableData.Rows.Count} row(s) loaded from {schema}.{tableName}";
+                TablePreview.TableData = await _dbService.GetTableDataAsync(database, schema, tableName);
+                TablePreview.CurrentPage = 1;
+                TablePreview.TotalPages = Math.Max(1, (int)Math.Ceiling((double)TablePreview.TableData.Rows.Count / 10));
+                TablePreview.UpdatePagedData();
+                StatusMessage = $"{TablePreview.TableData.Rows.Count} row(s) loaded.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading data: {ex.Message}";
-                IsPreviewVisible = false;
+                StatusMessage = $"Error: {ex.Message}";
+                TablePreview.IsVisible = false;
             }
-            finally
-            {
-                IsPreviewLoading = false;
-            }
+            finally { TablePreview.IsLoading = false; }
         }
-
-        private void UpdatePagedData()
-        {
-            if (TableData == null) return;
-
-            var paged = TableData.Clone();
-            int start = (CurrentPage - 1) * PageSize;
-            int end = Math.Min(start + PageSize, TableData.Rows.Count);
-
-            for (int i = start; i < end; i++)
-            {
-                paged.ImportRow(TableData.Rows[i]);
-            }
-
-            PagedData = paged.DefaultView;
-            PageInfo = $"Page {CurrentPage} of {TotalPages}  ({TableData.Rows.Count} rows)";
-        }
-
-        [RelayCommand]
-        private void NextPage()
-        {
-            if (CurrentPage < TotalPages)
-            {
-                CurrentPage++;
-                UpdatePagedData();
-            }
-        }
-
-        [RelayCommand]
-        private void PreviousPage()
-        {
-            if (CurrentPage > 1)
-            {
-                CurrentPage--;
-                UpdatePagedData();
-            }
-        }
-
-        // === View Definition / Visualization Methods ===
 
         public async Task LoadViewDefinitionAsync(string database, string schema, string viewName)
         {
             if (_dbService == null) return;
 
-            // Hide table data card when showing view visualization
-            IsPreviewVisible = false;
-            IsViewLoading = true;
+            TablePreview.IsVisible = false;
+            Canvas.IsLoading = true;
 
             try
             {
                 StatusMessage = $"Analyzing view {schema}.{viewName}...";
-                CurrentViewDefinition = await _dbService.GetViewDefinitionAsync(database, schema, viewName);
-                IsViewVisualizationVisible = true;
-
-                // Also show the SQL in the editor panel
-                SqlText = CurrentViewDefinition.SqlDefinition;
-
-                int tableCount = CurrentViewDefinition.ReferencedTables.Count;
-                int joinCount = CurrentViewDefinition.Joins.Count;
-                StatusMessage = $"View {schema}.{viewName}: {tableCount} source table(s), {joinCount} join(s)";
+                Canvas.CurrentViewDefinition = await _dbService.GetViewDefinitionAsync(database, schema, viewName);
+                if (!OpenWorkbooks.Any(w => w.ViewName == viewName && w.SchemaName == schema))
+                    OpenWorkbooks.Add(Canvas.CurrentViewDefinition);
+                    
+                ActiveWorkbook = Canvas.CurrentViewDefinition;
+                Canvas.IsVisible = true;
+                SqlEditor.SqlText = Canvas.CurrentViewDefinition.SqlDefinition;
+                StatusMessage = $"View {schema}.{viewName} loaded.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error analyzing view: {ex.Message}";
-                IsViewVisualizationVisible = false;
+                StatusMessage = $"Error: {ex.Message}";
+                Canvas.IsVisible = false;
             }
-            finally
-            {
-                IsViewLoading = false;
-            }
+            finally { Canvas.IsLoading = false; }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
         private async Task SaveViewChanges()
         {
-            if (_dbService == null || CurrentViewDefinition == null) return;
-
+            if (_dbService == null || Canvas.CurrentViewDefinition == null) return;
             try
             {
-                StatusMessage = "Saving view changes...";
-                string sql = CurrentViewDefinition.ToSql();
-
-                await _dbService.ExecuteNonQueryAsync(CurrentViewDefinition.DatabaseName, sql);
-
-                StatusMessage = "✓ View synchronized successfully.";
-                SqlText = sql;
+                StatusMessage = "Saving changes...";
+                string sql = Canvas.CurrentViewDefinition.ToSql();
+                await _dbService.ExecuteNonQueryAsync(Canvas.CurrentViewDefinition.DatabaseName, sql);
+                StatusMessage = "✓ View synchronized.";
+                SqlEditor.SqlText = sql;
             }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error saving view: {ex.Message}";
-            }
+            catch (Exception ex) { StatusMessage = $"Error: {ex.Message}"; }
         }
 
-        /// <summary>
-        /// Generates the current SQL from the view definition and updates the SQL panel live.
-        /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
         private void GenerateViewSql()
         {
-            if (CurrentViewDefinition == null) return;
-            SqlText = CurrentViewDefinition.ToSql();
+            if (Canvas.CurrentViewDefinition == null) return;
+            SqlEditor.SqlText = Canvas.CurrentViewDefinition.ToSql();
             StatusMessage = "SQL preview updated.";
         }
 
-        /// <summary>
-        /// Adds a new source table to the current view definition.
-        /// Called from the UI after the user picks a table.
-        /// </summary>
+        [RelayCommand]
+        public void ShowCreateTable()
+        {
+            // Delegate to the canvas-based CreateTableCard
+            OnCreateTableRequested?.Invoke();
+        }
+
+        private bool CanModifyView() => Canvas.CurrentViewDefinition != null;
+
+        public void NotifyModification(bool pushUndo = true)
+        {
+            if (!_isPerformingUndoRedo && pushUndo)
+            {
+                _undoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+                _redoStack.Clear();
+                UndoCommand.NotifyCanExecuteChanged();
+                RedoCommand.NotifyCanExecuteChanged();
+            }
+
+            HasUnsavedChanges = true;
+            GenerateViewSqlCommand.Execute(null);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            if (_undoStack.Count == 0) return;
+
+            _isPerformingUndoRedo = true;
+            _redoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+            
+            var state = _undoStack.Pop();
+            var workbook = JsonSerializer.Deserialize<ViewDefinitionInfo>(state);
+            
+            if (workbook != null)
+            {
+                // Restore state
+                ActiveWorkbook!.ReferencedTables = workbook.ReferencedTables;
+                ActiveWorkbook.Joins = workbook.Joins;
+                ActiveWorkbook.Columns = workbook.Columns;
+                ActiveWorkbook.NodePositions = workbook.NodePositions;
+                ActiveWorkbook.WhereClause = workbook.WhereClause;
+                ActiveWorkbook.GroupByClause = workbook.GroupByClause;
+                ActiveWorkbook.OrderByClause = workbook.OrderByClause;
+                ActiveWorkbook.ViewName = workbook.ViewName;
+
+                // Fire property changed for the whole workbook to trigger renderer
+                OnPropertyChanged(nameof(ActiveWorkbook));
+            }
+            
+            _isPerformingUndoRedo = false;
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanUndo() => _undoStack.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanRedo))]
+        private void Redo()
+        {
+            if (_redoStack.Count == 0) return;
+
+            _isPerformingUndoRedo = true;
+            _undoStack.Push(JsonSerializer.Serialize(ActiveWorkbook));
+
+            var state = _redoStack.Pop();
+            var workbook = JsonSerializer.Deserialize<ViewDefinitionInfo>(state);
+
+            if (workbook != null)
+            {
+                // Similar restoration as Undo...
+                ActiveWorkbook!.ReferencedTables = workbook.ReferencedTables;
+                ActiveWorkbook.Joins = workbook.Joins;
+                ActiveWorkbook.Columns = workbook.Columns;
+                ActiveWorkbook.NodePositions = workbook.NodePositions;
+                ActiveWorkbook.WhereClause = workbook.WhereClause;
+                ActiveWorkbook.GroupByClause = workbook.GroupByClause;
+                ActiveWorkbook.OrderByClause = workbook.OrderByClause;
+                ActiveWorkbook.ViewName = workbook.ViewName;
+
+                OnPropertyChanged(nameof(ActiveWorkbook));
+            }
+
+            _isPerformingUndoRedo = false;
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanRedo() => _redoStack.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanModifyView))]
+        private void SaveWorkbook()
+        {
+            if (ActiveWorkbook == null) return;
+
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "SqlSense Workbook (*.sqv)|*.sqv",
+                FileName = ActiveWorkbook.ViewName ?? "Workbook1"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Update model name to match file name before saving
+                    string newName = Path.GetFileNameWithoutExtension(saveDialog.FileName);
+                    ActiveWorkbook.ViewName = newName;
+                    
+                    // Sync current zoom before saving
+                    ActiveWorkbook.CanvasZoom = Canvas.Zoom;
+                    
+                    _workbookService.SaveWorkbook(ActiveWorkbook, saveDialog.FileName);
+                    HasUnsavedChanges = false;
+                    StatusMessage = $"✓ Workbook saved as {newName}.sqv";
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Save Error: {ex.Message}";
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void OpenWorkbook()
+        {
+            var openDialog = new OpenFileDialog
+            {
+                Filter = "SqlSense Workbook (*.sqv)|*.sqv"
+            };
+
+            if (openDialog.ShowDialog() == true)
+            {
+                LoadWorkbookFromFile(openDialog.FileName);
+            }
+        }
+
+        public void LoadWorkbookFromFile(string path)
+        {
+            try
+            {
+                var workbook = _workbookService.LoadWorkbook(path);
+                if (workbook != null)
+                {
+                    if (string.IsNullOrEmpty(workbook.ViewName)) 
+                        workbook.ViewName = Path.GetFileNameWithoutExtension(path);
+                    
+                    OpenWorkbooks.Add(workbook);
+                    ActiveWorkbook = workbook;
+                    HasUnsavedChanges = false;
+                    StatusMessage = $"✓ Loaded workbook: {workbook.ViewName}";
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Open Error: {ex.Message}";
+            }
+        }
+
         public async Task AddTableToViewAsync(string schema, string tableName)
         {
-            if (_dbService == null || CurrentViewDefinition == null) return;
+            if (_dbService == null || Canvas.CurrentViewDefinition == null) return;
 
             var alias = tableName;
-            // Ensure unique alias
             int suffix = 2;
-            while (CurrentViewDefinition.ReferencedTables.Any(t => 
-                string.Equals(t.Alias, alias, StringComparison.OrdinalIgnoreCase)))
+            while (Canvas.CurrentViewDefinition.ReferencedTables.Any(t => string.Equals(t.Alias, alias, StringComparison.OrdinalIgnoreCase)))
             {
                 alias = $"{tableName}{suffix++}";
             }
 
-            var newTable = new ReferencedTable
-            {
-                Schema = schema,
-                Name = tableName,
-                Alias = alias
-            };
+            var newTable = new ReferencedTable { Schema = schema, Name = tableName, Alias = alias };
+            Canvas.CurrentViewDefinition.ReferencedTables.Add(newTable);
+            NotifyModification();
 
-            CurrentViewDefinition.ReferencedTables.Add(newTable);
-
-            // Fetch all columns for the new table
-            var allCols = await _dbService.GetColumnsAsync(
-                CurrentViewDefinition.DatabaseName, schema, tableName);
-            CurrentViewDefinition.SourceTableAllColumns[newTable.FullName] = 
-                allCols.Select(c => c.Name).ToList();
+            var allCols = await _dbService.GetColumnsAsync(Canvas.CurrentViewDefinition.DatabaseName, schema, tableName);
+            Canvas.CurrentViewDefinition.SourceTableAllColumns[newTable.FullName] = allCols.Select(c => c.Name).ToList();
 
             StatusMessage = $"Added table {schema}.{tableName} as {alias}";
         }
 
-        /// <summary>
-        /// Adds a JOIN relationship between two tables.
-        /// </summary>
-        public void AddJoinRelationship(string leftAlias, string leftColumn,
-            string rightAlias, string rightColumn, string joinType = "INNER")
+        public void AddJoinRelationship(string leftAlias, string leftColumn, string rightAlias, string rightColumn, string joinType = "INNER")
         {
-            if (CurrentViewDefinition == null) return;
+            if (Canvas.CurrentViewDefinition == null) return;
 
-            var leftTable = CurrentViewDefinition.ReferencedTables
-                .FirstOrDefault(t => string.Equals(t.Alias, leftAlias, StringComparison.OrdinalIgnoreCase));
-            var rightTable = CurrentViewDefinition.ReferencedTables
-                .FirstOrDefault(t => string.Equals(t.Alias, rightAlias, StringComparison.OrdinalIgnoreCase));
+            var leftTable = Canvas.CurrentViewDefinition.ReferencedTables.FirstOrDefault(t => string.Equals(t.Alias, leftAlias, StringComparison.OrdinalIgnoreCase));
+            var rightTable = Canvas.CurrentViewDefinition.ReferencedTables.FirstOrDefault(t => string.Equals(t.Alias, rightAlias, StringComparison.OrdinalIgnoreCase));
 
             if (leftTable == null || rightTable == null) return;
 
-            CurrentViewDefinition.Joins.Add(new JoinRelationship
+            var relationship = new JoinRelationship
             {
-                LeftTableAlias = leftAlias,
-                LeftTableSchema = leftTable.Schema,
-                LeftTableName = leftTable.Name,
-                LeftColumn = leftColumn,
-                RightTableAlias = rightAlias,
-                RightTableSchema = rightTable.Schema,
-                RightTableName = rightTable.Name,
-                RightColumn = rightColumn,
+                LeftTableAlias = leftAlias, LeftTableSchema = leftTable.Schema, LeftTableName = leftTable.Name, LeftColumn = leftColumn,
+                RightTableAlias = rightAlias, RightTableSchema = rightTable.Schema, RightTableName = rightTable.Name, RightColumn = rightColumn,
                 JoinType = joinType
-            });
+            };
+            Canvas.CurrentViewDefinition.Joins.Add(relationship);
+            NotifyModification();
 
             StatusMessage = $"Added {joinType} JOIN: {leftAlias}.{leftColumn} = {rightAlias}.{rightColumn}";
         }
 
-        /// <summary>
-        /// Removes a JOIN relationship.
-        /// </summary>
-        public void RemoveJoinRelationship(JoinRelationship join)
-        {
-            if (CurrentViewDefinition == null) return;
-            CurrentViewDefinition.Joins.Remove(join);
-            StatusMessage = $"Removed JOIN between {join.LeftTableAlias} and {join.RightTableAlias}";
-        }
-
-        /// <summary>
-        /// Renames the view.
-        /// </summary>
-        public void RenameView(string newName)
-        {
-            if (CurrentViewDefinition == null) return;
-            CurrentViewDefinition.ViewName = newName;
-            StatusMessage = $"View renamed to {newName} (not yet synced)";
-        }
-
-        // === Canvas Zoom Methods ===
-
         [RelayCommand]
-        private void ZoomIn()
+        private async Task ShowMetadata()
         {
-            CanvasZoom = Math.Min(CanvasZoom + 0.1, 5.0);
-            ZoomPercentage = $"{(int)(CanvasZoom * 100)}%";
+            await LoadDatabaseTreeAsync();
+            StatusMessage = "Database metadata synchronized.";
         }
 
         [RelayCommand]
-        private void ZoomOut()
+        private async Task RunQuery()
         {
-            CanvasZoom = Math.Max(CanvasZoom - 0.1, 0.1);
-            ZoomPercentage = $"{(int)(CanvasZoom * 100)}%";
-        }
-
-        [RelayCommand]
-        private void ZoomReset()
-        {
-            CanvasZoom = 1.0;
-            ZoomPercentage = "100%";
-        }
-
-        [RelayCommand]
-        private void ZoomFit()
-        {
-            CanvasZoom = 0.5;
-            ZoomPercentage = "50%";
-        }
-
-        public void SetZoom(double zoom)
-        {
-            CanvasZoom = Math.Clamp(zoom, 0.1, 5.0);
-            ZoomPercentage = $"{(int)(CanvasZoom * 100)}%";
-        }
-
-        // === Tree Loading Methods ===
-
-        public async Task LoadDatabaseTreeAsync()
-        {
-            if (string.IsNullOrEmpty(ConnectionString)) return;
-
-            _dbService = new DatabaseService(ConnectionString);
-            TreeItems.Clear();
-
+            if (_dbService == null || string.IsNullOrWhiteSpace(SqlEditor.SqlText)) return;
+            
+            TablePreview.IsLoading = true;
+            TablePreview.IsVisible = true;
+            Canvas.IsVisible = false;
+            
             try
             {
-                StatusMessage = "Loading database tree...";
-
-                var serverNode = new DatabaseTreeItem
-                {
-                    Name = ServerName,
-                    NodeType = TreeNodeType.Server,
-                    IsExpanded = true
-                };
-
-                var dbFolder = new DatabaseTreeItem
-                {
-                    Name = "Databases",
-                    NodeType = TreeNodeType.DatabaseFolder,
-                    IsExpanded = true
-                };
-
-                var databases = await _dbService.GetDatabasesAsync();
-                var systemDbs = new[] { "master", "model", "msdb", "tempdb" };
-
-                var systemDbFolder = new DatabaseTreeItem
-                {
-                    Name = "System Databases",
-                    NodeType = TreeNodeType.SystemDatabaseFolder,
-                    IsExpanded = false
-                };
-
-                foreach (var db in databases)
-                {
-                    var dbNode = new DatabaseTreeItem
-                    {
-                        Name = db,
-                        NodeType = TreeNodeType.Database,
-                        DatabaseName = db,
-                        IsExpanded = false
-                    };
-
-                    dbNode.Children.Add(DatabaseTreeItem.CreateDummy());
-
-                    if (systemDbs.Contains(db, StringComparer.OrdinalIgnoreCase))
-                    {
-                        systemDbFolder.Children.Add(dbNode);
-                    }
-                    else
-                    {
-                        dbFolder.Children.Add(dbNode);
-                    }
-                }
-
-                dbFolder.Children.Insert(0, systemDbFolder);
-
-                var securityFolder = new DatabaseTreeItem
-                {
-                    Name = "Security",
-                    NodeType = TreeNodeType.SecurityFolder
-                };
-
-                serverNode.Children.Add(dbFolder);
-                serverNode.Children.Add(securityFolder);
-
-                TreeItems.Add(serverNode);
-
-                StatusMessage = $"Connected — {databases.Count} databases found";
+                StatusMessage = "Executing query...";
+                var dbName = Canvas.CurrentViewDefinition?.DatabaseName ?? Explorer.SelectedDatabaseName ?? "master";
+                TablePreview.TableData = await _dbService.ExecuteQueryAsync(dbName, SqlEditor.SqlText);
+                TablePreview.TableName = "Query Results";
+                TablePreview.CurrentPage = 1;
+                TablePreview.TotalPages = Math.Max(1, (int)Math.Ceiling((double)TablePreview.TableData.Rows.Count / 10));
+                TablePreview.UpdatePagedData();
+                StatusMessage = $"Query executed. {TablePreview.TableData.Rows.Count} rows returned.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading tree: {ex.Message}";
-            }
-        }
-
-        public async Task ExpandDatabaseNodeAsync(DatabaseTreeItem dbNode)
-        {
-            if (_dbService == null || !dbNode.HasDummyChild) return;
-
-            dbNode.IsLoading = true;
-            dbNode.Children.Clear();
-
-            try
-            {
-                string db = dbNode.DatabaseName;
-
-                var tablesFolder = new DatabaseTreeItem
-                {
-                    Name = "Tables",
-                    NodeType = TreeNodeType.TableFolder,
-                    DatabaseName = db
-                };
-
-                var tables = await _dbService.GetTablesAsync(db);
-                foreach (var t in tables)
-                {
-                    var tableNode = new DatabaseTreeItem
-                    {
-                        Name = $"{t.Schema}.{t.Name}",
-                        NodeType = TreeNodeType.Table,
-                        DatabaseName = db,
-                        SchemaName = t.Schema,
-                        Tag = t.Name,
-                        Tooltip = $"Table: {t.Schema}.{t.Name}"
-                    };
-                    tableNode.Children.Add(DatabaseTreeItem.CreateDummy());
-                    tablesFolder.Children.Add(tableNode);
-                }
-                tablesFolder.Tooltip = $"{tables.Count} table(s)";
-
-                var viewsFolder = new DatabaseTreeItem
-                {
-                    Name = "Views",
-                    NodeType = TreeNodeType.ViewFolder,
-                    DatabaseName = db
-                };
-
-                var views = await _dbService.GetViewsAsync(db);
-                foreach (var v in views)
-                {
-                    viewsFolder.Children.Add(new DatabaseTreeItem
-                    {
-                        Name = $"{v.Schema}.{v.Name}",
-                        NodeType = TreeNodeType.View,
-                        DatabaseName = db,
-                        SchemaName = v.Schema,
-                        Tag = v.Name,
-                        Tooltip = $"View: {v.Schema}.{v.Name}"
-                    });
-                }
-                viewsFolder.Tooltip = $"{views.Count} view(s)";
-
-                var procsFolder = new DatabaseTreeItem
-                {
-                    Name = "Stored Procedures",
-                    NodeType = TreeNodeType.StoredProcedureFolder,
-                    DatabaseName = db
-                };
-
-                var procs = await _dbService.GetStoredProceduresAsync(db);
-                foreach (var p in procs)
-                {
-                    procsFolder.Children.Add(new DatabaseTreeItem
-                    {
-                        Name = $"{p.Schema}.{p.Name}",
-                        NodeType = TreeNodeType.StoredProcedure,
-                        DatabaseName = db,
-                        SchemaName = p.Schema,
-                        Tag = p.Name,
-                        Tooltip = $"Stored Procedure: {p.Schema}.{p.Name}"
-                    });
-                }
-                procsFolder.Tooltip = $"{procs.Count} stored procedure(s)";
-
-                var funcsFolder = new DatabaseTreeItem
-                {
-                    Name = "Functions",
-                    NodeType = TreeNodeType.FunctionFolder,
-                    DatabaseName = db
-                };
-
-                var funcs = await _dbService.GetFunctionsAsync(db);
-                foreach (var f in funcs)
-                {
-                    funcsFolder.Children.Add(new DatabaseTreeItem
-                    {
-                        Name = $"{f.Schema}.{f.Name}",
-                        NodeType = TreeNodeType.Function,
-                        DatabaseName = db,
-                        SchemaName = f.Schema,
-                        Tag = f.Name,
-                        Tooltip = $"Function ({f.TypeDescription}): {f.Schema}.{f.Name}"
-                    });
-                }
-                funcsFolder.Tooltip = $"{funcs.Count} function(s)";
-
-                dbNode.Children.Add(tablesFolder);
-                dbNode.Children.Add(viewsFolder);
-                dbNode.Children.Add(procsFolder);
-                dbNode.Children.Add(funcsFolder);
-            }
-            catch (Exception ex)
-            {
-                dbNode.Children.Add(new DatabaseTreeItem
-                {
-                    Name = $"Error: {ex.Message}",
-                    NodeType = TreeNodeType.Column
-                });
+                StatusMessage = $"Query Error: {ex.Message}";
+                TablePreview.IsVisible = false;
             }
             finally
             {
-                dbNode.IsLoading = false;
-            }
-        }
-
-        public async Task ExpandTableNodeAsync(DatabaseTreeItem tableNode)
-        {
-            if (_dbService == null || !tableNode.HasDummyChild) return;
-
-            tableNode.IsLoading = true;
-            tableNode.Children.Clear();
-
-            try
-            {
-                var columnsFolder = new DatabaseTreeItem
-                {
-                    Name = "Columns",
-                    NodeType = TreeNodeType.ColumnFolder,
-                    DatabaseName = tableNode.DatabaseName
-                };
-
-                var columns = await _dbService.GetColumnsAsync(
-                    tableNode.DatabaseName, tableNode.SchemaName, tableNode.Tag);
-
-                foreach (var col in columns)
-                {
-                    var nodeType = col.IsPrimaryKey ? TreeNodeType.PrimaryKeyColumn
-                                 : col.IsForeignKey ? TreeNodeType.ForeignKeyColumn
-                                 : TreeNodeType.Column;
-
-                    string suffix = col.IsNullable ? ", null" : ", not null";
-                    string pkLabel = col.IsPrimaryKey ? " (PK)" : "";
-                    string fkLabel = col.IsForeignKey ? " (FK)" : "";
-                    string idLabel = col.IsIdentity ? ", identity" : "";
-
-                    columnsFolder.Children.Add(new DatabaseTreeItem
-                    {
-                        Name = $"{col.Name} ({col.DataType}{suffix}{idLabel}){pkLabel}{fkLabel}",
-                        NodeType = nodeType,
-                        Tooltip = $"Column: {col.Name}\nType: {col.DataType}({col.MaxLength})\nNullable: {col.IsNullable}"
-                    });
-                }
-                columnsFolder.Tooltip = $"{columns.Count} column(s)";
-
-                tableNode.Children.Add(columnsFolder);
-            }
-            catch (Exception ex)
-            {
-                tableNode.Children.Add(new DatabaseTreeItem
-                {
-                    Name = $"Error: {ex.Message}",
-                    NodeType = TreeNodeType.Column
-                });
-            }
-            finally
-            {
-                tableNode.IsLoading = false;
+                TablePreview.IsLoading = false;
             }
         }
 
         [RelayCommand]
-        private void RunQuery()
+        public void NewWorkspace()
         {
-            StatusMessage = "Executing query...";
+            TablePreview.Reset();
+            var newView = new ViewDefinitionInfo { ViewName = "New Workbook", DatabaseName = Explorer.SelectedDatabaseName ?? "master" };
+            OpenWorkbooks.Add(newView);
+            ActiveWorkbook = newView;
+            SqlEditor.SqlText = "-- New Workspace Ready";
+            StatusMessage = "New workbook started.";
         }
 
         [RelayCommand]
-        private void ShowMetadata()
+        public void CloseWorkbook(ViewDefinitionInfo workbook)
         {
-            StatusMessage = "Refreshing metadata...";
+            if (workbook == null) return;
+            
+            int index = OpenWorkbooks.IndexOf(workbook);
+            bool wasActive = (ActiveWorkbook == workbook);
+            
+            OpenWorkbooks.Remove(workbook);
+            
+            if (wasActive && OpenWorkbooks.Count > 0)
+            {
+                // Try to select the previous neighbor, or the new item at the same index
+                int nextIndex = Math.Clamp(index - 1, 0, OpenWorkbooks.Count - 1);
+                ActiveWorkbook = OpenWorkbooks[nextIndex];
+            }
+            
+            if (OpenWorkbooks.Count == 0)
+            {
+                NewWorkspace();
+            }
         }
     }
 }
-

@@ -8,9 +8,19 @@
         xmlns:converters="clr-namespace:sqlSense.Converters"
         xmlns:ui="clr-namespace:sqlSense.UI"
         mc:Ignorable="d"
-        Title="sqlSense - Database Visualization" Height="800" Width="1280"
+        Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
         WindowStyle="SingleBorderWindow">
+    
+    <Window.Style>
+        <Style TargetType="Window">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                    <Setter Property="Title" Value="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0} *'}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Style>
 
     
 
@@ -27,9 +37,53 @@
         <!-- Main Content Area -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" MinWidth="180" MaxWidth="450"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="300" MinWidth="200" MaxWidth="500"/>
+                <ColumnDefinition>
+                    <ColumnDefinition.Style>
+                        <Style TargetType="ColumnDefinition">
+                            <Setter Property="Width" Value="280"/>
+                            <Setter Property="MinWidth" Value="180"/>
+                            <Setter Property="MaxWidth" Value="450"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                                    <Setter Property="Width" Value="0"/>
+                                    <Setter Property="MinWidth" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ColumnDefinition.Style>
+                </ColumnDefinition>
+                <ColumnDefinition>
+                    <ColumnDefinition.Style>
+                        <Style TargetType="ColumnDefinition">
+                            <Setter Property="Width" Value="*"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                                    <Setter Property="Width" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ColumnDefinition.Style>
+                </ColumnDefinition>
+                <ColumnDefinition>
+                    <ColumnDefinition.Style>
+                        <Style TargetType="ColumnDefinition">
+                            <Setter Property="Width" Value="300"/>
+                            <Setter Property="MinWidth" Value="200"/>
+                            <Setter Property="MaxWidth" Value="500"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                                    <Setter Property="Width" Value="*"/>
+                                    <Setter Property="MaxWidth" Value="Infinity"/>
+                                    <Setter Property="MinWidth" Value="200"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SqlEditor.IsVisible}" Value="False">
+                                    <Setter Property="Width" Value="0"/>
+                                    <Setter Property="MinWidth" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ColumnDefinition.Style>
+                </ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <!-- LEFT PANEL: Object Explorer -->
@@ -38,18 +92,124 @@
                                     SelectedItemChanged="ObjectExplorer_SelectedItemChanged" />
 
             <!-- CENTER PANEL: Infinite Canvas -->
-            <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="1" />
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Workbook Tabs (VS Code style) -->
+                <ListBox Grid.Row="0" 
+                         ItemsSource="{Binding OpenWorkbooks}"
+                         SelectedItem="{Binding ActiveWorkbook}"
+                         Background="#1E1E1E" 
+                         BorderThickness="0,0,0,1"
+                         BorderBrush="#252526"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="#2D2D2D"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                            <Setter Property="BorderBrush" Value="#252526"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                MinWidth="120" MaxWidth="200">
+                                            <Grid Margin="12,0,8,0" Height="35">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" 
+                                                               FontSize="10" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                               Foreground="{StaticResource PrimaryAccentBrush}"/>
+                                                    <TextBlock Text="{Binding ViewName}" 
+                                                               Foreground="{StaticResource TextSecondaryBrush}" 
+                                                               FontSize="11" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="1"
+                                                        x:Name="closeBtn"
+                                                        Content="&#xE8BB;"
+                                                        FontFamily="Segoe MDL2 Assets"
+                                                        FontSize="12"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Foreground="{StaticResource MutedBrush}"
+                                                        VerticalAlignment="Center"
+                                                        Margin="8,0,0,0"
+                                                        Cursor="Hand"
+                                                        ToolTip="Close"
+                                                        Command="{Binding DataContext.CloseWorkbookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#1E1E1E"/>
+                                                <Setter TargetName="bd" Property="BorderThickness" Value="0,2,1,0"/>
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource PrimaryAccentBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+
+                <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Row="1" />
+            </Grid>
 
             <!-- RIGHT PANEL: SQL Editor -->
             <ui:SqlEditorPanel Grid.Column="2" />
 
             <!-- Resizers -->
-            <GridSplitter Grid.Column="0" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
-            <GridSplitter Grid.Column="1" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+            <GridSplitter Grid.Column="0" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
+            
+            <GridSplitter Grid.Column="1" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SqlEditor.IsVisible}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
         </Grid>
 
         <!-- Bottom Status Bar -->
-        <Border Grid.Row="2" Background="#007ACC" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="{Binding StatusBackground}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -69,6 +229,8 @@
                 </StackPanel>
             </Grid>
         </Border>
+
     </Grid>
 </Window>
+
 

@@ -11,11 +11,51 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <TextBlock Text="SQL EDITOR" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" Margin="15,15,15,5" FontSize="11"/>
+            <Grid Margin="15,15,15,5">
+                <TextBlock Text="SQL EDITOR" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Maximize / Restore Toggle -->
+                    <Button Command="{Binding SqlEditor.ToggleMaximizedCommand}" 
+                            ToolTip="Maximize Code Editor"
+                            Background="Transparent" BorderThickness="0" Margin="0,0,8,0">
+                        <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" 
+                                 FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                 VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                    <!-- Close -->
+                    <Button Command="{Binding SqlEditor.CloseCommand}" 
+                            ToolTip="Close Editor"
+                            Background="Transparent" BorderThickness="0">
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" 
+                                 FontSize="9" Foreground="{StaticResource MutedBrush}"
+                                 VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                </StackPanel>
+            </Grid>
             <TextBox Grid.Row="1" Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource SuccessBrush}" 
                      BorderThickness="0" Padding="10" AcceptsReturn="True" AcceptsTab="True" FontFamily="Consolas"
                      VerticalScrollBarVisibility="Auto"
-                     Text="{Binding SqlText, UpdateSourceTrigger=PropertyChanged}"/>
+                     Text="{Binding SqlEditor.SqlText, UpdateSourceTrigger=PropertyChanged}"/>
         </Grid>
     </Border>
 </UserControl>

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace sqlSense.Models
 {
@@ -7,12 +9,22 @@ namespace sqlSense.Models
     /// Holds the parsed definition of a SQL view, 
     /// including the SQL text, referenced tables, and column mappings.
     /// </summary>
-    public class ViewDefinitionInfo
+    public class ViewDefinitionInfo : INotifyPropertyChanged
     {
-        public string ViewName { get; set; } = "";
+        private string _viewName = "";
+        public string ViewName 
+        { 
+            get => _viewName; 
+            set { _viewName = value; OnPropertyChanged(); } 
+        }
+
         public string SchemaName { get; set; } = "";
         public string DatabaseName { get; set; } = "";
         public string SqlDefinition { get; set; } = "";
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null) => 
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         
         /// <summary>
         /// Tables/views referenced in the FROM / JOIN clauses
@@ -53,6 +65,15 @@ namespace sqlSense.Models
         /// Optional ORDER BY clause
         /// </summary>
         public string OrderByClause { get; set; } = "";
+        
+        /// <summary>
+        /// Persistent layout positions for table nodes
+        /// </summary>
+        public Dictionary<string, (double X, double Y)> NodePositions { get; set; } = new();
+
+        public double CanvasZoom { get; set; } = 1.0;
+        public double CanvasOffsetX { get; set; } = 0;
+        public double CanvasOffsetY { get; set; } = 0;
 
         /// <summary>
         /// Generates the ALTER VIEW SQL statement based on the current state.

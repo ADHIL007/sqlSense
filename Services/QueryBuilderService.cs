@@ -80,6 +80,11 @@ namespace sqlSense.Services
                     }
                 }
             }
+            if (!string.IsNullOrEmpty(viewDef.WhereClause))
+            {
+                sql += $"\nWHERE {viewDef.WhereClause}";
+            }
+
             return sql;
         }
     }

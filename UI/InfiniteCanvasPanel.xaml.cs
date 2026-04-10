@@ -18,7 +18,7 @@ namespace sqlSense.UI
 
         public MainViewModel? ViewModel => DataContext as MainViewModel;
 
-        // UI Accessors that ViewGraphRenderer might need
+        // UI Accessors that ViewGraphRenderer uses
         public Canvas CanvasElement => FlowCanvas;
         public Border Container => CanvasContainer;
         public TranslateTransform Translate => CanvasTranslate;
@@ -34,32 +34,63 @@ namespace sqlSense.UI
             {
                 double w = CanvasContainer.ActualWidth;
                 double h = CanvasContainer.ActualHeight;
-                CanvasTranslate.X = -(5000 * ViewModel.CanvasZoom) + (w / 2);
-                CanvasTranslate.Y = -(5000 * ViewModel.CanvasZoom) + (h / 2);
+                CanvasTranslate.X = -(5000 * ViewModel.Canvas.Zoom) + (w / 2);
+                CanvasTranslate.Y = -(5000 * ViewModel.Canvas.Zoom) + (h / 2);
             }
         }
 
-        public void PositionTableCardAtViewCenter()
+
+
+        // ═══════════════════════════════════════════════════════════════
+        //  TOOLBAR EVENTS
+        // ═══════════════════════════════════════════════════════════════
+
+        private void ErdToolbar_ShapeRequested(string shapeType)
         {
-            if (CanvasContainer == null || TableDataCard == null || ViewModel == null) return;
-            double zoom = ViewModel.CanvasZoom;
-            double cx = (CanvasContainer.ActualWidth / 2 - CanvasTranslate.X) / zoom;
-            double cy = (CanvasContainer.ActualHeight / 2 - CanvasTranslate.Y) / zoom;
-            Canvas.SetLeft(TableDataCard, cx - 200);
-            Canvas.SetTop(TableDataCard, cy - 100);
+            switch (shapeType)
+            {
+                case "ToggleMode":
+                    GraphRenderer?.ToggleDataFlowState();
+                    break;
+                case "CreateTable":
+                    GraphRenderer?.ShowCreateTableOnCanvas();
+                    break;
+                case "Table":
+                    GraphRenderer?.AddTableCardAtCenter();
+                    break;
+                case "View":
+                    ViewModel!.StatusMessage = "Select a View from the Object Explorer to visualize it.";
+                    break;
+                case "Arrange":
+                    GraphRenderer?.AutoArrange();
+                    break;
+                case "Variable":
+                case "IfElse":
+                case "While":
+                case "Execute":
+                case "TryCatch":
+                case "Comment":
+                case "Text":
+                    ViewModel!.StatusMessage = $"{shapeType} shape — coming soon.";
+                    break;
+            }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CANVAS NAVIGATION
+        // ═══════════════════════════════════════════════════════════════
 
         private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (ViewModel == null) return;
             Point mousePos = e.GetPosition(CanvasContainer);
-            double oldZoom = ViewModel.CanvasZoom;
+            double oldZoom = ViewModel.Canvas.Zoom;
             double delta = e.Delta > 0 ? 0.1 : -0.1;
             double newZoom = Math.Clamp(oldZoom + delta, 0.1, 5.0);
             double sc = newZoom / oldZoom;
             CanvasTranslate.X = mousePos.X - (mousePos.X - CanvasTranslate.X) * sc;
             CanvasTranslate.Y = mousePos.Y - (mousePos.Y - CanvasTranslate.Y) * sc;
-            ViewModel.SetZoom(newZoom); 
+            ViewModel.Canvas.SetZoom(newZoom); 
             UpdateCoordinates(mousePos);
         }
 
@@ -72,8 +103,21 @@ namespace sqlSense.UI
 
         private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            Point currentPos = e.GetPosition(CanvasContainer);
+            double dist = Math.Sqrt(Math.Pow(currentPos.X - _panStart.X, 2) + Math.Pow(currentPos.Y - _panStart.Y, 2));
+            
             StopPan(); 
             CanvasContainer.Cursor = Cursors.Arrow;
+
+            // If it was a quick click (not a drag or pan), show the context menu
+            if (dist < 3)
+            {
+                if (CanvasContainer.ContextMenu != null)
+                {
+                    CanvasContainer.ContextMenu.PlacementTarget = CanvasContainer;
+                    CanvasContainer.ContextMenu.IsOpen = true;
+                }
+            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -113,20 +157,21 @@ namespace sqlSense.UI
             CanvasContainer.ReleaseMouseCapture(); 
         }
 
+        private void ContextMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item && item.Tag is string shapeType)
+            {
+                ErdToolbar_ShapeRequested(shapeType);
+            }
+        }
+
         private void UpdateCoordinates(Point screenPos) 
         {
             if (ViewModel == null || CoordinateLabel == null) return;
-            double z = ViewModel.CanvasZoom;
+            double z = ViewModel.Canvas.Zoom;
             double cx = (screenPos.X - CanvasTranslate.X) / z - 5000;
             double cy = (screenPos.Y - CanvasTranslate.Y) / z - 5000;
-            CoordinateLabel.Text = $"{(int)cx}, {(int)cy}  |  {ViewModel.ZoomPercentage}";
-        }
-
-        private void DataFlowToggleBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (GraphRenderer == null) return;
-            GraphRenderer.ToggleDataFlowState();
-            DataFlowToggleBtn.Content = GraphRenderer.IsGlobalDataFlowEnabled ? "\uE14F DATA FLOW: ON" : "\uE14F DATA FLOW: OFF";
+            CoordinateLabel.Text = $"{(int)cx}, {(int)cy}  |  {ViewModel.Canvas.ZoomPercentage}";
         }
     }
 }

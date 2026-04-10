@@ -433,14 +433,27 @@ namespace sqlSense.Services
         /// <summary>
         /// Executes a non-query SQL command (e.g. ALTER VIEW).
         /// </summary>
-        public async Task ExecuteNonQueryAsync(string database, string sql)
+        public async Task ExecuteNonQueryAsync(string sql, string? database = null)
         {
-            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            var connStr = string.IsNullOrEmpty(database) 
+                ? _connectionString 
+                : ChangeDatabaseInConnectionString(_connectionString, database);
+            
             LoggerService.LogSql(sql);
             using var conn = new SqlConnection(connStr);
             await conn.OpenAsync();
-            using var cmd = new SqlCommand(sql, conn);
-            await cmd.ExecuteNonQueryAsync();
+
+            // Split script by 'GO' batches to correctly support sequential DDL followed by DML operations
+            string[] batches = System.Text.RegularExpressions.Regex.Split(sql, @"^\s*GO\s*$", 
+                                 System.Text.RegularExpressions.RegexOptions.IgnoreCase | 
+                                 System.Text.RegularExpressions.RegexOptions.Multiline);
+
+            foreach (var batch in batches)
+            {
+                if (string.IsNullOrWhiteSpace(batch)) continue;
+                using var cmd = new SqlCommand(batch, conn);
+                await cmd.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -606,6 +619,7 @@ namespace sqlSense.Services
                 }
             }
         }
+
     }
 
     public class TableInfo

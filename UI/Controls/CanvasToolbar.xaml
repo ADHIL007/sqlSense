@@ -1,0 +1,126 @@
+<UserControl x:Class="sqlSense.UI.Controls.CanvasToolbar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="44">
+
+    <UserControl.Resources>
+        <Style x:Key="ErdToolBtn" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2A2D2E"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#094771"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource PanelBrush}" 
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0"
+            Padding="4,8">
+        <StackPanel>
+            <!-- Section: Objects -->
+            <TextBlock Text="ERD" FontSize="8" FontWeight="Bold" 
+                       Foreground="{StaticResource MutedBrush}" 
+                       HorizontalAlignment="Center" Margin="0,0,0,4"/>
+
+            <Button x:Name="TableBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Add Table" Click="TableBtn_Click">
+                <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Button x:Name="ViewBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Add View" Click="ViewBtn_Click">
+                <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
+
+            <!-- Section: Mode -->
+            <TextBlock Text="MODE" FontSize="8" FontWeight="Bold" 
+                       Foreground="{StaticResource MutedBrush}" 
+                       HorizontalAlignment="Center" Margin="0,0,0,4"/>
+
+            <Button x:Name="ModeToggleBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Toggle Data/Control Flow" Click="ModeToggleBtn_Click">
+                <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
+
+            <!-- Section: Stored Proc shapes -->
+            <TextBlock Text="PROC" FontSize="8" FontWeight="Bold" 
+                       Foreground="{StaticResource MutedBrush}" 
+                       HorizontalAlignment="Center" Margin="0,4,0,4"/>
+
+            <Button x:Name="VariableBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Declare Variable" Click="VariableBtn_Click">
+                <TextBlock Text="@" FontFamily="Consolas" FontSize="16" FontWeight="Bold"/>
+            </Button>
+
+            <Button x:Name="IfElseBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="IF / ELSE Block" Click="IfElseBtn_Click">
+                <TextBlock Text="&#xE9B4;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Button x:Name="WhileBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="WHILE Loop" Click="WhileBtn_Click">
+                <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Button x:Name="ExecuteBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="EXECUTE Statement" Click="ExecuteBtn_Click">
+                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Button x:Name="TryCatchBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="TRY / CATCH Block" Click="TryCatchBtn_Click">
+                <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
+
+            <!-- Section: Utilities -->
+            <TextBlock Text="UTIL" FontSize="8" FontWeight="Bold" 
+                       Foreground="{StaticResource MutedBrush}" 
+                       HorizontalAlignment="Center" Margin="0,4,0,4"/>
+
+            <Button x:Name="CommentBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Comment Block" Click="CommentBtn_Click">
+                <TextBlock Text="/*" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+            </Button>
+
+            <Button x:Name="TextBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Text Annotation" Click="TextBtn_Click">
+                <TextBlock Text="&#xE8D2;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+
+            <Button x:Name="ArrangeBtn" Style="{StaticResource ErdToolBtn}" 
+                    ToolTip="Auto Arrange Layout" Click="ArrangeBtn_Click">
+                <TextBlock Text="&#xE9AC;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>

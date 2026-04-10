@@ -27,7 +27,7 @@
           Background="Transparent" BorderThickness="0" 
           Foreground="{StaticResource TextSecondaryBrush}" 
           Margin="0" Padding="4"
-          ItemsSource="{Binding TreeItems}"
+          ItemsSource="{Binding Explorer.TreeItems}"
           TreeViewItem.Expanded="TreeViewItem_Expanded"
           TreeViewItem.RequestBringIntoView="TreeViewItem_RequestBringIntoView"
           SelectedItemChanged="ObjectExplorer_SelectedItemChanged"
