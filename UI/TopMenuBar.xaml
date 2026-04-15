@@ -50,7 +50,7 @@
                 <MenuItem Header="_Tools">
                     <MenuItem Header="Sync Database Metadata" Command="{Binding ShowMetadataCommand}" />
                     <Separator />
-                    <MenuItem Header="Options..." />
+                    <MenuItem Header="Options..."  />
                 </MenuItem>
             </Menu>
             
@@ -68,9 +68,9 @@
             <Separator Background="{StaticResource BorderBrush}" Margin="10,5" Width="1"/>
             
             <!-- Quick Action Toolbar -->
-            <Button Command="{Binding ShowCreateTableCommand}" Content="⊕ New Table" Background="Transparent" Foreground="{StaticResource PrimaryAccentBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
-            <Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
-            <Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>
+            <!--<Button Command="{Binding ShowCreateTableCommand}" Content="New Table" Background="Transparent" Foreground="{StaticResource PrimaryAccentBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
+            <!--<Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
+            <!--<Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
             
             <!-- SQL Editor Toggle -->
             <Button Command="{Binding SqlEditor.ToggleMaximizedCommand}" ToolTip="Maximize SQL Editor" Background="Transparent" BorderThickness="0" Margin="5,0" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right">

@@ -6,8 +6,13 @@
              xmlns:converters="clr-namespace:sqlSense.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Colors -->
-        <Color x:Key="BackgroundColor">#1E1E1E</Color>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="UI/Icons.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Colors -->
+            <Color x:Key="BackgroundColor">#1E1E1E</Color>
         <Color x:Key="PanelColor">#252526</Color>
         <Color x:Key="PanelLightColor">#2D2D30</Color>
         <Color x:Key="BorderColor">#3C3C3C</Color>
@@ -536,6 +541,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
 

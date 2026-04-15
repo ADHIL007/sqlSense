@@ -30,6 +30,9 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#094771"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -51,10 +54,10 @@
                 <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
             </Button>
 
-            <Button x:Name="ViewBtn" Style="{StaticResource ErdToolBtn}" 
+            <!--<Button x:Name="ViewBtn" Style="{StaticResource ErdToolBtn}" 
                     ToolTip="Add View" Click="ViewBtn_Click">
                 <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
-            </Button>
+            </Button>-->
 
             <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
 
@@ -64,14 +67,14 @@
                        HorizontalAlignment="Center" Margin="0,0,0,4"/>
 
             <Button x:Name="ModeToggleBtn" Style="{StaticResource ErdToolBtn}" 
-                    ToolTip="Toggle Data/Control Flow" Click="ModeToggleBtn_Click">
-                <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    ToolTip="Toggle Edit/View Mode" Click="ModeToggleBtn_Click">
+                <Control Template="{StaticResource DataToControlSwitchIcon}" Width="18" Height="18"/>
             </Button>
 
             <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
 
             <!-- Section: Stored Proc shapes -->
-            <TextBlock Text="PROC" FontSize="8" FontWeight="Bold" 
+            <!--<TextBlock Text="PROC" FontSize="8" FontWeight="Bold" 
                        Foreground="{StaticResource MutedBrush}" 
                        HorizontalAlignment="Center" Margin="0,4,0,4"/>
 
@@ -102,7 +105,7 @@
 
             <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="4,6"/>
 
-            <!-- Section: Utilities -->
+            --><!-- Section: Utilities --><!--
             <TextBlock Text="UTIL" FontSize="8" FontWeight="Bold" 
                        Foreground="{StaticResource MutedBrush}" 
                        HorizontalAlignment="Center" Margin="0,4,0,4"/>
@@ -120,7 +123,7 @@
             <Button x:Name="ArrangeBtn" Style="{StaticResource ErdToolBtn}" 
                     ToolTip="Auto Arrange Layout" Click="ArrangeBtn_Click">
                 <TextBlock Text="&#xE9AC;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
-            </Button>
+            </Button>-->
         </StackPanel>
     </Border>
 </UserControl>

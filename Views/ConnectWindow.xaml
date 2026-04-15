@@ -166,7 +166,9 @@
             <DockPanel LastChildFill="False" Margin="10,0">
                 <Image Source="https://static-00.iconduck.com/assets.00/sql-server-icon-2048x2048-v6q8y7m2.png" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBlock Text="Connect to Server" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12"/>
-                <Button Content="✕" DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" BorderThickness="0" Width="34" Click="Exit_Click" FontSize="14"/>
+                <Button DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" BorderThickness="0" Width="34" Click="Exit_Click">
+                    <Control Template="{StaticResource CloseIcon}" Width="12" Height="12"/>
+                </Button>
             </DockPanel>
         </Border>
 

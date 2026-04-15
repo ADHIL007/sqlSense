@@ -189,7 +189,7 @@
 
                     <Button Grid.Column="1" Style="{StaticResource SmallIconBtn}" 
                             Click="CloseCard_Click" ToolTip="Cancel">
-                        <TextBlock Text="✕" FontSize="11" FontFamily="Segoe UI"/>
+                        <Control Template="{StaticResource CloseIcon}" Width="10" Height="10"/>
                     </Button>
                 </Grid>
             </Border>
@@ -306,7 +306,7 @@
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
                         <Button Style="{StaticResource CardActionBtn}" Click="CloseCard_Click" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal" Margin="2,0">
-                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <Control Template="{StaticResource CloseIcon}" Width="10" Height="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBlock Text="Cancel" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>

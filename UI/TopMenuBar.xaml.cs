@@ -13,5 +13,11 @@ namespace sqlSense.UI
         {
 
         }
+
+        private void onOptionClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+        }
+
+
     }
 }

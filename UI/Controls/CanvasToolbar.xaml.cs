@@ -26,6 +26,25 @@ namespace sqlSense.UI.Controls
         private void ModeToggleBtn_Click(object sender, RoutedEventArgs e)
             => ShapeRequested?.Invoke("ToggleMode");
 
+        /// <summary>
+        /// Switches the mode toggle button icon to reflect the current state.
+        /// </summary>
+        /// <param name="isDataFlowMode">True if currently in data flow mode, false for control flow mode.</param>
+        public void SetModeIcon(bool isDataFlowMode)
+        {
+            var iconKey = isDataFlowMode ? "DataToControlSwitchIcon" : "ControlToDataSwitchIcon";
+            var tooltip = isDataFlowMode ? "Switch to Control Flow" : "Switch to Data Flow";
+
+            if (Application.Current.TryFindResource(iconKey) is System.Windows.Controls.ControlTemplate template)
+            {
+                // Find the Control child inside the button
+                if (ModeToggleBtn.Content is System.Windows.Controls.Control iconControl)
+                {
+                    iconControl.Template = template;
+                }
+            }
+            ModeToggleBtn.ToolTip = tooltip;
+        }
         private void VariableBtn_Click(object sender, RoutedEventArgs e)
             => ShapeRequested?.Invoke("Variable");
 
