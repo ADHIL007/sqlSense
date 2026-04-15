@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,50 @@ namespace sqlSense.UI.MenueItems.Settings
         public optionsDialog()
         {
             InitializeComponent();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void OK_Click(object sender, RoutedEventArgs e)
+        {
+            // Logic to save settings would go here
+            this.Close();
+        }
+
+        private void Nav_Checked(object sender, RoutedEventArgs e)
+        {
+            if (ContentArea == null) return;
+
+            var button = sender as RadioButton;
+            var category = button.Content.ToString();
+
+            // Hide all pages
+            foreach (UIElement child in ContentArea.Children)
+            {
+                child.Visibility = Visibility.Collapsed;
+            }
+
+            // Show selected page
+            switch (category)
+            {
+                case "General": PageGeneral.Visibility = Visibility.Visible; break;
+                case "Editor": PageEditor.Visibility = Visibility.Visible; break;
+                case "Connection": PageConnection.Visibility = Visibility.Visible; break;
+                case "Theme": PageTheme.Visibility = Visibility.Visible; break;
+                case "Canvas": PageCanvas.Visibility = Visibility.Visible; break;
+                case "SQL Engine": PageSQLEngine.Visibility = Visibility.Visible; break;
+                case "Keyboard": PageKeyboard.Visibility = Visibility.Visible; break;
+                case "About": PageAbout.Visibility = Visibility.Visible; break;
+            }
         }
     }
 }
