@@ -13,6 +13,68 @@ namespace sqlSense.UI.Controls
         public AiChatInterface()
         {
             InitializeComponent();
+            this.Loaded += AiChatInterface_Loaded;
+        }
+
+        private void AiChatInterface_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateToolbarUI();
+        }
+
+        private void UpdateToolbarUI()
+        {
+            var settings = sqlSense.Services.SettingsManager.Current;
+            FastModeText.Text = settings.AiFastMode ? "Fast" : "Reason";
+            FastModeText.Foreground = settings.AiFastMode ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136)) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(79, 195, 247)); // Highlight when reasoning
+            
+            CurrentModelLabel.Text = string.IsNullOrEmpty(settings.AiModelName) ? settings.AiProvider : settings.AiModelName;
+        }
+
+        private void FastModeToggleBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var settings = sqlSense.Services.SettingsManager.Current;
+            settings.AiFastMode = !settings.AiFastMode;
+            sqlSense.Services.SettingsManager.Save();
+            UpdateToolbarUI();
+        }
+
+        private async void ModelSelectorBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn)
+            {
+                var contextMenu = new ContextMenu();
+                var loadingItem = new MenuItem { Header = "Fetching models...", IsEnabled = false };
+                contextMenu.Items.Add(loadingItem);
+                
+                contextMenu.PlacementTarget = btn;
+                contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
+                contextMenu.IsOpen = true;
+
+                var settings = sqlSense.Services.SettingsManager.Current;
+                var models = await sqlSense.Services.AiService.FetchAvailableModelsAsync(settings.AiProvider, settings.AiApiKey, settings.AiBaseUrl);
+                
+                contextMenu.Items.Clear();
+                if (models != null && models.Count > 0)
+                {
+                    foreach (var m in models)
+                    {
+                        var item = new MenuItem { Header = m };
+                        if (m == settings.AiModelName) item.IsChecked = true;
+                        
+                        item.Click += (s, args) => 
+                        {
+                            settings.AiModelName = m;
+                            sqlSense.Services.SettingsManager.Save();
+                            UpdateToolbarUI();
+                        };
+                        contextMenu.Items.Add(item);
+                    }
+                }
+                else
+                {
+                    contextMenu.Items.Add(new MenuItem { Header = "No models available / Check Settings", IsEnabled = false });
+                }
+            }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -59,19 +121,15 @@ namespace sqlSense.UI.Controls
             string text = InputTextBox.Text.Trim();
             if (string.IsNullOrEmpty(text)) return;
 
-            // Add User Message
             AddMessage(text, true);
             InputTextBox.Text = "";
 
-            // Show a temporary thinking message
-            var loadingBorder = AddMessage("🤔 Thinking...", false, true);
+            var loadingBorder = AddMessage("Thinking...", false, true);
             
             try
             {
-                // Call actual AI Service
                 string aiResponse = await sqlSense.Services.AiService.SendMessageAsync(text);
                 
-                // Replace loading text with actual AI response
                 if (loadingBorder.Child is TextBlock txt)
                 {
                     txt.Text = aiResponse;

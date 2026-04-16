@@ -24,6 +24,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             TbDeploymentName.Text = appSettings.AiDeploymentName;
             TbApiVersion.Text = appSettings.AiApiVersion;
             CbSendSchema.IsChecked = appSettings.AiSendSchema;
+            CbFastMode.IsChecked = appSettings.AiFastMode;
 
             foreach (ComboBoxItem item in CmbProvider.Items)
             {

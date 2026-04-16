@@ -63,73 +63,102 @@
             </ScrollViewer>
             
             <!-- Input Area -->
-            <Grid Grid.Row="2" Margin="0,5,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <TextBox x:Name="InputTextBox" 
-                         Grid.Column="0" 
-                         Background="{StaticResource BackgroundBrush}" 
-                         Foreground="{StaticResource TextPrimaryBrush}" 
-                         BorderBrush="{StaticResource BorderBrush}" 
-                         BorderThickness="1" 
-                         Padding="10,8,10,8" 
-                         TextWrapping="Wrap" 
-                         MinHeight="36" 
-                         MaxHeight="100" 
-                         FontSize="12"
-                         VerticalScrollBarVisibility="Auto"
-                         AcceptsReturn="True"
-                         PreviewKeyDown="InputTextBox_PreviewKeyDown">
-                    <TextBox.Resources>
-                        <Style TargetType="{x:Type TextBox}">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="{x:Type TextBox}">
-                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="18" Effect="{StaticResource NodeShadow}">
+            <Border Grid.Row="2" Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="8" Margin="0,5,0,0" Effect="{StaticResource NodeShadow}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBox x:Name="InputTextBox" 
+                             Grid.Row="0"
+                             Background="Transparent" 
+                             Foreground="#D4D4D4" 
+                             BorderThickness="0" 
+                             Padding="12,12,12,8" 
+                             TextWrapping="Wrap" 
+                             MinHeight="50"
+                             MaxHeight="200" 
+                             FontSize="13"
+                             VerticalScrollBarVisibility="Auto"
+                             AcceptsReturn="True"
+                             PreviewKeyDown="InputTextBox_PreviewKeyDown">
+                        <TextBox.Resources>
+                            <Style TargetType="{x:Type TextBox}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type TextBox}">
                                             <Grid>
-                                                <ScrollViewer x:Name="PART_ContentHost" Margin="0,4"/>
-                                                <TextBlock x:Name="Watermark" Text="Ask AI to write SQL..." Foreground="{StaticResource MutedBrush}" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                                <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                                <TextBlock x:Name="Watermark" Text="Ask anything, @ to mention" Foreground="#666666" Margin="12,12,0,0" VerticalAlignment="Top" IsHitTestVisible="False" Visibility="Collapsed"/>
                                             </Grid>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding Text.Length, RelativeSource={RelativeSource Self}}" Value="0">
-                                                <Setter TargetName="Watermark" Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </TextBox.Resources>
-                </TextBox>
-                
-                <Button Grid.Column="1" 
-                        Background="{StaticResource PrimaryAccentBrush}" 
-                        Foreground="Black" 
-                        BorderThickness="0" 
-                        Width="36" 
-                        Height="36" 
-                        Margin="8,0,0,0" 
-                        Cursor="Hand"
-                        Effect="{StaticResource NodeShadow}"
-                        Click="SendButton_Click" VerticalAlignment="Bottom">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="18">
-                                <TextBlock Text="&#xE724;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bg" Property="Opacity" Value="0.8"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding Text.Length, RelativeSource={RelativeSource Self}}" Value="0">
+                                                    <Setter TargetName="Watermark" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </TextBox.Resources>
+                    </TextBox>
+
+                    <Grid Grid.Row="1" Margin="8,0,8,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Plus Button -->
+                            <Button Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" ToolTip="Add Context" Padding="4">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                            </Button>
+                            
+                            <!-- Fast Toggle -->
+                            <Button x:Name="FastModeToggleBtn" Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" ToolTip="Toggle Fast Mode" Click="FastModeToggleBtn_Click" Padding="4,4,8,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="FastModeText" Text="Fast" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Model Selector -->
+                            <Button x:Name="ModelSelectorBtn" Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" ToolTip="Select Model" Padding="4,4,8,4" Click="ModelSelectorBtn_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="CurrentModelLabel" Text="Gemini 3.1 Pro (High)" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Send Button -->
+                        <Button Grid.Column="2" 
+                                Background="#333333" 
+                                Foreground="#D4D4D4" 
+                                BorderThickness="0" 
+                                Width="28" 
+                                Height="28" 
+                                Cursor="Hand"
+                                Click="SendButton_Click" VerticalAlignment="Center">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="14">
+                                        <TextBlock Text="&#xE72A;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Margin="1,0,0,0"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="#444444"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

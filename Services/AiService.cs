@@ -92,23 +92,41 @@ namespace sqlSense.Services
                 return "Error: API key is not configured. Please set your " + settings.AiProvider + " API Key in Settings.";
             }
 
+            if (settings.AiFastMode)
+            {
+                message = "You are in fast mode. You must reply immediately without any chain of thought. Never output <think> or <thought> tags.\n\n" + message;
+            }
+
             try
             {
+                string rawResult = "";
                 switch (settings.AiProvider)
                 {
                     case "OpenAI":
-                        return await CallOpenAiAsync(message, settings.AiApiKey);
+                        rawResult = await CallOpenAiAsync(message, settings.AiApiKey);
+                        break;
                     case "Microsoft Azure OpenAI":
-                        return await CallAzureAsync(message, settings.AiApiKey);
+                        rawResult = await CallAzureAsync(message, settings.AiApiKey);
+                        break;
                     case "Google Gemini":
-                        return await CallGeminiAsync(message, settings.AiApiKey);
+                        rawResult = await CallGeminiAsync(message, settings.AiApiKey);
+                        break;
                     case "Anthropic Claude":
-                        return await CallAnthropicAsync(message, settings.AiApiKey);
+                        rawResult = await CallAnthropicAsync(message, settings.AiApiKey);
+                        break;
                     case "Local Model (Ollama)":
-                        return await CallOllamaAsync(message);
+                        rawResult = await CallOllamaAsync(message);
+                        break;
                     default:
                         return "Error: Unknown AI Provider selected.";
                 }
+
+                if (settings.AiFastMode && !string.IsNullOrEmpty(rawResult))
+                {
+                    rawResult = System.Text.RegularExpressions.Regex.Replace(rawResult, @"<think>.*?</think>", "", System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+                }
+
+                return rawResult;
             }
             catch (Exception ex)
             {

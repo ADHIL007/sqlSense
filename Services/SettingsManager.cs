@@ -15,6 +15,7 @@ namespace sqlSense.Services
         public string AiDeploymentName { get; set; } = "";
         public string AiApiVersion { get; set; } = "";
         public bool AiSendSchema { get; set; } = true;
+        public bool AiFastMode { get; set; } = false;
     }
 
     public static class SettingsManager

@@ -107,6 +107,12 @@
                         <TextBlock Text="Overrides Base URL:" Style="{StaticResource SettingLabel}"/>
                         <TextBox x:Name="TbBaseUrl" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center"/>
                     </Grid>
+                    <StackPanel Margin="0,10,0,0">
+                        <CheckBox x:Name="CbFastMode" Content="Fast Mode (Disable Reasoning/Thinking)" 
+                                  Style="{StaticResource SettingCheckBox}" IsChecked="False"/>
+                        <TextBlock Text="Instructs models to skip chain-of-thought processing and strip reasoning tags for faster replies." 
+                                   Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+                    </StackPanel>
                 </StackPanel>
             </Expander>
         </StackPanel>

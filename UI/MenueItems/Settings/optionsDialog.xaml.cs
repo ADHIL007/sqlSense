@@ -48,6 +48,7 @@ namespace sqlSense.UI.MenueItems.Settings
             appSettings.AiDeploymentName = PageAI.TbDeploymentName.Text;
             appSettings.AiApiVersion = PageAI.TbApiVersion.Text;
             appSettings.AiSendSchema = PageAI.CbSendSchema.IsChecked ?? false;
+            appSettings.AiFastMode = PageAI.CbFastMode.IsChecked ?? false;
 
             sqlSense.Services.SettingsManager.Save();
 
