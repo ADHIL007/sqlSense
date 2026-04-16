@@ -28,12 +28,24 @@ namespace sqlSense.UI.Controls
             ChatUI.Visibility = Visibility.Visible;
         }
 
-        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && Keyboard.IsKeyDown(Key.LeftShift) == false && Keyboard.IsKeyDown(Key.RightShift) == false)
+            if (e.Key == Key.Enter)
             {
-                e.Handled = true;
-                SendMessage();
+                if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt)
+                {
+                    int caretIndex = InputTextBox.CaretIndex;
+                    InputTextBox.Text = InputTextBox.Text.Insert(caretIndex, Environment.NewLine);
+                    InputTextBox.CaretIndex = caretIndex + Environment.NewLine.Length;
+                    e.Handled = true;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
+                {
+                    // Naked Enter -> Send message
+                    e.Handled = true;
+                    SendMessage();
+                }
+                // Shift+Enter falls through to native behaviour (new line)
             }
         }
 

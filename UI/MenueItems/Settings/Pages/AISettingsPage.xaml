@@ -56,6 +56,15 @@
             <PasswordBox x:Name="PbApiKey" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•"/>
         </Grid>
 
+        <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="280"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Model Name:" Style="{StaticResource SettingLabel}"/>
+            <TextBox x:Name="TbModelName" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="e.g. gpt-4, claude-3-opus-20240229, gemini-pro, llama3"/>
+        </Grid>
+
         <StackPanel Margin="0,0,0,18">
             <CheckBox x:Name="CbSendSchema" Content="Send anonymized schema data" 
                       Style="{StaticResource SettingCheckBox}" IsChecked="True"/>

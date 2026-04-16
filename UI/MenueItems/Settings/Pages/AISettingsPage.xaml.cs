@@ -16,6 +16,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             CbEnableAiCompletion.IsChecked = appSettings.AiEnableCodeCompletion;
             CbEnableNlToSql.IsChecked = appSettings.AiEnableNlToSql;
             PbApiKey.Password = appSettings.AiApiKey;
+            TbModelName.Text = appSettings.AiModelName;
             CbSendSchema.IsChecked = appSettings.AiSendSchema;
 
             foreach (ComboBoxItem item in CmbProvider.Items)

@@ -82,7 +82,7 @@
                          FontSize="12"
                          VerticalScrollBarVisibility="Auto"
                          AcceptsReturn="True"
-                         KeyDown="InputTextBox_KeyDown">
+                         PreviewKeyDown="InputTextBox_PreviewKeyDown">
                     <TextBox.Resources>
                         <Style TargetType="{x:Type TextBox}">
                             <Setter Property="Template">

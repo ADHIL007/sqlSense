@@ -10,6 +10,7 @@ namespace sqlSense.Services
         public bool AiEnableNlToSql { get; set; } = true;
         public string AiProvider { get; set; } = "OpenAI";
         public string AiApiKey { get; set; } = "";
+        public string AiModelName { get; set; } = "";
         public bool AiSendSchema { get; set; } = true;
     }
 

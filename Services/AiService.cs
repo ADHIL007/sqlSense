@@ -43,9 +43,10 @@ namespace sqlSense.Services
 
         private static async Task<string> CallOpenAiAsync(string prompt, string apiKey)
         {
+            var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gpt-3.5-turbo" : SettingsManager.Current.AiModelName;
             var payload = new
             {
-                model = "gpt-3.5-turbo",
+                model = modelName,
                 messages = new[] { new { role = "user", content = prompt } }
             };
 
@@ -79,7 +80,8 @@ namespace sqlSense.Services
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}";
+            var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gemini-pro" : SettingsManager.Current.AiModelName;
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:generateContent?key={apiKey}";
             
             var response = await _httpClient.PostAsync(url, content);
             response.EnsureSuccessStatusCode();
@@ -91,9 +93,10 @@ namespace sqlSense.Services
 
         private static async Task<string> CallAnthropicAsync(string prompt, string apiKey)
         {
+            var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "claude-3-opus-20240229" : SettingsManager.Current.AiModelName;
             var payload = new
             {
-                model = "claude-3-opus-20240229",
+                model = modelName,
                 max_tokens = 1000,
                 messages = new[] { new { role = "user", content = prompt } }
             };
@@ -117,9 +120,10 @@ namespace sqlSense.Services
 
         private static async Task<string> CallOllamaAsync(string prompt)
         {
+            var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "llama3" : SettingsManager.Current.AiModelName;
             var payload = new
             {
-                model = "llama3", // default fallback
+                model = modelName, 
                 messages = new[] { new { role = "user", content = prompt } },
                 stream = false
             };
