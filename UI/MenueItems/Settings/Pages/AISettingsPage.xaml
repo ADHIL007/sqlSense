@@ -1,0 +1,66 @@
+<UserControl x:Class="sqlSense.UI.MenueItems.Settings.Pages.AISettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../SettingsResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel Margin="0,0,0,0">
+        <TextBlock Text="AI Assistant" Style="{StaticResource SectionHeader}"/>
+
+        <StackPanel Margin="0,0,0,18">
+            <CheckBox Content="Enable AI code completion" 
+                      Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+            <TextBlock Text="Suggest entire blocks of SQL code as you type." 
+                       Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,0,18">
+            <CheckBox Content="Enable natural language to SQL" 
+                      Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+            <TextBlock Text="Allow the AI to generate SQL queries from plain English descriptions." 
+                       Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+        </StackPanel>
+
+        <Border Height="1" Background="#3C3C3C" Margin="0,8,0,24"/>
+
+        <TextBlock Text="Model Configuration" Style="{StaticResource SectionHeader}"/>
+
+        <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="AI Provider:" Style="{StaticResource SettingLabel}"/>
+            <ComboBox Grid.Column="1" Style="{StaticResource SettingComboBox}">
+                <ComboBoxItem Content="OpenAI" IsSelected="True" Style="{StaticResource SettingComboBoxItem}"/>
+                <ComboBoxItem Content="Google Gemini" Style="{StaticResource SettingComboBoxItem}"/>
+                <ComboBoxItem Content="Anthropic Claude" Style="{StaticResource SettingComboBoxItem}"/>
+                <ComboBoxItem Content="Local Model (Ollama)" Style="{StaticResource SettingComboBoxItem}"/>
+            </ComboBox>
+        </Grid>
+
+        <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="280"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="API Key:" Style="{StaticResource SettingLabel}"/>
+            <PasswordBox Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•"/>
+        </Grid>
+
+        <StackPanel Margin="0,0,0,18">
+            <CheckBox Content="Send anonymized schema data" 
+                      Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+            <TextBlock Text="Allow the AI to understand your tables and columns for better suggestions. (No table data is sent)" 
+                       Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

@@ -13,38 +13,136 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <StackPanel Margin="0,0,0,0">
-        <TextBlock Text="Connection" Style="{StaticResource SectionHeader}"/>
-
-        <Grid Margin="0,0,0,18">
+        <!-- Title & Edit Button -->
+        <Grid Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="180"/>
-                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Connection timeout (s):" Style="{StaticResource SettingLabel}"/>
-            <TextBox Grid.Column="1" Text="30" Style="{StaticResource SettingTextBox}"/>
+            <TextBlock Text="Connection Settings" Style="{StaticResource SectionHeader}" Margin="0"/>
+            
+            <!-- Edit Button -->
+            <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="EditConnection_Click" ToolTip="Edit Connection Settings">
+                <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#4FC3F7"/>
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="Transparent" Padding="4" CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#2A2D2E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
         </Grid>
 
-        <Grid Margin="0,0,0,18">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="180"/>
-                <ColumnDefinition Width="120"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="Command timeout (s):" Style="{StaticResource SettingLabel}"/>
-            <TextBox Grid.Column="1" Text="60" Style="{StaticResource SettingTextBox}"/>
-        </Grid>
+        <!-- Current Connection Display -->
+        <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE968;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="CurrentServerText" Text="LAPTOP-50NO702V" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <Border Background="#094771" CornerRadius="2" Padding="4,0" Margin="0,0,6,0">
+                            <TextBlock x:Name="ConnectionTypeBadge" Text="Local" Foreground="#4FC3F7" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="CurrentAuthText" Text="Windows Authentication" Style="{StaticResource SettingDescription}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <Border Grid.Column="2" Background="#094771" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                    <TextBlock Text="Connected" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                </Border>
+            </Grid>
+        </Border>
 
-        <Border Height="1" Background="#3C3C3C" Margin="0,8,0,24"/>
+        <!-- Editable Mode Panel -->
+        <StackPanel x:Name="EditSettingsPanel" IsEnabled="False">
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Server name:" Style="{StaticResource SettingLabel}"/>
+                <ComboBox x:Name="ServerNameComboBox" Grid.Column="1" Style="{StaticResource SettingComboBox}" IsEditable="True" TextBoxBase.TextChanged="ServerName_TextChanged"/>
+            </Grid>
 
-        <StackPanel Margin="0,0,0,18">
-            <CheckBox Content="Encrypt connection" 
-                      Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
-            <TextBlock Text="Use encrypted connections to SQL Server." 
-                       Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
-        </StackPanel>
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Authentication:" Style="{StaticResource SettingLabel}"/>
+                <ComboBox x:Name="AuthComboBox" Grid.Column="1" Style="{StaticResource SettingComboBox}" SelectionChanged="AuthComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Windows Authentication" IsSelected="True" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="SQL Server Authentication" Style="{StaticResource SettingComboBoxItem}"/>
+                </ComboBox>
+            </Grid>
 
-        <StackPanel Margin="0,0,0,18">
-            <CheckBox Content="Trust server certificate" 
-                      Style="{StaticResource SettingCheckBox}"/>
+            <Grid Margin="0,0,0,18" x:Name="UserGrid" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="User name:" Style="{StaticResource SettingLabel}"/>
+                <TextBox x:Name="UserTextBox" Grid.Column="1" Text="sa" Style="{StaticResource SettingTextBox}"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,18" x:Name="PasswordGrid" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Password:" Style="{StaticResource SettingLabel}"/>
+                <PasswordBox x:Name="PasswordBox" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="120"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Connection timeout (s):" Style="{StaticResource SettingLabel}"/>
+                <TextBox x:Name="ConnTimeoutTextBox" Grid.Column="1" Text="30" Style="{StaticResource SettingTextBox}"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="120"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Command timeout (s):" Style="{StaticResource SettingLabel}"/>
+                <TextBox x:Name="CmdTimeoutTextBox" Grid.Column="1" Text="60" Style="{StaticResource SettingTextBox}"/>
+            </Grid>
+
+            <Border Height="1" Background="#3C3C3C" Margin="0,8,0,24"/>
+
+            <StackPanel Margin="0,0,0,18">
+                <CheckBox x:Name="EncryptCheckBox" Content="Encrypt connection" 
+                          Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+                <TextBlock Text="Use encrypted connections to SQL Server." 
+                           Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,0,0,24">
+                <CheckBox x:Name="TrustServerCheckBox" Content="Trust server certificate" 
+                          Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Test Connection" Style="{StaticResource ActionButton}" Width="120" Margin="0" Click="TestConnection_Click"/>
+                <Button Content="Connect" Style="{StaticResource ActionButton}" Width="90" Background="#094771" Margin="10,0,0,0" Click="Connect_Click"/>
+                <TextBlock x:Name="TestConnectionResult" Text="" Foreground="#4CAF50" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12"/>
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>

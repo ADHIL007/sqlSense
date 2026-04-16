@@ -59,7 +59,9 @@ namespace sqlSense.UI.MenueItems.Settings
             {
                 case "General": PageGeneral.Visibility = Visibility.Visible; break;
                 case "Editor": PageEditor.Visibility = Visibility.Visible; break;
-                case "Connection": PageConnection.Visibility = Visibility.Visible; break;
+                case "AI Assistant": PageAI.Visibility = Visibility.Visible; break;
+                case "Connection":
+                case "DB Connection": PageConnection.Visibility = Visibility.Visible; break;
                 case "Theme": PageTheme.Visibility = Visibility.Visible; break;
                 case "Canvas": PageCanvas.Visibility = Visibility.Visible; break;
                 case "SQL Engine": PageSQLEngine.Visibility = Visibility.Visible; break;
