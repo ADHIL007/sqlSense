@@ -5,8 +5,36 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style x:Key="PopupItemButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#D4D4D4"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#2A2D2E"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Selected">
+                                <Setter TargetName="bg" Property="Background" Value="#172635"/>
+                                <Setter TargetName="bg" Property="BorderBrush" Value="#007ACC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid Background="Transparent">
-        
         <!-- Floating AI Button (collapsed state) -->
         <Button x:Name="FloatingAIButton"
                 HorizontalAlignment="Right"
@@ -79,6 +107,7 @@
                              TextWrapping="Wrap" 
                              MinHeight="50"
                              MaxHeight="200" 
+                             CaretBrush="#D4D4D4"
                              FontSize="13"
                              VerticalScrollBarVisibility="Auto"
                              AcceptsReturn="True"
@@ -160,5 +189,38 @@
                 </Grid>
             </Border>
         </Grid>
+        <!-- Custom Popups matching Cursor style -->
+        <Popup x:Name="ModePopup" StaysOpen="False" PlacementTarget="{Binding ElementName=FastModeToggleBtn}" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="-8">
+            <Border Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="6" Width="360" Effect="{StaticResource NodeShadow}">
+                <StackPanel>
+                    <TextBlock Text="Conversation mode" Foreground="#AAAAAA" FontSize="11" Margin="8,4,8,8"/>
+                    
+                    <Button x:Name="ModeReasonBtn" Style="{StaticResource PopupItemButton}" Click="ModeReasonBtn_Click">
+                        <StackPanel>
+                            <TextBlock Text="Reason" FontSize="13" FontWeight="SemiBold" Foreground="#E0E0E0" Margin="0,0,0,4"/>
+                            <TextBlock Text="Agent can reason before executing tasks. Use for deep research, complex tasks, or collaborative work" FontSize="11" Foreground="#999999" TextWrapping="Wrap" LineHeight="16"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="ModeFastBtn" Style="{StaticResource PopupItemButton}" Click="ModeFastBtn_Click">
+                        <StackPanel>
+                            <TextBlock Text="Fast" FontSize="13" FontWeight="SemiBold" Foreground="#E0E0E0" Margin="0,0,0,4"/>
+                            <TextBlock Text="Agent will execute tasks directly. Use for simple tasks that can be completed faster" FontSize="11" Foreground="#999999" TextWrapping="Wrap" LineHeight="16"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <Popup x:Name="ModelPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=ModelSelectorBtn}" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="-8">
+            <Border Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="6" MinWidth="220" Effect="{StaticResource NodeShadow}">
+                <StackPanel>
+                    <TextBlock Text="Model" Foreground="#AAAAAA" FontSize="11" Margin="8,4,8,8"/>
+                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="ModelListPanel"/>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </UserControl>
