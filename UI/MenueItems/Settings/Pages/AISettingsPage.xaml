@@ -16,14 +16,14 @@
         <TextBlock Text="AI Assistant" Style="{StaticResource SectionHeader}"/>
 
         <StackPanel Margin="0,0,0,18">
-            <CheckBox Content="Enable AI code completion" 
+            <CheckBox x:Name="CbEnableAiCompletion" Content="Enable AI code completion" 
                       Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
             <TextBlock Text="Suggest entire blocks of SQL code as you type." 
                        Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
         </StackPanel>
 
         <StackPanel Margin="0,0,0,18">
-            <CheckBox Content="Enable natural language to SQL" 
+            <CheckBox x:Name="CbEnableNlToSql" Content="Enable natural language to SQL" 
                       Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
             <TextBlock Text="Allow the AI to generate SQL queries from plain English descriptions." 
                        Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
@@ -39,7 +39,7 @@
                 <ColumnDefinition Width="200"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="AI Provider:" Style="{StaticResource SettingLabel}"/>
-            <ComboBox Grid.Column="1" Style="{StaticResource SettingComboBox}">
+            <ComboBox x:Name="CmbProvider" Grid.Column="1" Style="{StaticResource SettingComboBox}">
                 <ComboBoxItem Content="OpenAI" IsSelected="True" Style="{StaticResource SettingComboBoxItem}"/>
                 <ComboBoxItem Content="Google Gemini" Style="{StaticResource SettingComboBoxItem}"/>
                 <ComboBoxItem Content="Anthropic Claude" Style="{StaticResource SettingComboBoxItem}"/>
@@ -53,11 +53,11 @@
                 <ColumnDefinition Width="280"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="API Key:" Style="{StaticResource SettingLabel}"/>
-            <PasswordBox Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•"/>
+            <PasswordBox x:Name="PbApiKey" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•"/>
         </Grid>
 
         <StackPanel Margin="0,0,0,18">
-            <CheckBox Content="Send anonymized schema data" 
+            <CheckBox x:Name="CbSendSchema" Content="Send anonymized schema data" 
                       Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
             <TextBlock Text="Allow the AI to understand your tables and columns for better suggestions. (No table data is sent)" 
                        Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>

@@ -58,13 +58,7 @@
             <!-- Chat Area -->
             <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0">
                 <StackPanel x:Name="ChatMessagesPanel" Margin="0,0,0,5">
-                    <!-- Initial Greeting -->
-                    <Border Background="{StaticResource PanelBrush}" Effect="{StaticResource NodeShadow}" CornerRadius="8,8,8,0" Padding="12,10" Margin="0,0,30,10" HorizontalAlignment="Left">
-                        <TextBlock Text="Hello! I'm your SQLSense AI Assistant. I can help generate queries, explain data, and optimize your database." 
-                                   TextWrapping="Wrap" 
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="12"/>
-                    </Border>
+                    <!-- Dynamic chat messages go here -->
                 </StackPanel>
             </ScrollViewer>
             

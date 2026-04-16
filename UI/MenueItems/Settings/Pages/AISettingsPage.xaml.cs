@@ -7,6 +7,25 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
         public AISettingsPage()
         {
             InitializeComponent();
+            LoadSettings();
+        }
+
+        private void LoadSettings()
+        {
+            var appSettings = sqlSense.Services.SettingsManager.Current;
+            CbEnableAiCompletion.IsChecked = appSettings.AiEnableCodeCompletion;
+            CbEnableNlToSql.IsChecked = appSettings.AiEnableNlToSql;
+            PbApiKey.Password = appSettings.AiApiKey;
+            CbSendSchema.IsChecked = appSettings.AiSendSchema;
+
+            foreach (ComboBoxItem item in CmbProvider.Items)
+            {
+                if (item.Content.ToString() == appSettings.AiProvider)
+                {
+                    CmbProvider.SelectedItem = item;
+                    break;
+                }
+            }
         }
     }
 }

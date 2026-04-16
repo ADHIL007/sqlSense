@@ -42,7 +42,7 @@ namespace sqlSense.UI.Controls
             SendMessage();
         }
 
-        private void SendMessage()
+        private async void SendMessage()
         {
             string text = InputTextBox.Text.Trim();
             if (string.IsNullOrEmpty(text)) return;
@@ -51,11 +51,30 @@ namespace sqlSense.UI.Controls
             AddMessage(text, true);
             InputTextBox.Text = "";
 
-            // Simulate AI responding
-            AddMessage("I'm formulating an answer for your query...", false);
+            // Show a temporary thinking message
+            var loadingBorder = AddMessage("🤔 Thinking...", false, true);
+            
+            try
+            {
+                // Call actual AI Service
+                string aiResponse = await sqlSense.Services.AiService.SendMessageAsync(text);
+                
+                // Replace loading text with actual AI response
+                if (loadingBorder.Child is TextBlock txt)
+                {
+                    txt.Text = aiResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (loadingBorder.Child is TextBlock txt)
+                {
+                    txt.Text = "Error: " + ex.Message;
+                }
+            }
         }
 
-        private void AddMessage(string text, bool isUser)
+        private Border AddMessage(string text, bool isUser, bool isTemporary = false)
         {
             var border = new Border
             {
@@ -91,10 +110,17 @@ namespace sqlSense.UI.Controls
                 FontSize = 12
             };
 
+            if (isTemporary)
+            {
+                textBlock.FontStyle = FontStyles.Italic;
+                textBlock.Opacity = 0.8;
+            }
+
             border.Child = textBlock;
             ChatMessagesPanel.Children.Add(border);
 
             ChatScrollViewer.ScrollToEnd();
+            return border;
         }
     }
 }

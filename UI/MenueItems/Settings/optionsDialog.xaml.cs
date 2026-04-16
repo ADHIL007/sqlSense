@@ -37,7 +37,16 @@ namespace sqlSense.UI.MenueItems.Settings
 
         private void OK_Click(object sender, RoutedEventArgs e)
         {
-            // Logic to save settings would go here
+            // Save AI Settings
+            var appSettings = sqlSense.Services.SettingsManager.Current;
+            appSettings.AiEnableCodeCompletion = PageAI.CbEnableAiCompletion.IsChecked ?? false;
+            appSettings.AiEnableNlToSql = PageAI.CbEnableNlToSql.IsChecked ?? false;
+            appSettings.AiProvider = ((ComboBoxItem)PageAI.CmbProvider.SelectedItem)?.Content?.ToString() ?? "OpenAI";
+            appSettings.AiApiKey = PageAI.PbApiKey.Password;
+            appSettings.AiSendSchema = PageAI.CbSendSchema.IsChecked ?? false;
+
+            sqlSense.Services.SettingsManager.Save();
+
             this.Close();
         }
 
