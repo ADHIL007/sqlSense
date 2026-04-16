@@ -42,8 +42,11 @@ namespace sqlSense.UI.MenueItems.Settings
             appSettings.AiEnableCodeCompletion = PageAI.CbEnableAiCompletion.IsChecked ?? false;
             appSettings.AiEnableNlToSql = PageAI.CbEnableNlToSql.IsChecked ?? false;
             appSettings.AiProvider = ((ComboBoxItem)PageAI.CmbProvider.SelectedItem)?.Content?.ToString() ?? "OpenAI";
+            appSettings.AiBaseUrl = PageAI.TbBaseUrl.Text;
             appSettings.AiApiKey = PageAI.PbApiKey.Password;
-            appSettings.AiModelName = PageAI.TbModelName.Text;
+            appSettings.AiModelName = PageAI.CmbModelName.Text;
+            appSettings.AiDeploymentName = PageAI.TbDeploymentName.Text;
+            appSettings.AiApiVersion = PageAI.TbApiVersion.Text;
             appSettings.AiSendSchema = PageAI.CbSendSchema.IsChecked ?? false;
 
             sqlSense.Services.SettingsManager.Save();
