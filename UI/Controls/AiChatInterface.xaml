@@ -188,14 +188,14 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="md:MarkdownViewer">
-                            <RichTextBox Document="{TemplateBinding Document}"
+                            <FlowDocumentScrollViewer Document="{TemplateBinding Document}"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                IsReadOnly="True"
-                                IsDocumentEnabled="True"
-                                Padding="-4,-4,-4,-4" Margin="0"
+                                IsSelectionEnabled="True"
+                                Padding="0" Margin="0"
                                 Background="Transparent"
-                                BorderThickness="0" />
+                                BorderThickness="0"
+                                Focusable="False" />
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -344,18 +344,24 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <!-- Hide/Eye Button -->
-            <Button Grid.Row="0" 
-                    HorizontalAlignment="Right" 
-                    Background="Transparent" 
-                    BorderThickness="0" 
-                    Foreground="{StaticResource TextSecondaryBrush}" 
-                    Cursor="Hand" 
-                    Click="CloseButton_Click" 
-                    ToolTip="Hide Chat"
-                    Margin="0,0,0,5">
-                <TextBlock Text="&#xE890;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
-            </Button>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,5">
+                <TextBlock Text="Agent" Foreground="#E0E0E0" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Margin="16,0,0,0" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,16,0">
+                    <Button x:Name="NewChatBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="New Chat" Click="NewChatBtn_Click">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
+                    <Button x:Name="HistoryBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="Chat History" Click="HistoryBtn_Click">
+                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
+                    <Button x:Name="MoreOptionsBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="More Options" Click="MoreOptionsBtn_Click">
+                        <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
+                    <Button x:Name="CloseBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="Close" Click="CloseButton_Click">
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
             
             <!-- Chat Area -->
             <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,0" Padding="0,0,16,0" PanningMode="VerticalFirst">
@@ -364,6 +370,74 @@
                 </StackPanel>
             </ScrollViewer>
             
+            <!-- History Overlay -->
+            <Grid x:Name="HistoryOverlay" Grid.Row="1" Grid.RowSpan="2" Background="#1E1E1E" Visibility="Collapsed" Panel.ZIndex="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Text="Select a conversation" Foreground="#888888" FontSize="13" Margin="16,16,16,8"/>
+                
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,16">
+                    <StackPanel x:Name="HistoryListPanel">
+                        <TextBlock Text="Running in sqlSense" Foreground="#888888" FontSize="11" Margin="0,16,0,8" />
+                        
+                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Background="#004A77" Tag="Selected" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Implementing Dynamic Canvas UI Components" Foreground="#E0E0E0" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
+                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Foreground="#888888" Padding="2" Cursor="Hand" ToolTip="Delete">
+                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                </Button>
+                            </Grid>
+                        </Button>
+                        
+                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Designing SQL Flow Interface" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                <TextBlock Grid.Column="1" Text="2 wks ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <TextBlock Text="Recent in sqlSense" Foreground="#888888" FontSize="11" Margin="0,16,0,8" />
+
+                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Fixing Canvas Interaction Logic" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+                        
+                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Fixing Thickness Constructor Error" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
             <!-- Input Area -->
             <Border Grid.Row="2" Background="#08FFFFFF" BorderBrush="#1AFFFFFF" BorderThickness="1" CornerRadius="10" Margin="16,5,16,16">
                 <Border.Style>

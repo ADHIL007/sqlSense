@@ -119,10 +119,27 @@ namespace sqlSense.UI.Controls
             }
         }
 
+        private void NewChatBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ChatMessagesPanel.Children.Clear();
+            HistoryOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void HistoryBtn_Click(object sender, RoutedEventArgs e)
+        {
+            HistoryOverlay.Visibility = HistoryOverlay.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void MoreOptionsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Future implementation
+        }
+
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             ChatUI.Visibility = Visibility.Collapsed;
             FloatingAIButton.Visibility = Visibility.Visible;
+            HistoryOverlay.Visibility = Visibility.Collapsed;
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
 
