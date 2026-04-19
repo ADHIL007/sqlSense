@@ -35,9 +35,7 @@ namespace sqlSense.UI.Controls
 
             var closeBtn = new Button
             {
-                Content = "\uE711",
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 10,
+                Content = CreateCloseIcon(10),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Foreground = new SolidColorBrush(TextMuted),
@@ -113,6 +111,14 @@ namespace sqlSense.UI.Controls
                 Padding = new Thickness(0, -2, 0, 0),
                 Template = CreateCircleButtonTemplate()
             };
+
+            // Hide the FAB when it's disabled
+            var style = new Style(typeof(Button));
+            var trigger = new Trigger { Property = UIElement.IsEnabledProperty, Value = false };
+            trigger.Setters.Add(new Setter(UIElement.VisibilityProperty, Visibility.Collapsed));
+            style.Triggers.Add(trigger);
+            btn.Style = style;
+
             btn.Click += (s, e) => onClick(sourceTbl);
             return btn;
         }

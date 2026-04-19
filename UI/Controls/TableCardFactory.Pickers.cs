@@ -51,9 +51,7 @@ namespace sqlSense.UI.Controls
             });
             var closeBtn = new Button
             {
-                Content = "\uE711",
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 10,
+                Content = CreateCloseIcon(10),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Foreground = new SolidColorBrush(TextMuted),

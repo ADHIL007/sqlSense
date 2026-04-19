@@ -143,18 +143,17 @@
 
                                                 <Button Grid.Column="1"
                                                         x:Name="closeBtn"
-                                                        Content="&#xE8BB;"
-                                                        FontFamily="Segoe MDL2 Assets"
-                                                        FontSize="12"
                                                         Background="Transparent"
                                                         BorderThickness="0"
-                                                        Foreground="{StaticResource MutedBrush}"
                                                         VerticalAlignment="Center"
                                                         Margin="8,0,0,0"
                                                         Cursor="Hand"
                                                         ToolTip="Close"
                                                         Command="{Binding DataContext.CloseWorkbookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}" />
+                                                        CommandParameter="{Binding}">
+                                                    <Control Template="{StaticResource CloseIcon}" Width="10" Height="10"
+                                                             Foreground="{StaticResource MutedBrush}"/>
+                                                </Button>
                                             </Grid>
                                         </Border>
                                         <ControlTemplate.Triggers>

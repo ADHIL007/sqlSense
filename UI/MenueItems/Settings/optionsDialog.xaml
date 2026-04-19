@@ -1,0 +1,139 @@
+<Window x:Class="sqlSense.UI.MenueItems.Settings.optionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:pages="clr-namespace:sqlSense.UI.MenueItems.Settings.Pages"
+        Title="SQLSense Options"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#1E1E1E"
+        WindowStyle="None"
+        BorderBrush="#3C3C3C"
+        BorderThickness="1"
+        AllowsTransparency="True">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="34"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom Title Bar -->
+        <Border Grid.Row="0" Background="#252526" BorderBrush="#3C3C3C" BorderThickness="0,0,0,1" 
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <DockPanel LastChildFill="False" Margin="12,0">
+                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="13" 
+                           Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="SQLSense Options" VerticalAlignment="Center" 
+                           Foreground="#CCCCCC" FontSize="12" FontFamily="Segoe UI"/>
+                <Button DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" 
+                        BorderThickness="0" Width="34" Click="Close_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" Padding="8">
+                                <Control Template="{StaticResource CloseIcon}" Width="10" Height="10"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E81123"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="1"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Navigation Sidebar -->
+            <Border Grid.Column="0" Background="#252526">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,8">
+                        <!-- Search Box -->
+                        <Border Margin="10,4,10,12" Background="#1E1E1E" BorderBrush="#3C3C3C" 
+                                BorderThickness="1" CornerRadius="3" Height="28">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12" 
+                                           Foreground="#888888" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                                <TextBox Grid.Column="1" Background="Transparent" BorderThickness="0" 
+                                         Foreground="White" VerticalContentAlignment="Center" FontSize="12"
+                                         CaretBrush="White"/>
+                            </Grid>
+                        </Border>
+
+                        <RadioButton Content="General" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE713;" IsChecked="True" Checked="Nav_Checked"/>
+                        <RadioButton Content="Editor" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE70F;" Checked="Nav_Checked"/>
+                        <RadioButton x:Name="RbAIAssistant" Content="AI Assistant" Style="{StaticResource NavButton}" 
+                              Tag="&#xE968;" Checked="Nav_Checked"/>
+                        <RadioButton Content="DB Connection" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE968;" Checked="Nav_Checked"/>
+                        <RadioButton Content="Theme" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE790;" Checked="Nav_Checked"/>
+                        <RadioButton Content="Canvas" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE943;" Checked="Nav_Checked"/>
+                        <RadioButton Content="SQL Engine" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE756;" Checked="Nav_Checked"/>
+                        <RadioButton Content="Keyboard" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE92E;" Checked="Nav_Checked"/>
+                        <RadioButton Content="About" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE946;" Checked="Nav_Checked"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Divider -->
+            <Border Grid.Column="1" Background="#3C3C3C"/>
+
+            <!-- Right Content Area -->
+            <Border Grid.Column="2" Background="#1E1E1E">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,20">
+                    <!-- Content Pages (stacked, toggle visibility) -->
+                    <Grid x:Name="ContentArea">
+                        <pages:GeneralSettingsPage x:Name="PageGeneral"/>
+                        <pages:EditorSettingsPage x:Name="PageEditor" Visibility="Collapsed"/>
+                        <pages:AISettingsPage x:Name="PageAI" Visibility="Collapsed"/>
+                        <pages:ConnectionSettingsPage x:Name="PageConnection" Visibility="Collapsed"/>
+                        <pages:ThemeSettingsPage x:Name="PageTheme" Visibility="Collapsed"/>
+                        <pages:CanvasSettingsPage x:Name="PageCanvas" Visibility="Collapsed"/>
+                        <pages:SqlEngineSettingsPage x:Name="PageSQLEngine" Visibility="Collapsed"/>
+                        <pages:KeyboardSettingsPage x:Name="PageKeyboard" Visibility="Collapsed"/>
+                        <pages:AboutSettingsPage x:Name="PageAbout" Visibility="Collapsed"/>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="2" Background="#252526" BorderBrush="#3C3C3C" BorderThickness="0,1,0,0" Padding="20,14">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="OK" Style="{StaticResource ActionButton}" 
+                        Background="#4FC3F7" Foreground="Black" FontWeight="Bold"
+                        Click="OK_Click" IsDefault="True"/>
+                <Button Content="Cancel" Style="{StaticResource ActionButton}" 
+                        Click="Close_Click" IsCancel="True"/>
+                <Button Content="Apply" Style="{StaticResource ActionButton}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

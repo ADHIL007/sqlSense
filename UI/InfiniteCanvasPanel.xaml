@@ -184,6 +184,13 @@
                            Foreground="{StaticResource MutedBrush}" FontSize="10" 
                            FontFamily="Consolas"/>
             </Border>
+
+            <!-- AI Chat Interface overlay -->
+            <controls:AiChatInterface Grid.Column="1"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Stretch"
+                                      Width="320"
+                                      Margin="0,16,16,70" />
         </Grid>
     </Border>
 </UserControl>

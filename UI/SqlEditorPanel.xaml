@@ -36,19 +36,18 @@
                     <Button Command="{Binding SqlEditor.CloseCommand}" 
                             ToolTip="Close Editor"
                             Background="Transparent" BorderThickness="0">
-                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" 
-                                 FontSize="9" Foreground="{StaticResource MutedBrush}"
-                                 VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
+                        <Control Template="{StaticResource CloseIcon}" Width="9" Height="9"
+                                 Foreground="{StaticResource MutedBrush}">
+                            <Control.Style>
+                                <Style TargetType="Control">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
                                             <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                            </Control.Style>
+                        </Control>
                     </Button>
                 </StackPanel>
             </Grid>

@@ -27,6 +27,22 @@ namespace sqlSense.UI.Controls
         private static readonly Color SelectedRow = Color.FromRgb(0x09, 0x47, 0x71);
 
         /// <summary>
+        /// Creates a close (X) icon Control using the shared CloseIcon template.
+        /// </summary>
+        private static Control CreateCloseIcon(double size, Brush? foreground = null)
+        {
+            var icon = new Control
+            {
+                Width = size,
+                Height = size,
+                Template = (ControlTemplate)Application.Current.FindResource("CloseIcon"),
+                Foreground = foreground ?? new SolidColorBrush(TextMuted),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            return icon;
+        }
+
+        /// <summary>
         /// Creates a standard table card matching the top-10 records preview style.
         /// Includes a header, column list, and hover-revealed join connector.
         /// </summary>
@@ -64,9 +80,7 @@ namespace sqlSense.UI.Controls
 
                 var previewCloseBtn = new Button
                 {
-                    Content = "\uE711",
-                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                    FontSize = 10,
+                    Content = CreateCloseIcon(10),
                     Background = Brushes.Transparent,
                     BorderThickness = new Thickness(0),
                     Foreground = new SolidColorBrush(TextMuted),
@@ -150,9 +164,7 @@ namespace sqlSense.UI.Controls
 
             var closeBtn = new Button
             {
-                Content = "\uE711",
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 10,
+                Content = CreateCloseIcon(10),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Foreground = new SolidColorBrush(TextMuted),

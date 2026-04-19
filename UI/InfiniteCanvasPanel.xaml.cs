@@ -51,6 +51,12 @@ namespace sqlSense.UI
             {
                 case "ToggleMode":
                     GraphRenderer?.ToggleDataFlowState();
+                    bool isDataFlow = GraphRenderer?.IsGlobalDataFlowEnabled ?? true;
+                    ErdToolbar.SetModeIcon(isDataFlow);
+                    if (ViewModel != null)
+                        ViewModel.StatusMessage = isDataFlow 
+                            ? "Switched to Data Flow mode" 
+                            : "Switched to Control Flow mode";
                     break;
                 case "CreateTable":
                     GraphRenderer?.ShowCreateTableOnCanvas();

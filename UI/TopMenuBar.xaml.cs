@@ -1,4 +1,7 @@
+using System.Windows;
 using System.Windows.Controls;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
+using sqlSense.UI.MenueItems.Settings;
 
 namespace sqlSense.UI
 {
@@ -13,5 +16,20 @@ namespace sqlSense.UI
         {
 
         }
+
+        private void onOptionClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var owner = Window.GetWindow(this);
+
+            var dialog = new optionsDialog
+            {
+                Owner = owner,
+                Width = 850,
+                Height = 600
+            };
+            dialog.ShowDialog();
+        }
+
+
     }
 }

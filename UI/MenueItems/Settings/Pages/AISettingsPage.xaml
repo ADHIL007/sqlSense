@@ -1,0 +1,128 @@
+<UserControl x:Class="sqlSense.UI.MenueItems.Settings.Pages.AISettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../SettingsResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,0,0">
+            <TextBlock Text="AI Assistant" Style="{StaticResource SectionHeader}"/>
+
+            <StackPanel Margin="0,0,0,18">
+                <CheckBox x:Name="CbEnableAiCompletion" Content="Enable AI code completion" 
+                          Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+                <TextBlock Text="Suggest entire blocks of SQL code as you type." 
+                           Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,0,0,18">
+                <CheckBox x:Name="CbEnableNlToSql" Content="Enable natural language to SQL" 
+                          Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+                <TextBlock Text="Allow the AI to generate SQL queries from plain English descriptions." 
+                           Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+            </StackPanel>
+
+            <Border Height="1" Background="#3C3C3C" Margin="0,8,0,24"/>
+
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="AI Provider:" Style="{StaticResource SettingLabel}"/>
+                <ComboBox x:Name="CmbProvider" Grid.Column="1" Style="{StaticResource SettingComboBox}" SelectionChanged="CmbProvider_SelectionChanged">
+                    <ComboBoxItem Content="None" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="OpenAI" IsSelected="True" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="Microsoft Azure OpenAI" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="Google Gemini" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="Anthropic Claude" Style="{StaticResource SettingComboBoxItem}"/>
+                    <ComboBoxItem Content="Local Model (Ollama)" Style="{StaticResource SettingComboBoxItem}"/>
+                </ComboBox>
+            </Grid>
+
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="280"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="API Key:" Style="{StaticResource SettingLabel}"/>
+                <StackPanel Grid.Column="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="PbApiKey" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•" PasswordChanged="PbApiKey_PasswordChanged"/>
+                        <Button x:Name="BtnSaveApiKey" Grid.Column="1" Content="Save Key" Margin="10,0,0,0" Height="28" Padding="10,0" Background="#333333" Foreground="White" BorderThickness="0" Cursor="Hand" Click="BtnSaveApiKey_Click"/>
+                    </Grid>
+                    <TextBlock Text="(Stored securely and never shared with AI)" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Model Name:" Style="{StaticResource SettingLabel}"/>
+                <ComboBox x:Name="CmbModelName" Style="{StaticResource SettingComboBox}" Grid.Column="1" Height="28" IsEditable="True" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" ToolTip="e.g. gpt-4, claude-3-opus-20240229, gemini-pro, llama3"/>
+                <Button x:Name="BtnLoadModels" Grid.Column="2" Content="Load Models" Margin="10,0,0,0" Height="28" Padding="10,0" Background="#333333" Foreground="White" BorderThickness="0" Cursor="Hand" Click="BtnLoadModels_Click" IsEnabled="False"/>
+            </Grid>
+
+            <StackPanel x:Name="AzureExtraOptionsGrid" Visibility="Collapsed">
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="280"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Deployment Name:" Style="{StaticResource SettingLabel}"/>
+                    <TextBox x:Name="TbDeploymentName" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="e.g. gpt-4-deploy"/>
+                </Grid>
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="280"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="API Version:" Style="{StaticResource SettingLabel}"/>
+                    <TextBox x:Name="TbApiVersion" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="e.g. 2024-02-15-preview"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Margin="0,0,0,24">
+                <CheckBox x:Name="CbSendSchema" Content="Send anonymized schema data" 
+                          Style="{StaticResource SettingCheckBox}" IsChecked="True"/>
+                <TextBlock Text="Allow the AI to understand your tables and columns for better suggestions. (No table data is sent)" 
+                           Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+            </StackPanel>
+
+            <Expander Header="Advanced Settings" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,18" ExpandDirection="Down">
+                <StackPanel Margin="0,10,0,0">
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="280"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Overrides Base URL:" Style="{StaticResource SettingLabel}"/>
+                        <TextBox x:Name="TbBaseUrl" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Margin="0,10,0,0">
+                        <CheckBox x:Name="CbFastMode" Content="Fast Mode (Disable Reasoning/Thinking)" 
+                                  Style="{StaticResource SettingCheckBox}" IsChecked="False"/>
+                        <TextBlock Text="Instructs models to skip chain-of-thought processing and strip reasoning tags for faster replies." 
+                                   Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
