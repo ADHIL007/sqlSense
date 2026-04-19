@@ -114,16 +114,6 @@ namespace sqlSense.UI
             
             StopPan(); 
             CanvasContainer.Cursor = Cursors.Arrow;
-
-            // If it was a quick click (not a drag or pan), show the context menu
-            if (dist < 3)
-            {
-                if (CanvasContainer.ContextMenu != null)
-                {
-                    CanvasContainer.ContextMenu.PlacementTarget = CanvasContainer;
-                    CanvasContainer.ContextMenu.IsOpen = true;
-                }
-            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
