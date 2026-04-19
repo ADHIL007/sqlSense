@@ -93,10 +93,7 @@ namespace sqlSense.Services
                 yield break;
             }
 
-            if (settings.AiFastMode)
-            {
-                message = "You are in fast mode. You must reply immediately without any chain of thought. Never output <think> or <thought> tags.\n\n" + message;
-            }
+            message = sqlSense.AgentService.PromptBuilder.BuildPrompt(message, settings.AiFastMode);
 
             IAsyncEnumerable<string> stream = null;
             System.Diagnostics.Debug.WriteLine($"[AiService] Sending message via {settings.AiProvider} (Model: {settings.AiModelName})");
@@ -140,115 +137,10 @@ namespace sqlSense.Services
 
             if (stream == null) yield break;
 
-            bool isThinking = false;
-            string buffer = "";
-            bool hasYieldedError = false;
-
-            await using var enumerator = stream.GetAsyncEnumerator(cancellationToken);
-            while (true)
+            var processedStream = sqlSense.AgentService.AgentService.ProcessStreamAsync(stream, settings.AiFastMode, cancellationToken);
+            await foreach (var chunk in processedStream.WithCancellation(cancellationToken))
             {
-                bool success = false;
-                Exception loopEx = null;
-                try
-                {
-                    success = await enumerator.MoveNextAsync();
-                }
-                catch (Exception e)
-                {
-                    loopEx = e;
-                    System.Diagnostics.Debug.WriteLine($"[AiService] Stream Exception: {e}");
-                }
-
-                if (loopEx != null)
-                {
-                    if (!hasYieldedError)
-                    {
-                        yield return $"\n[Stream Error: {loopEx.Message}]";
-                        hasYieldedError = true;
-                    }
-                    break;
-                }
-
-                if (!success) break;
-
-                var chunk = enumerator.Current;
-                System.Diagnostics.Debug.WriteLine($"[AiService] Chunk received: {chunk?.Replace("\n", "\\n").Replace("\r", "")}");
-
-                if (!settings.AiFastMode)
-                {
-                    yield return chunk;
-                    continue;
-                }
-
-                string process = buffer + chunk;
-                buffer = "";
-                
-                while (process.Length > 0)
-                {
-                    if (!isThinking)
-                    {
-                        int idx = process.IndexOf("<think>");
-                        if (idx >= 0)
-                        {
-                            isThinking = true;
-                            if (idx > 0) yield return process.Substring(0, idx);
-                            process = process.Substring(idx + 7);
-                        }
-                        else
-                        {
-                            int pIdx = -1;
-                            for (int i = 1; i <= 6 && i <= process.Length; i++)
-                            {
-                                if ("<think>".StartsWith(process.Substring(process.Length - i)))
-                                {
-                                    pIdx = process.Length - i;
-                                    break;
-                                }
-                            }
-                            if (pIdx >= 0)
-                            {
-                                if (pIdx > 0) yield return process.Substring(0, pIdx);
-                                buffer = process.Substring(pIdx);
-                                process = "";
-                            }
-                            else
-                            {
-                                yield return process;
-                                process = "";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        int idx = process.IndexOf("</think>");
-                        if (idx >= 0)
-                        {
-                            isThinking = false;
-                            process = process.Substring(idx + 8);
-                        }
-                        else
-                        {
-                            int pIdx = -1;
-                            for (int i = 1; i <= 7 && i <= process.Length; i++)
-                            {
-                                if ("</think>".StartsWith(process.Substring(process.Length - i)))
-                                {
-                                    pIdx = process.Length - i;
-                                    break;
-                                }
-                            }
-                            if (pIdx >= 0)
-                            {
-                                buffer = process.Substring(pIdx);
-                            }
-                            process = "";
-                        }
-                    }
-                }
-            }
-            if (!isThinking && buffer.Length > 0 && buffer != "<think" && buffer != "</think") 
-            {
-                yield return buffer;
+                yield return chunk;
             }
         }
 
