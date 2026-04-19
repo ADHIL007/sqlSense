@@ -5,11 +5,14 @@
 It enables developers to **understand, build, and debug SQL visually** instead of reading thousands of lines of code.
 
 ---
-new Update 1.5.0.0.1✨
+new Update 1.5.0.1✨
 
 -Enhanced UI ,added FAB buttons <br>
 -implemented Workbook saving <br>
 -implement custom query creation using tables (joining tables)  <br>
+-Added Agent chat view <br>
+1.5.0.1✨
+<img width="1919" height="995" alt="image" src="https://github.com/user-attachments/assets/06b9f0cf-9cb1-4682-b461-aebc0faa63d3" />
 
 <img width="1916" height="1009" alt="image" src="https://github.com/user-attachments/assets/9d621f5e-069b-4929-bd47-0fae4a3e41ed" />
 
