@@ -16,6 +16,7 @@ namespace sqlSense.Services
         public string AiApiVersion { get; set; } = "";
         public bool AiSendSchema { get; set; } = true;
         public bool AiFastMode { get; set; } = false;
+        public System.Collections.Generic.Dictionary<string, string> SavedApiKeys { get; set; } = new System.Collections.Generic.Dictionary<string, string>();
     }
 
     public static class SettingsManager

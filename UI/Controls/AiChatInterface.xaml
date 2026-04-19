@@ -381,60 +381,6 @@
                 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,16">
                     <StackPanel x:Name="HistoryListPanel">
-                        <TextBlock Text="Running in sqlSense" Foreground="#888888" FontSize="11" Margin="0,16,0,8" />
-                        
-                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Background="#004A77" Tag="Selected" Margin="0,2">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Implementing Dynamic Canvas UI Components" Foreground="#E0E0E0" TextTrimming="CharacterEllipsis" FontSize="13" />
-                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
-                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Foreground="#888888" Padding="2" Cursor="Hand" ToolTip="Delete">
-                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
-                                </Button>
-                            </Grid>
-                        </Button>
-                        
-                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Designing SQL Flow Interface" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
-                                <TextBlock Grid.Column="1" Text="2 wks ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
-
-                        <TextBlock Text="Recent in sqlSense" Foreground="#888888" FontSize="11" Margin="0,16,0,8" />
-
-                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Fixing Canvas Interaction Logic" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
-                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
-                        
-                        <Button Style="{StaticResource PopupItemButton}" HorizontalContentAlignment="Stretch" Margin="0,2">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Fixing Thickness Constructor Error" Foreground="#CCCCCC" TextTrimming="CharacterEllipsis" FontSize="13" />
-                                <TextBlock Grid.Column="1" Text="1 wk ago" Foreground="#888888" FontSize="11" Margin="8,0" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

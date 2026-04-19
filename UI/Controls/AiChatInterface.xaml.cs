@@ -122,12 +122,165 @@ namespace sqlSense.UI.Controls
         private void NewChatBtn_Click(object sender, RoutedEventArgs e)
         {
             ChatMessagesPanel.Children.Clear();
+            sqlSense.Services.ChatSessionManager.CreateNewSession();
             HistoryOverlay.Visibility = Visibility.Collapsed;
         }
 
         private void HistoryBtn_Click(object sender, RoutedEventArgs e)
         {
-            HistoryOverlay.Visibility = HistoryOverlay.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            if (HistoryOverlay.Visibility == Visibility.Collapsed)
+            {
+                RefreshHistoryPanel();
+                HistoryOverlay.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                HistoryOverlay.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void RefreshHistoryPanel()
+        {
+            HistoryListPanel.Children.Clear();
+            var sessions = sqlSense.Services.ChatSessionManager.GetRecentSessions();
+            
+            var textBlock = new TextBlock { Text = "Recent Output", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 11, Margin = new Thickness(0, 16, 0, 8) };
+            HistoryListPanel.Children.Add(textBlock);
+
+            foreach(var session in sessions)
+            {
+                var btn = new Button 
+                { 
+                    Style = (Style)FindResource("PopupItemButton"), 
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    Margin = new Thickness(0, 2, 0, 2)
+                };
+                if (sqlSense.Services.ChatSessionManager.CurrentSession?.SessionId == session.SessionId)
+                {
+                    btn.Background = new SolidColorBrush(Color.FromRgb(0, 74, 119));
+                    btn.Tag = "Selected";
+                }
+
+                var grid = new Grid();
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var titleTxt = new TextBlock { Text = session.Title, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), TextTrimming = TextTrimming.CharacterEllipsis, FontSize = 13 };
+                Grid.SetColumn(titleTxt, 0);
+                grid.Children.Add(titleTxt);
+
+                var timeTxt = new TextBlock { Text = sqlSense.Services.ChatSessionManager.GetRelativeTime(session.UpdatedAt), Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 11, Margin = new Thickness(8, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(timeTxt, 1);
+                grid.Children.Add(timeTxt);
+
+                var delBtn = new Button { Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), Padding = new Thickness(2), Cursor = Cursors.Hand, ToolTip = "Delete" };
+                var delTxt = new TextBlock { Text = "\xE74D", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 12 };
+                delBtn.Content = delTxt;
+                Grid.SetColumn(delBtn, 2);
+                grid.Children.Add(delBtn);
+
+                delBtn.Click += (s, ev) => {
+                    ev.Handled = true;
+                    sqlSense.Services.ChatSessionManager.DeleteSession(session.SessionId);
+                    RefreshHistoryPanel();
+                    if (sqlSense.Services.ChatSessionManager.CurrentSession == null)
+                    {
+                        NewChatBtn_Click(null, null);
+                    }
+                };
+
+                btn.Content = grid;
+                btn.Click += (s, ev) => {
+                    LoadSessionIntoUI(session.SessionId);
+                    HistoryOverlay.Visibility = Visibility.Collapsed;
+                };
+
+                HistoryListPanel.Children.Add(btn);
+            }
+        }
+
+        private void LoadSessionIntoUI(string sessionId)
+        {
+            var session = sqlSense.Services.ChatSessionManager.LoadSession(sessionId);
+            if (session == null) return;
+
+            ChatMessagesPanel.Children.Clear();
+            foreach (var msg in session.Messages)
+            {
+                if (msg.Role == "user")
+                {
+                    AddMessage(msg.Content, true);
+                }
+                else
+                {
+                    AddMessageBubbleFromHistory(msg.Content);
+                }
+            }
+            ChatScrollViewer.ScrollToEnd();
+        }
+
+        private void AddMessageBubbleFromHistory(string content)
+        {
+            string thinkPart = null;
+            string textPart = content;
+
+            if (content.StartsWith("<think>") && content.Contains("</think>"))
+            {
+                int endIdx = content.IndexOf("</think>");
+                thinkPart = content.Substring(7, endIdx - 7).Trim();
+                textPart = content.Substring(endIdx + 8).Trim();
+            }
+
+            var border = new Border
+            {
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(12, 10, 12, 2),
+                Margin = new Thickness(0, 4, 16, 8),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                MaxWidth = 500,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Colors.Black, BlurRadius = 15, ShadowDepth = 5, Opacity = 0.3 }
+            };
+            border.Background = new SolidColorBrush(Color.FromArgb(0x08, 0xFF, 0xFF, 0xFF));
+            border.BorderBrush = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+            border.CornerRadius = new CornerRadius(12, 12, 12, 4);
+
+            var container = new StackPanel { Orientation = Orientation.Vertical };
+
+            if (!string.IsNullOrEmpty(thinkPart))
+            {
+                var thinkTxt = new Markdig.Wpf.MarkdownViewer { 
+                    Markdown = thinkPart,
+                    Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175)), 
+                    Margin = new Thickness(8,4,8,4), Background = Brushes.Transparent, BorderThickness = new Thickness(0), 
+                    Pipeline = new Markdig.MarkdownPipelineBuilder().UseAdvancedExtensions().UsePipeTables().Build() };
+                ScrollViewer.SetVerticalScrollBarVisibility(thinkTxt, ScrollBarVisibility.Disabled);
+                thinkTxt.PreviewMouseWheel += (s, e) => { e.Handled = true; var ev = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta) { RoutedEvent = UIElement.MouseWheelEvent, Source = s }; ChatScrollViewer.RaiseEvent(ev); };
+                
+                var thinkExpander = new Expander { 
+                    Header = "Thought Process", 
+                    Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175)),
+                    Content = new Border { Background = new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)), BorderBrush = new SolidColorBrush(Color.FromArgb(0x10, 255, 255, 255)), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(6), Child = thinkTxt },
+                    Margin = new Thickness(0, 4, 0, 8),
+                    IsExpanded = false
+                };
+                container.Children.Add(thinkExpander);
+            }
+
+            if (!string.IsNullOrEmpty(textPart))
+            {
+                var currentTxt = new Markdig.Wpf.MarkdownViewer { 
+                    Markdown = textPart,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0xE6, 0xED, 0xF3)), 
+                    Background = Brushes.Transparent, BorderThickness = new Thickness(0), Margin = new Thickness(0),
+                    Pipeline = new Markdig.MarkdownPipelineBuilder().UseAdvancedExtensions().UsePipeTables().Build() };
+                ScrollViewer.SetVerticalScrollBarVisibility(currentTxt, ScrollBarVisibility.Disabled);
+                currentTxt.PreviewMouseWheel += (s, e) => { e.Handled = true; var ev = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta) { RoutedEvent = UIElement.MouseWheelEvent, Source = s }; ChatScrollViewer.RaiseEvent(ev); };
+                container.Children.Add(currentTxt);
+            }
+
+            border.Child = container;
+            ChatMessagesPanel.Children.Add(border);
         }
 
         private void MoreOptionsBtn_Click(object sender, RoutedEventArgs e)
@@ -199,6 +352,8 @@ namespace sqlSense.UI.Controls
             if (string.IsNullOrWhiteSpace(text)) return;
             
             AddMessage(text, true);
+            sqlSense.Services.ChatSessionManager.AddMessage("user", text);
+            
             SetInputText("");
             InputTextBox.IsEnabled = false; // Prevent typing while waiting
             _cancelStream = false;
@@ -384,6 +539,11 @@ namespace sqlSense.UI.Controls
                     {
                         container.Children.Remove(dotsBorder);
                     }
+                    
+                    string finalContent = "";
+                    if (!string.IsNullOrEmpty(thinkTextBuffer)) finalContent += $"<think>\n{thinkTextBuffer}\n</think>\n\n";
+                    finalContent += currentTextBuffer;
+                    sqlSense.Services.ChatSessionManager.AddMessage("assistant", finalContent);
                 }
             }
             catch (Exception ex)

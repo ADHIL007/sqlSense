@@ -49,6 +49,16 @@ namespace sqlSense.UI.MenueItems.Settings
             appSettings.AiProvider = ((ComboBoxItem)PageAI.CmbProvider.SelectedItem)?.Content?.ToString() ?? "None";
             appSettings.AiBaseUrl = PageAI.TbBaseUrl.Text;
             appSettings.AiApiKey = PageAI.PbApiKey.Password;
+            
+            if (appSettings.SavedApiKeys == null)
+            {
+                appSettings.SavedApiKeys = new System.Collections.Generic.Dictionary<string, string>();
+            }
+            if (appSettings.AiProvider != "None")
+            {
+                appSettings.SavedApiKeys[appSettings.AiProvider] = appSettings.AiApiKey;
+            }
+
             appSettings.AiModelName = PageAI.CmbModelName.Text;
             appSettings.AiDeploymentName = PageAI.TbDeploymentName.Text;
             appSettings.AiApiVersion = PageAI.TbApiVersion.Text;

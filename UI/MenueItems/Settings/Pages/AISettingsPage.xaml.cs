@@ -38,7 +38,8 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
 
         private void CmbProvider_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (CmbProvider.SelectedItem is ComboBoxItem item && item.Content?.ToString() == "None")
+            var provider = (CmbProvider.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            if (provider == "None")
             {
                 if (PbApiKey != null) PbApiKey.Password = "";
                 if (CmbModelName != null) 
@@ -47,9 +48,41 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
                     CmbModelName.Items.Clear();
                 }
             }
+            else if (provider != null)
+            {
+                var appSettings = sqlSense.Services.SettingsManager.Current;
+                if (appSettings.SavedApiKeys != null && appSettings.SavedApiKeys.ContainsKey(provider))
+                {
+                    if (PbApiKey != null) PbApiKey.Password = appSettings.SavedApiKeys[provider];
+                }
+                else if (PbApiKey != null)
+                {
+                    // Fallback to currently active key only if it matches active provider, or leave as is if we just loaded Settings
+                    if (appSettings.AiProvider != provider)
+                    {
+                        PbApiKey.Password = "";
+                    }
+                }
+            }
             
             UpdateDynamicUI();
             UpdateLoadModelsButtonState();
+        }
+
+        private void BtnSaveApiKey_Click(object sender, RoutedEventArgs e)
+        {
+            var provider = ((ComboBoxItem)CmbProvider.SelectedItem)?.Content?.ToString();
+            if (provider != null && provider != "None")
+            {
+                var appSettings = sqlSense.Services.SettingsManager.Current;
+                if (appSettings.SavedApiKeys == null)
+                {
+                    appSettings.SavedApiKeys = new System.Collections.Generic.Dictionary<string, string>();
+                }
+                appSettings.SavedApiKeys[provider] = PbApiKey.Password;
+                sqlSense.Services.SettingsManager.Save();
+                System.Windows.MessageBox.Show($"API Key for {provider} saved successfully.", "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
         }
 
         private void PbApiKey_PasswordChanged(object sender, RoutedEventArgs e)

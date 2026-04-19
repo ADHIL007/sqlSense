@@ -56,7 +56,14 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="API Key:" Style="{StaticResource SettingLabel}"/>
                 <StackPanel Grid.Column="1">
-                    <PasswordBox x:Name="PbApiKey" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•" PasswordChanged="PbApiKey_PasswordChanged"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox x:Name="PbApiKey" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" PasswordChar="•" PasswordChanged="PbApiKey_PasswordChanged"/>
+                        <Button x:Name="BtnSaveApiKey" Grid.Column="1" Content="Save Key" Margin="10,0,0,0" Height="28" Padding="10,0" Background="#333333" Foreground="White" BorderThickness="0" Cursor="Hand" Click="BtnSaveApiKey_Click"/>
+                    </Grid>
                     <TextBlock Text="(Stored securely and never shared with AI)" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,4,0,0"/>
                 </StackPanel>
             </Grid>
