@@ -28,7 +28,7 @@ namespace sqlSense.Services
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync();
-            using var reader = new System.IO.StreamReader(stream);
+            using var reader = new System.IO.StreamReader(stream, Encoding.UTF8);
 
             while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {

@@ -40,6 +40,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="AI Provider:" Style="{StaticResource SettingLabel}"/>
                 <ComboBox x:Name="CmbProvider" Grid.Column="1" Style="{StaticResource SettingComboBox}" SelectionChanged="CmbProvider_SelectionChanged">
+                    <ComboBoxItem Content="None" Style="{StaticResource SettingComboBoxItem}"/>
                     <ComboBoxItem Content="OpenAI" IsSelected="True" Style="{StaticResource SettingComboBoxItem}"/>
                     <ComboBoxItem Content="Microsoft Azure OpenAI" Style="{StaticResource SettingComboBoxItem}"/>
                     <ComboBoxItem Content="Google Gemini" Style="{StaticResource SettingComboBoxItem}"/>

@@ -34,21 +34,44 @@ namespace sqlSense.Services
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new System.IO.StreamReader(stream);
 
+            bool reasoningStarted = false;
+            bool reasoningEnded = false;
+
             while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 if (line.StartsWith("data: "))
                 {
-                    string delta = null;
+                    string deltaReasoning = null;
+                    string deltaContentText = null;
                     try {
-                        var json = JObject.Parse(line.Substring(6));
+                        var jsonStr = line.Substring(6);
+                        var json = JObject.Parse(jsonStr);
                         if (json["type"]?.ToString() == "content_block_delta")
                         {
-                            delta = json["delta"]?["text"]?.ToString();
+                            var deltaObj = json["delta"];
+                            if (deltaObj?["type"]?.ToString() == "thinking_delta")
+                            {
+                                deltaReasoning = deltaObj["thinking"]?.ToString();
+                            }
+                            else if (deltaObj?["type"]?.ToString() == "text_delta")
+                            {
+                                deltaContentText = deltaObj["text"]?.ToString();
+                            }
                         }
                     } catch { }
-                    if (!string.IsNullOrEmpty(delta)) yield return delta;
+                    
+                    if (!string.IsNullOrEmpty(deltaReasoning))
+                    {
+                        if (!reasoningStarted) { reasoningStarted = true; yield return "<think>\n"; }
+                        yield return deltaReasoning;
+                    }
+                    if (!string.IsNullOrEmpty(deltaContentText))
+                    {
+                        if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; yield return "\n</think>\n"; }
+                        yield return deltaContentText;
+                    }
                 }
             }
         }

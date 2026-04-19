@@ -84,7 +84,7 @@
                                      Tag="&#xE713;" IsChecked="True" Checked="Nav_Checked"/>
                         <RadioButton Content="Editor" Style="{StaticResource NavButton}" 
                                      Tag="&#xE70F;" Checked="Nav_Checked"/>
-                        <RadioButton Content="AI Assistant" Style="{StaticResource NavButton}" 
+                        <RadioButton x:Name="RbAIAssistant" Content="AI Assistant" Style="{StaticResource NavButton}" 
                               Tag="&#xE968;" Checked="Nav_Checked"/>
                         <RadioButton Content="DB Connection" Style="{StaticResource NavButton}" 
                                      Tag="&#xE968;" Checked="Nav_Checked"/>

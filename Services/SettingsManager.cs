@@ -8,7 +8,7 @@ namespace sqlSense.Services
     {
         public bool AiEnableCodeCompletion { get; set; } = true;
         public bool AiEnableNlToSql { get; set; } = true;
-        public string AiProvider { get; set; } = "OpenAI";
+        public string AiProvider { get; set; } = "None";
         public string AiApiKey { get; set; } = "";
         public string AiBaseUrl { get; set; } = "";
         public string AiModelName { get; set; } = "";

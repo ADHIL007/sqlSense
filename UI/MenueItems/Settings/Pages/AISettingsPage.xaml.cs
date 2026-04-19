@@ -38,6 +38,16 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
 
         private void CmbProvider_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (CmbProvider.SelectedItem is ComboBoxItem item && item.Content?.ToString() == "None")
+            {
+                if (PbApiKey != null) PbApiKey.Password = "";
+                if (CmbModelName != null) 
+                {
+                    CmbModelName.Text = "";
+                    CmbModelName.Items.Clear();
+                }
+            }
+            
             UpdateDynamicUI();
             UpdateLoadModelsButtonState();
         }
@@ -68,7 +78,11 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             if (CmbProvider.SelectedItem == null || BtnLoadModels == null || PbApiKey == null) return;
             
             var provider = ((ComboBoxItem)CmbProvider.SelectedItem).Content.ToString();
-            if (provider == "Local Model (Ollama)")
+            if (provider == "None")
+            {
+                BtnLoadModels.IsEnabled = false;
+            }
+            else if (provider == "Local Model (Ollama)")
             {
                 BtnLoadModels.IsEnabled = true;
             }

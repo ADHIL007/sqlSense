@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace sqlSense.Services
 {
-    public static class AiService
+    public static partial class AiService
     {
         private static readonly HttpClient _httpClient = new HttpClient();
 
@@ -99,6 +99,8 @@ namespace sqlSense.Services
             }
 
             IAsyncEnumerable<string> stream = null;
+            System.Diagnostics.Debug.WriteLine($"[AiService] Sending message via {settings.AiProvider} (Model: {settings.AiModelName})");
+            System.Diagnostics.Debug.WriteLine($"[AiService] FastMode: {settings.AiFastMode}, Message Length: {message.Length}");
 
             string setupError = null;
             try
@@ -154,6 +156,7 @@ namespace sqlSense.Services
                 catch (Exception e)
                 {
                     loopEx = e;
+                    System.Diagnostics.Debug.WriteLine($"[AiService] Stream Exception: {e}");
                 }
 
                 if (loopEx != null)
@@ -169,6 +172,7 @@ namespace sqlSense.Services
                 if (!success) break;
 
                 var chunk = enumerator.Current;
+                System.Diagnostics.Debug.WriteLine($"[AiService] Chunk received: {chunk?.Replace("\n", "\\n").Replace("\r", "")}");
 
                 if (!settings.AiFastMode)
                 {

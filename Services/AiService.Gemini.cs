@@ -29,21 +29,46 @@ namespace sqlSense.Services
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new System.IO.StreamReader(stream);
 
+            bool reasoningStarted = false;
+            bool reasoningEnded = false;
+
             while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 if (line.StartsWith("data: "))
                 {
-                    string delta = null;
+                    List<string> tokensToYield = new List<string>();
                     try {
                         var jsonStr = line.Substring(6);
                         if (jsonStr != "[DONE]") {
                             var json = JObject.Parse(jsonStr);
-                            delta = json["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString();
+                            var parts = json["candidates"]?[0]?["content"]?["parts"];
+                            if (parts != null) {
+                                foreach (var part in parts) {
+                                    bool isThought = part["thought"] != null && (part["thought"].Type == JTokenType.Boolean ? (bool)part["thought"] : false);
+                                    string text = part["text"]?.ToString();
+                                    
+                                    // Sometimes thinking is returned as a direct 'thought' string depending on exact model version
+                                    string thoughtField = part["thought"] != null && part["thought"].Type == JTokenType.String ? part["thought"].ToString() : null;
+                                    
+                                    string reasoningToOutput = !string.IsNullOrEmpty(thoughtField) ? thoughtField : (isThought ? text : null);
+                                    
+                                    if (!string.IsNullOrEmpty(reasoningToOutput))
+                                    {
+                                        if (!reasoningStarted) { reasoningStarted = true; tokensToYield.Add("<think>\n"); }
+                                        tokensToYield.Add(reasoningToOutput);
+                                    }
+                                    else if (!string.IsNullOrEmpty(text))
+                                    {
+                                        if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; tokensToYield.Add("\n</think>\n"); }
+                                        tokensToYield.Add(text);
+                                    }
+                                }
+                            }
                         }
                     } catch { }
-                    if (!string.IsNullOrEmpty(delta)) yield return delta;
+                    foreach(var token in tokensToYield) yield return token;
                 }
             }
         }

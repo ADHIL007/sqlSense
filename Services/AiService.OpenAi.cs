@@ -31,6 +31,9 @@ namespace sqlSense.Services
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new System.IO.StreamReader(stream);
 
+            bool reasoningStarted = false;
+            bool reasoningEnded = false;
+
             while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync();
@@ -38,12 +41,25 @@ namespace sqlSense.Services
                 if (line.StartsWith("data: ") && !line.Contains("[DONE]"))
                 {
                     string jsonStr = line.Substring(6);
-                    string delta = null;
+                    string deltaReasoning = null;
+                    string deltaContentText = null;
                     try {
                         var json = JObject.Parse(jsonStr);
-                        delta = json["choices"]?[0]?["delta"]?["content"]?.ToString();
+                        deltaReasoning = json["choices"]?[0]?["delta"]?["reasoning_content"]?.ToString();
+                        deltaContentText = json["choices"]?[0]?["delta"]?["content"]?.ToString();
                     } catch { } 
-                    if (!string.IsNullOrEmpty(delta)) yield return delta;
+                        
+                    if (!string.IsNullOrEmpty(deltaReasoning))
+                    {
+                        if (!reasoningStarted) { reasoningStarted = true; yield return "<think>\n"; }
+                        yield return deltaReasoning;
+                    }
+                    
+                    if (!string.IsNullOrEmpty(deltaContentText))
+                    {
+                        if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; yield return "\n</think>\n"; }
+                        yield return deltaContentText;
+                    }
                 }
             }
         }

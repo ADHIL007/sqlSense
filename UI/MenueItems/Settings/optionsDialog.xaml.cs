@@ -24,6 +24,11 @@ namespace sqlSense.UI.MenueItems.Settings
             InitializeComponent();
         }
 
+        public void SelectAIAssistantPage()
+        {
+            RbAIAssistant.IsChecked = true;
+        }
+
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
@@ -41,7 +46,7 @@ namespace sqlSense.UI.MenueItems.Settings
             var appSettings = sqlSense.Services.SettingsManager.Current;
             appSettings.AiEnableCodeCompletion = PageAI.CbEnableAiCompletion.IsChecked ?? false;
             appSettings.AiEnableNlToSql = PageAI.CbEnableNlToSql.IsChecked ?? false;
-            appSettings.AiProvider = ((ComboBoxItem)PageAI.CmbProvider.SelectedItem)?.Content?.ToString() ?? "OpenAI";
+            appSettings.AiProvider = ((ComboBoxItem)PageAI.CmbProvider.SelectedItem)?.Content?.ToString() ?? "None";
             appSettings.AiBaseUrl = PageAI.TbBaseUrl.Text;
             appSettings.AiApiKey = PageAI.PbApiKey.Password;
             appSettings.AiModelName = PageAI.CmbModelName.Text;
