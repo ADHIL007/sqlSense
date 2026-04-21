@@ -7,6 +7,7 @@
         xmlns:models="clr-namespace:sqlSense.Models"
         xmlns:converters="clr-namespace:sqlSense.Converters"
         xmlns:ui="clr-namespace:sqlSense.UI"
+        xmlns:controls="clr-namespace:sqlSense.UI.Controls"
         mc:Ignorable="d"
         Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
@@ -22,7 +23,72 @@
         </Style>
     </Window.Style>
 
-    
+    <Window.Resources>
+        <!-- ═══ Segmented Tab Button Style ═══ -->
+        <Style x:Key="SegmentedTabBtn" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="14,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}"
+                                BorderThickness="1" BorderBrush="Transparent"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#094771"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#0D5D99"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsChecked" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="bd" Property="Background" Value="#2A2D2E"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══ Status Bar Mode Button Style ═══ -->
+        <Style x:Key="StatusModeBtn" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -34,9 +100,10 @@
         <!-- Top Menu Bar -->
         <ui:TopMenuBar Grid.Row="0" />
 
-        <!-- Main Content Area -->
+        <!-- ═══ Main Content Area ═══ -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <!-- Object Explorer -->
                 <ColumnDefinition>
                     <ColumnDefinition.Style>
                         <Style TargetType="ColumnDefinition">
@@ -52,31 +119,21 @@
                         </Style>
                     </ColumnDefinition.Style>
                 </ColumnDefinition>
+                <!-- Working Area (tabs + toolbar + canvas/editor) -->
+                <ColumnDefinition Width="*"/>
+                <!-- AI Chat Panel -->
                 <ColumnDefinition>
                     <ColumnDefinition.Style>
                         <Style TargetType="ColumnDefinition">
-                            <Setter Property="Width" Value="*"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
-                                    <Setter Property="Width" Value="0"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ColumnDefinition.Style>
-                </ColumnDefinition>
-                <ColumnDefinition>
-                    <ColumnDefinition.Style>
-                        <Style TargetType="ColumnDefinition">
-                            <Setter Property="Width" Value="300"/>
-                            <Setter Property="MinWidth" Value="200"/>
+                            <Setter Property="Width" Value="320"/>
+                            <Setter Property="MinWidth" Value="250"/>
                             <Setter Property="MaxWidth" Value="500"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
-                                    <Setter Property="Width" Value="*"/>
-                                    <Setter Property="MaxWidth" Value="Infinity"/>
-                                    <Setter Property="MinWidth" Value="200"/>
+                                <DataTrigger Binding="{Binding IsAiChatVisible}" Value="False">
+                                    <Setter Property="Width" Value="0"/>
+                                    <Setter Property="MinWidth" Value="0"/>
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding SqlEditor.IsVisible}" Value="False">
+                                <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
                                     <Setter Property="Width" Value="0"/>
                                     <Setter Property="MinWidth" Value="0"/>
                                 </DataTrigger>
@@ -91,14 +148,14 @@
                                     ItemExpanded="TreeViewItem_Expanded"
                                     SelectedItemChanged="ObjectExplorer_SelectedItemChanged" />
 
-            <!-- CENTER PANEL: Infinite Canvas -->
+            <!-- RIGHT: Tabs + Mode Toolbar + Content (Canvas / Editor) -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Workbook Tabs (VS Code style) -->
+                <!-- ═══ Workbook Tabs ═══ -->
                 <ListBox Grid.Row="0" 
                          ItemsSource="{Binding OpenWorkbooks}"
                          SelectedItem="{Binding ActiveWorkbook}"
@@ -170,13 +227,68 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
 
-                <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Row="1" />
+                <!-- ═══ Content Area: Canvas + SQL Editor (side by side) ═══ -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <!-- Canvas Column -->
+                        <ColumnDefinition>
+                            <ColumnDefinition.Style>
+                                <Style TargetType="ColumnDefinition">
+                                    <Setter Property="Width" Value="*"/>
+                                    <Style.Triggers>
+                                        <!-- In Code-only mode: hide canvas -->
+                                        <DataTrigger Binding="{Binding SqlEditor.IsCodeMode}" Value="True">
+                                            <Setter Property="Width" Value="0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ColumnDefinition.Style>
+                        </ColumnDefinition>
+                        <!-- Editor Column -->
+                        <ColumnDefinition>
+                            <ColumnDefinition.Style>
+                                <Style TargetType="ColumnDefinition">
+                                    <Setter Property="Width" Value="0"/>
+                                    <Setter Property="MinWidth" Value="0"/>
+                                    <Style.Triggers>
+                                        <!-- In Code-only mode: editor fills everything -->
+                                        <DataTrigger Binding="{Binding SqlEditor.IsCodeMode}" Value="True">
+                                            <Setter Property="Width" Value="*"/>
+                                        </DataTrigger>
+                                        <!-- In Split mode: editor gets portion -->
+                                        <DataTrigger Binding="{Binding SqlEditor.IsSplitMode}" Value="True">
+                                            <Setter Property="Width" Value="*"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ColumnDefinition.Style>
+                        </ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Canvas Panel -->
+                    <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="0" />
+
+                    <!-- SQL Editor Panel -->
+                    <ui:SqlEditorPanel Grid.Column="1" />
+
+                    <!-- Resizer between canvas and editor (only in Split mode) -->
+                    <GridSplitter Grid.Column="0" Width="4" Background="Transparent" 
+                                  HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                        <GridSplitter.Style>
+                            <Style TargetType="GridSplitter">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SqlEditor.IsSplitMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </GridSplitter.Style>
+                    </GridSplitter>
+                </Grid>
             </Grid>
 
-            <!-- RIGHT PANEL: SQL Editor -->
-            <ui:SqlEditorPanel Grid.Column="2" />
-
-            <!-- Resizers -->
+            <!-- OE Resizer -->
             <GridSplitter Grid.Column="0" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch">
                 <GridSplitter.Style>
                     <Style TargetType="GridSplitter">
@@ -189,16 +301,22 @@
                     </Style>
                 </GridSplitter.Style>
             </GridSplitter>
-            
+
+            <!-- RIGHT PANEL: AI Chat -->
+            <Border Grid.Column="2" Background="#1E1E1E" BorderThickness="1,0,0,0" BorderBrush="{StaticResource BorderBrush}">
+                <controls:AiChatInterface />
+            </Border>
+
+            <!-- AI Chat Resizer -->
             <GridSplitter Grid.Column="1" Width="4" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch">
                 <GridSplitter.Style>
                     <Style TargetType="GridSplitter">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
+                            <DataTrigger Binding="{Binding IsAiChatVisible}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding SqlEditor.IsVisible}" Value="False">
+                            <DataTrigger Binding="{Binding SqlEditor.IsMaximized}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -207,29 +325,99 @@
             </GridSplitter>
         </Grid>
 
-        <!-- Bottom Status Bar -->
+        <!-- ═══ Bottom Status Bar ═══ -->
         <Border Grid.Row="2" Background="{Binding StatusBackground}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Server Info (left) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBlock Text="{Binding ServerName}" Foreground="White" FontSize="11" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <TextBlock Text=" | Connected" Foreground="#E0E0E0" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <!-- Status Message -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Separator Width="1" Background="#40FFFFFF" Margin="10,4"/>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="White" FontSize="11" VerticalAlignment="Center" Margin="5,0"/>
+                </StackPanel>
+
+                <!-- Right side: Cursor info + Language + Mode Buttons -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    
+                    <!-- Cursor position -->
+                    <TextBlock Text="{Binding SqlEditor.CursorPosition}" Foreground="#E0E0E0" FontSize="10" 
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                    <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
+
+                    <!-- Spaces -->
+                    <TextBlock Text="{Binding SqlEditor.SpacesInfo}" Foreground="#E0E0E0" FontSize="10" 
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                    <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
+
+                    <!-- Language mode -->
+                    <TextBlock Text="{Binding SqlEditor.LanguageMode}" Foreground="#E0E0E0" FontSize="10"
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                    <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
+
+                    <!-- Run button -->
+                    <Button Command="{Binding RunQueryCommand}" Background="Transparent" 
+                            BorderThickness="0" Cursor="Hand" VerticalAlignment="Center"
+                            Margin="0,0,16,0" ToolTip="Execute Query (F5)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="▶" Foreground="{StaticResource SuccessBrush}" FontSize="9" 
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Run" Foreground="#E0E0E0" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
+
+                    <!-- View Mode Switcher Buttons (bottom bar mirrors) -->
+                    <RadioButton GroupName="StatusViewMode"
+                                 Style="{StaticResource StatusModeBtn}"
+                                 IsChecked="{Binding SqlEditor.IsChartMode, Mode=OneWay}"
+                                 Command="{Binding SqlEditor.SetChartModeCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Visual (Chart)" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton GroupName="StatusViewMode"
+                                 Style="{StaticResource StatusModeBtn}"
+                                 IsChecked="{Binding SqlEditor.IsCodeMode, Mode=OneWay}"
+                                 Command="{Binding SqlEditor.SetCodeModeCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&lt;/&gt;" FontFamily="Consolas" FontSize="9" FontWeight="Bold"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Code" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton GroupName="StatusViewMode"
+                                 Style="{StaticResource StatusModeBtn}"
+                                 IsChecked="{Binding SqlEditor.IsSplitMode, Mode=OneWay}"
+                                 Command="{Binding SqlEditor.SetSplitModeCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Split" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
             </Grid>
         </Border>
 
     </Grid>
 </Window>
-
-

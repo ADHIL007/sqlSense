@@ -39,6 +39,15 @@ namespace sqlSense.ViewModels
         [ObservableProperty]
         private string _statusBackground = "#007ACC";
 
+        [ObservableProperty]
+        private bool _isAiChatVisible = false;
+
+        [RelayCommand]
+        private void ToggleAiChat()
+        {
+            IsAiChatVisible = !IsAiChatVisible;
+        }
+
         partial void OnStatusMessageChanged(string? value)
         {
             if (string.IsNullOrEmpty(value))

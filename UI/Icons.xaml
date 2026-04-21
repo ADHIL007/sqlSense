@@ -12,7 +12,7 @@
         </Viewbox>
     </ControlTemplate>
 
-
+    
     <ControlTemplate x:Key="DataToControlSwitchIcon" TargetType="Control">
         <Viewbox Stretch="Uniform">
             <Canvas Width="24" Height="24">

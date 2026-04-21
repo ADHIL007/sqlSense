@@ -288,19 +288,7 @@ namespace sqlSense.UI.Controls
             // Future implementation
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            ChatUI.Visibility = Visibility.Collapsed;
-            FloatingAIButton.Visibility = Visibility.Visible;
-            HistoryOverlay.Visibility = Visibility.Collapsed;
-            CloseRequested?.Invoke(this, EventArgs.Empty);
-        }
 
-        private void FloatingAIButton_Click(object sender, RoutedEventArgs e)
-        {
-            FloatingAIButton.Visibility = Visibility.Collapsed;
-            ChatUI.Visibility = Visibility.Visible;
-        }
 
         private string GetInputText()
         {

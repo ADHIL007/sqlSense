@@ -309,33 +309,6 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid Background="Transparent">
-        <!-- Floating AI Button (collapsed state) -->
-        <Button x:Name="FloatingAIButton"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Width="48" Height="48"
-                Background="{StaticResource PrimaryAccentBrush}"
-                Foreground="Black"
-                BorderThickness="0"
-                Cursor="Hand"
-                Effect="{StaticResource NodeShadow}"
-                Click="FloatingAIButton_Click"
-                Visibility="Collapsed"
-                ToolTip="Open AI Assistant">
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="24">
-                        <TextBlock Text="&#xE90A;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Opacity" Value="0.8"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Button.Template>
-        </Button>
-
         <!-- Chat UI (expanded state) -->
         <Grid x:Name="ChatUI" Background="Transparent" Visibility="Visible" TextElement.FontFamily="Segoe UI Emoji">
             <Grid.RowDefinitions>
@@ -357,7 +330,7 @@
                     <Button x:Name="MoreOptionsBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="More Options" Click="MoreOptionsBtn_Click">
                         <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                     </Button>
-                    <Button x:Name="CloseBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="Close" Click="CloseButton_Click">
+                    <Button x:Name="CloseBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="Close" Command="{Binding DataContext.ToggleAiChatCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                         <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                     </Button>
                 </StackPanel>

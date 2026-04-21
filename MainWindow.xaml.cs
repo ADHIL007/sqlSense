@@ -142,6 +142,7 @@ namespace sqlSense
             }
         }
 
+
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             if (_viewModel != null && _viewModel.HasUnsavedChanges)
