@@ -428,29 +428,32 @@ namespace sqlSense.ViewModels
         {
             if (_dbService == null || string.IsNullOrWhiteSpace(SqlEditor.SqlText)) return;
             
-            TablePreview.IsLoading = true;
-            TablePreview.IsVisible = true;
-            Canvas.IsVisible = false;
+            StatusMessage = "Executing query...";
+            SqlEditor.HasResults = true;
+            SqlEditor.QueryResults = null;
+            SqlEditor.QueryMessages = "Executing query...";
+            SqlEditor.SelectedTabIndex = 1; // Messages tab
             
             try
             {
-                StatusMessage = "Executing query...";
                 var dbName = Canvas.CurrentViewDefinition?.DatabaseName ?? Explorer.SelectedDatabaseName ?? "master";
-                TablePreview.TableData = await _dbService.ExecuteQueryAsync(dbName, SqlEditor.SqlText);
-                TablePreview.TableName = "Query Results";
-                TablePreview.CurrentPage = 1;
-                TablePreview.TotalPages = Math.Max(1, (int)Math.Ceiling((double)TablePreview.TableData.Rows.Count / 10));
-                TablePreview.UpdatePagedData();
-                StatusMessage = $"Query executed. {TablePreview.TableData.Rows.Count} rows returned.";
+                
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var dt = await _dbService.ExecuteQueryAsync(dbName, SqlEditor.SqlText);
+                sw.Stop();
+                
+                SqlEditor.QueryResults = dt;
+                SqlEditor.QueryMessages = $"({dt.Rows.Count} rows affected)\n\nCompletion time: {DateTime.Now:yyyy-MM-ddTHH:mm:ss.fffffffzzz}";
+                SqlEditor.SelectedTabIndex = 0; // Results tab
+                
+                StatusMessage = "Query executed successfully.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Query Error: {ex.Message}";
-                TablePreview.IsVisible = false;
-            }
-            finally
-            {
-                TablePreview.IsLoading = false;
+                SqlEditor.QueryResults = null;
+                SqlEditor.QueryMessages = $"Msg 0, Level 16, State 1, Line 1\n{ex.Message}\n\nCompletion time: {DateTime.Now:yyyy-MM-ddTHH:mm:ss.fffffffzzz}";
+                SqlEditor.SelectedTabIndex = 1; // Messages tab
+                StatusMessage = "Query executed with errors.";
             }
         }
 

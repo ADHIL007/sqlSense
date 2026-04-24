@@ -17,6 +17,30 @@ namespace sqlSense.ViewModels.Modules
         [ObservableProperty]
         private bool _isMaximized = false;
 
+        [ObservableProperty]
+        private System.Data.DataTable? _queryResults;
+
+        [ObservableProperty]
+        private string _queryMessages = "";
+
+        [ObservableProperty]
+        private bool _hasResults = false;
+
+        [ObservableProperty]
+        private int _selectedTabIndex = 0;
+
+        [ObservableProperty]
+        private int _queryRowCount = 0;
+
+        /// <summary>DataView for DataGrid binding — DataGrid needs DefaultView, not DataTable directly.</summary>
+        public System.Data.DataView? QueryResultsView => QueryResults?.DefaultView;
+
+        partial void OnQueryResultsChanged(System.Data.DataTable? value)
+        {
+            OnPropertyChanged(nameof(QueryResultsView));
+            QueryRowCount = value?.Rows.Count ?? 0;
+        }
+
         // ─── View Mode (Chart / Code / Split) ─────────────────────────
         // 0 = Visual (Chart), 1 = Code, 2 = Split
         [ObservableProperty]
@@ -109,5 +133,8 @@ namespace sqlSense.ViewModels.Modules
 
         [RelayCommand]
         private void Show() => IsVisible = true;
+
+        [RelayCommand]
+        private void HideResults() => HasResults = false;
     }
 }
