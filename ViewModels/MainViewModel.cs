@@ -461,7 +461,7 @@ namespace sqlSense.ViewModels
             var newView = new ViewDefinitionInfo { ViewName = "New Workbook", DatabaseName = Explorer.SelectedDatabaseName ?? "master" };
             OpenWorkbooks.Add(newView);
             ActiveWorkbook = newView;
-            SqlEditor.SqlText = "-- New Workspace Ready";
+            SqlEditor.SqlText = "";
             StatusMessage = "New workbook started.";
         }
 

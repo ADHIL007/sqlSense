@@ -3,31 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:sci="clr-namespace:ScintillaNET.WPF;assembly=ScintillaNET.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="800">
 
     <Border Background="#1E1E1E" BorderThickness="0" ClipToBounds="True">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Line Numbers -->
-            <Border Grid.Column="0" Background="#1E1E1E" Padding="16,16,16,16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" MinWidth="48">
-                <ScrollViewer x:Name="LineNumbersScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
-                              CanContentScroll="{Binding ElementName=EditorTextBox, Path=(ScrollViewer.CanContentScroll)}">
-                    <TextBlock x:Name="LineNumbers" Foreground="#858585" FontFamily="Consolas" FontSize="13" TextAlignment="Right" LineHeight="20"
-                               Text="1"/>
-                </ScrollViewer>
-            </Border>
-
-            <!-- Code Content -->
-            <TextBox x:Name="EditorTextBox" Grid.Column="1" Background="#1E1E1E" Foreground="#D4D4D4" 
-                     BorderThickness="0" Padding="16,16" AcceptsReturn="True" AcceptsTab="True" FontFamily="Consolas"
-                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontSize="13" TextBlock.LineHeight="20"
-                     TextChanged="EditorTextBox_TextChanged" ScrollViewer.ScrollChanged="EditorTextBox_ScrollChanged"
-                     Text="{Binding SqlEditor.SqlText, UpdateSourceTrigger=PropertyChanged}"/>
-        </Grid>
+        <sci:ScintillaWPF x:Name="SqlEditor" />
     </Border>
 </UserControl>

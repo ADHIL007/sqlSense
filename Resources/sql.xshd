@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<!-- sqlSense-style T-SQL highlighting -->
+<SyntaxDefinition name="TSQL" extensions=".sql"
+                  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <Color name="Digits"      foreground="#B5CEA8" exampleText="3.1415"/>
+  <Color name="Comment"     foreground="#6A9955" fontStyle="italic" exampleText="-- comment"/>
+  <Color name="Punctuation" foreground="#D4D4D4" exampleText=",.()" />
+
+  <Color name="String"      foreground="#CE9178" exampleText="'Hello'"/>
+  <Color name="String2"     foreground="#CE9178" exampleText="&quot;Hello&quot;"/>
+
+  <!-- Main DML/DDL keywords: bright blue bold -->
+  <Color name="Keyword"     foreground="#569CD6" fontWeight="bold" exampleText="SELECT"/>
+  <!-- Secondary keywords (SET NOCOUNT etc): blue normal -->
+  <Color name="Keyword1"    foreground="#569CD6" exampleText="NOCOUNT"/>
+  <!-- GO: red bold -->
+  <Color name="GoKeyword"   foreground="#F44747" fontWeight="bold" exampleText="GO"/>
+
+  <!-- Built-in functions -->
+  <Color name="MethodCall"  foreground="#DCDCAA" fontWeight="bold" />
+
+  <!-- @variables -->
+  <Color name="Variable"    foreground="#9CDCFE" exampleText="@Variable" />
+  <Color name="Variable1"   foreground="#9CDCFE" exampleText="@@Variable" />
+
+  <!-- schema.table.column  or  table.column -->
+  <Color name="ObjectReference"  foreground="#4EC9B0" exampleText="e.BusinessEntityID" />
+  <Color name="ObjectReference1" foreground="#4EC9B0" exampleText="dbo.Table.Column" />
+
+  <!-- [bracket] references -->
+  <Color name="ObjectReferenceInBrackets"  foreground="#4EC9B0" exampleText="[Table].[Col]" />
+  <Color name="ObjectReferenceInBrackets1" foreground="#4EC9B0" exampleText="[dbo].[T].[C]" />
+
+  <!-- Aliases defined after AS: teal italic -->
+  <Color name="AliasName"   foreground="#4EC9B0" fontStyle="italic" exampleText="DepartmentName"/>
+
+  <!-- Short single-letter aliases (e, d, s, edh): violet/purple -->
+  <Color name="TableAlias"  foreground="#C586C0" exampleText="e"/>
+
+  <Color name="CommentMarkerSetTodo"       foreground="#F44747" fontWeight="bold" />
+  <Color name="CommentMarkerSetHackUndone" foreground="#E0E000" fontWeight="bold" />
+
+  <RuleSet name="CommentMarkerSet">
+    <Keywords color="CommentMarkerSetTodo">
+      <Word>TODO</Word>
+      <Word>FIXME</Word>
+    </Keywords>
+    <Keywords color="CommentMarkerSetHackUndone">
+      <Word>HACK</Word>
+      <Word>UNDONE</Word>
+    </Keywords>
+  </RuleSet>
+
+  <RuleSet ignoreCase="true">
+
+    <Span color="String" multiline="true">
+      <Begin>'</Begin>
+      <End>'</End>
+    </Span>
+
+    <Span color="String2" multiline="true">
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+
+    <Span color="Comment" begin="--" end="\n" ruleSet="CommentMarkerSet"/>
+    <Span color="Comment" multiline="true" ruleSet="CommentMarkerSet">
+      <Begin>/\*</Begin>
+      <End>\*/</End>
+    </Span>
+
+    <Keywords color="Keyword">
+      <Word>ABORT</Word><Word>ACCESS</Word><Word>ADD</Word><Word>ALL</Word>
+      <Word>ALTER</Word><Word>AND</Word><Word>ANY</Word><Word>ARRAY</Word>
+      <Word>ARRAYLEN</Word><Word>AS</Word><Word>ASC</Word><Word>ASSERT</Word>
+      <Word>ASSIGN</Word><Word>AT</Word><Word>AUTHORIZATION</Word><Word>AVG</Word>
+      <Word>BASE_TABLE</Word><Word>BEGIN</Word><Word>BETWEEN</Word>
+      <Word>BINARY_INTEGER</Word><Word>BODY</Word><Word>BOOLEAN</Word><Word>BY</Word>
+      <Word>CASE</Word><Word>CHAR</Word><Word>CHAR_BASE</Word><Word>CHECK</Word>
+      <Word>CLOSE</Word><Word>CLUSTER</Word><Word>CLUSTERS</Word><Word>COLAUTH</Word>
+      <Word>COLUMNS</Word><Word>COMMIT</Word><Word>COMPRESS</Word><Word>CONNECT</Word>
+      <Word>CONSTANT</Word><Word>COUNT</Word><Word>CRASH</Word><Word>CREATE</Word>
+      <Word>CURRENT</Word><Word>CURRVAL</Word><Word>CURSOR</Word><Word>DATABASE</Word>
+      <Word>DATA_BASE</Word><Word>DATE</Word><Word>DBA</Word><Word>DEBUGOFF</Word>
+      <Word>DEBUGON</Word><Word>DECIMAL</Word><Word>DECLARE</Word><Word>DEFAULT</Word>
+      <Word>DEFINITION</Word><Word>DELAY</Word><Word>DELETE</Word><Word>DELTA</Word>
+      <Word>DESC</Word><Word>DIGITS</Word><Word>DISPOSE</Word><Word>DISTINCT</Word>
+      <Word>DO</Word><Word>DROP</Word><Word>ELSE</Word><Word>ELSIF</Word>
+      <Word>END</Word><Word>ENTRY</Word><Word>EXCEPTION</Word><Word>EXCEPTION_INIT</Word>
+      <Word>EXISTS</Word><Word>EXIT</Word><Word>FALSE</Word><Word>FETCH</Word>
+      <Word>FLOAT</Word><Word>FOR</Word><Word>FORM</Word><Word>FROM</Word>
+      <Word>FUNCTION</Word><Word>GENERIC</Word><Word>GOTO</Word><Word>GRANT</Word>
+      <Word>GROUP</Word><Word>HAVING</Word><Word>IDENTIFIED</Word><Word>IF</Word>
+      <Word>IN</Word><Word>INDEX</Word><Word>INDEXES</Word><Word>INDICATOR</Word>
+      <Word>INNER</Word><Word>INSERT</Word><Word>INTEGER</Word><Word>INTERSECT</Word>
+      <Word>INTO</Word><Word>IS</Word><Word>JOIN</Word><Word>LEVEL</Word>
+      <Word>LIKE</Word><Word>LIMITED</Word><Word>LOOP</Word><Word>MAX</Word>
+      <Word>MIN</Word><Word>MINUS</Word><Word>MLSLABEL</Word><Word>MOD</Word>
+      <Word>MODE</Word><Word>NATURAL</Word><Word>NEW</Word><Word>NEXTVAL</Word>
+      <Word>NOCOMPRESS</Word><Word>NOT</Word><Word>NULL</Word><Word>NUMBER</Word>
+      <Word>NUMBER_BASE</Word><Word>OF</Word><Word>ON</Word><Word>OPEN</Word>
+      <Word>OPTION</Word><Word>OR</Word><Word>ORDER</Word><Word>OTHERS</Word>
+      <Word>OUT</Word><Word>OUTER</Word><Word>PACKAGE</Word><Word>PARTITION</Word>
+      <Word>PCTFREE</Word><Word>POSITIVE</Word><Word>PRAGMA</Word><Word>PRIOR</Word>
+      <Word>PRIVATE</Word><Word>PROCEDURE</Word><Word>PUBLIC</Word><Word>RAISE</Word>
+      <Word>RANGE</Word><Word>REAL</Word><Word>RECORD</Word><Word>RELEASE</Word>
+      <Word>REMR</Word><Word>RENAME</Word><Word>RESOURCE</Word><Word>RETURN</Word>
+      <Word>REVERSE</Word><Word>REVOKE</Word><Word>ROLLBACK</Word><Word>ROWID</Word>
+      <Word>ROWLABEL</Word><Word>ROWNUM</Word><Word>ROWTYPE</Word><Word>RUN</Word>
+      <Word>SAVEPOINT</Word><Word>SCHEMA</Word><Word>SELECT</Word><Word>SEPARATE</Word>
+      <Word>SET</Word><Word>SIZE</Word><Word>SMALLINT</Word><Word>SPACE</Word>
+      <Word>SQL</Word><Word>SQLCODE</Word><Word>SQLERRM</Word><Word>START</Word>
+      <Word>STATEMENT</Word><Word>STDDEV</Word><Word>SUBTYPE</Word><Word>SUM</Word>
+      <Word>TABAUTH</Word><Word>TABLE</Word><Word>TABLES</Word><Word>TASK</Word>
+      <Word>TERMINATE</Word><Word>THEN</Word><Word>TO</Word><Word>TRUE</Word>
+      <Word>TRUNCATE</Word><Word>TYPE</Word><Word>UNION</Word><Word>UNIQUE</Word>
+      <Word>UPDATE</Word><Word>USE</Word><Word>VALUES</Word><Word>VARCHAR</Word>
+      <Word>VARCHAR2</Word><Word>VARIANCE</Word><Word>VIEW</Word><Word>VIEWS</Word>
+      <Word>WHEN</Word><Word>WHERE</Word><Word>WHILE</Word><Word>WITH</Word>
+      <Word>WORK</Word><Word>XOR</Word>
+    </Keywords>
+
+    <Keywords color="Keyword1">
+      <Word>NOCOUNT</Word>
+    </Keywords>
+
+    <Keywords color="GoKeyword">
+      <Word>GO</Word>
+    </Keywords>
+
+    <!-- Three-part: schema.table.column -->
+    <Rule color="ObjectReference1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
+    <!-- Two-part: table.column or alias.column -->
+    <Rule color="ObjectReference">([\d\w]+)\.([\d\w]+)</Rule>
+
+    <!-- Bracketed three-part -->
+    <Rule color="ObjectReferenceInBrackets1">\[([\d\w\s]+)\]\.\[([\d\w\s]+)\]\.\[([\d\w\s]+)\]</Rule>
+    <!-- Bracketed two-part -->
+    <Rule color="ObjectReferenceInBrackets">\[([\d\w\s]+)\]\.\[([\d\w\s]+)\]</Rule>
+
+    <Rule color="Punctuation">
+      [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;=]+
+    </Rule>
+
+    <!-- Built-in function calls -->
+    <Rule color="MethodCall">[\d\w_]+(?=\s*\()</Rule>
+
+    <!-- @@system variables -->
+    <Rule color="Variable1">@@[\w]+</Rule>
+    <!-- @user variables -->
+    <Rule color="Variable">@[\w]+</Rule>
+
+    <!-- Numbers -->
+    <Rule color="Digits">
+      \b0[xX][0-9a-fA-F]+
+      |
+      (\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?
+    </Rule>
+
+  </RuleSet>
+
+</SyntaxDefinition>

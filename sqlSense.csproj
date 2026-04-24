@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="estebano.ScintillaNET.WPF" Version="2.6.0" />
+    <PackageReference Include="fernandreu.ScintillaNET.WPF" Version="3.1.0" />
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
     <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="170.191.0" />
@@ -25,6 +27,10 @@
       <Link>rust_engine.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\sql.xshd" />
   </ItemGroup>
 
 </Project>

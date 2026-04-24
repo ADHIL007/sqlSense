@@ -73,8 +73,19 @@
             <!--<Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
             
             <!-- AI Chat Toggle -->
-            <Button Command="{Binding ToggleAiChatCommand}" ToolTip="Toggle AI Agent" Background="Transparent" BorderThickness="0" Margin="5,0" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEA8F;" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}"/>
+            <Button Command="{Binding ToggleAiChatCommand}"
+        ToolTip="AI Assistant"
+        Background="Transparent"
+        BorderThickness="0"
+        Margin="5,0"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Right"
+        DockPanel.Dock="Right">
+
+                <TextBlock FontFamily="Segoe MDL2 Assets"
+               Text="&#xE8BD;"
+               FontSize="18"
+               Foreground="{StaticResource TextSecondaryBrush}"/>
             </Button>
 
             <!-- SQL Editor Toggle -->

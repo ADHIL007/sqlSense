@@ -177,10 +177,42 @@ namespace sqlSense.ViewModels.Modules
             finally { tableNode.IsLoading = false; }
         }
         
+        private HashSet<string> _cachedAutocompleteWords = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> GetCachedAutocompleteWords() => _cachedAutocompleteWords;
+
         partial void OnSelectedDatabaseNameChanged(string? value)
         {
             if (!string.IsNullOrEmpty(value))
+            {
                 StatusMessage = $"Switching context to {value}...";
+                _ = PreloadAutocompleteDataAsync(value);
+            }
+        }
+
+        private async Task PreloadAutocompleteDataAsync(string dbName)
+        {
+            if (_dbService == null) return;
+            try
+            {
+                var tables = await _dbService.GetTablesAsync(dbName);
+                var views = await _dbService.GetViewsAsync(dbName);
+
+                var newCache = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var t in tables)
+                {
+                    newCache.Add(t.Name);
+                }
+                foreach (var v in views)
+                {
+                    newCache.Add(v.Name);
+                }
+
+                _cachedAutocompleteWords = newCache;
+            }
+            catch 
+            {
+                // Ignore any connection errors during background preload
+            }
         }
     }
 }
