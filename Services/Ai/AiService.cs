@@ -44,7 +44,18 @@ namespace sqlSense.Services.Ai
                         var json = JObject.Parse(await response.Content.ReadAsStringAsync());
                         if (json["models"] != null)
                         {
-                            foreach (var item in json["models"]) models.Add(item["name"].ToString().Replace("models/", ""));
+                            foreach (var item in json["models"])
+                            {
+                                var supportedMethods = item["supportedGenerationMethods"]?.ToObject<List<string>>() ?? new List<string>();
+                                if (supportedMethods.Contains("predict") || supportedMethods.Contains("predictLongRunning")) continue;
+
+                                string modelId = item["name"].ToString().Replace("models/", "");
+                                bool hasThinking = item["thinking"] != null && (bool)item["thinking"];
+                                
+                                if (hasThinking) modelId += " 🧠";
+                                
+                                models.Add(modelId);
+                            }
                         }
                     }
                 }

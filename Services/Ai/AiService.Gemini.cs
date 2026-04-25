@@ -22,6 +22,9 @@ namespace sqlSense.Services.Ai
 
             var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gemini-pro" : SettingsManager.Current.AiModelName;
+            // Strip the thinking icon if present
+            modelName = modelName.Replace(" 🧠", "");
+            
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:streamGenerateContent?alt=sse&key={apiKey}";
             
             using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
@@ -73,6 +76,7 @@ namespace sqlSense.Services.Ai
                     foreach(var token in tokensToYield) yield return token;
                 }
             }
+            if (reasoningStarted && !reasoningEnded) yield return "\n</think>\n";
         }
     }
 }

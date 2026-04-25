@@ -64,6 +64,7 @@ namespace sqlSense.UI.MenueItems.Settings
             appSettings.AiApiVersion = PageAI.TbApiVersion.Text;
             appSettings.AiSendSchema = PageAI.CbSendSchema.IsChecked ?? false;
             appSettings.AiFastMode = PageAI.CbFastMode.IsChecked ?? false;
+            appSettings.EnableHttpLogging = PageLogging.CbEnableLogging.IsChecked ?? false;
 
             sqlSense.Services.Configuration.SettingsManager.Save();
 
@@ -96,6 +97,7 @@ namespace sqlSense.UI.MenueItems.Settings
                 case "SQL Engine": PageSQLEngine.Visibility = Visibility.Visible; break;
                 case "Keyboard": PageKeyboard.Visibility = Visibility.Visible; break;
                 case "About": PageAbout.Visibility = Visibility.Visible; break;
+                case "Logging": PageLogging.Visibility = Visibility.Visible; break;
             }
         }
     }

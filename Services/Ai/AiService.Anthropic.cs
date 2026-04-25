@@ -76,6 +76,7 @@ namespace sqlSense.Services.Ai
                     }
                 }
             }
+            if (reasoningStarted && !reasoningEnded) yield return "\n</think>\n";
         }
     }
 }

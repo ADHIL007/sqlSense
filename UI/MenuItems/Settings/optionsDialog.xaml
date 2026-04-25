@@ -98,6 +98,8 @@
                                      Tag="&#xE92E;" Checked="Nav_Checked"/>
                         <RadioButton Content="About" Style="{StaticResource NavButton}" 
                                      Tag="&#xE946;" Checked="Nav_Checked"/>
+                        <RadioButton Content="Logging" Style="{StaticResource NavButton}" 
+                                     Tag="&#xE9F5;" Checked="Nav_Checked"/>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -119,6 +121,7 @@
                         <pages:SqlEngineSettingsPage x:Name="PageSQLEngine" Visibility="Collapsed"/>
                         <pages:KeyboardSettingsPage x:Name="PageKeyboard" Visibility="Collapsed"/>
                         <pages:AboutSettingsPage x:Name="PageAbout" Visibility="Collapsed"/>
+                        <pages:LoggingSettingsPage x:Name="PageLogging" Visibility="Collapsed"/>
                     </Grid>
                 </ScrollViewer>
             </Border>
