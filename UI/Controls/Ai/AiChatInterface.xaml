@@ -402,7 +402,7 @@
                                 </Paragraph>
                             </FlowDocument>
                         </RichTextBox>
-                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="13" LineHeight="20" Foreground="{DynamicResource MutedBrush}" Margin="12,8,0,0" VerticalAlignment="Top" IsHitTestVisible="False"/>
+                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="13" LineHeight="20" Foreground="{DynamicResource MutedBrush}" Margin="16,8,0,0" VerticalAlignment="Top" IsHitTestVisible="False"/>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="8,0,8,8">
