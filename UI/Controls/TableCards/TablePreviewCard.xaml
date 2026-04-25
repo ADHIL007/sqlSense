@@ -1,0 +1,168 @@
+<UserControl x:Class="sqlSense.UI.Controls.TableCards.TablePreviewCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="320">
+
+    <UserControl.Resources>
+        <!-- Re-declare styles here so the control is fully self-contained -->
+        <!-- Circle outline button -->
+        <Style x:Key="CircleOutlineBtn" TargetType="Button">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryAccentBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Ellipse x:Name="circle" 
+                                     Stroke="{StaticResource PrimaryAccentBrush}" StrokeThickness="1.5" Fill="Transparent"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="circle" Property="Fill" Value="{StaticResource PrimaryAccentBrush}"/>
+                                <Setter Property="Foreground" Value="#1E1E1E"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="circle" Property="Fill" Value="White"/>
+                                <Setter Property="Foreground" Value="#1E1E1E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SmallIconBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2A2D2E"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardDataGrid" TargetType="DataGrid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="RowBackground" Value="#252526"/>
+            <Setter Property="AlternatingRowBackground" Value="#2D2D30"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="RowHeight" Value="28"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="Cell"/>
+            <Setter Property="IsReadOnly" Value="False"/>
+            <Setter Property="ColumnWidth" Value="150"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource PanelBrush}" 
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+            MinWidth="320">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Card Header -->
+            <Border Background="#2D2D30" Padding="12,8"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="13" 
+                                   Foreground="#4FC3F7" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <!-- We bind directly to properties. We expect the DataContext of this UserControl to be a view model like TablePreviewViewModel -->
+                        <TextBlock Text="{Binding TableName}" FontSize="12" 
+                                   Foreground="{StaticResource TextPrimaryBrush}" 
+                                   VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right" Margin="0 0 20 0">
+                        <TextBlock Text="TOP 10" FontSize="9" 
+                                   Foreground="{StaticResource MutedBrush}" 
+                                   VerticalAlignment="Center" FontFamily="Consolas" Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource CircleOutlineBtn}" Click="AddRow_Click" 
+                                ToolTip="Add new row" Width="20" Height="20">
+                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- DataGrid -->
+            <DataGrid Grid.Row="1" x:Name="PreviewGrid" 
+                      Style="{StaticResource CardDataGrid}"
+                      ItemsSource="{Binding PagedData}"
+                      AutoGeneratingColumn="PreviewGrid_AutoGeneratingColumn"
+                      MaxHeight="250" BorderThickness="0"/>
+
+            <!-- Pagination & Save -->
+            <Border Grid.Row="2" Background="#2D2D30" Padding="8,6"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Content="‹" Style="{StaticResource SmallIconBtn}" 
+                                Command="{Binding PreviousPageCommand}" 
+                                FontFamily="Segoe UI" FontSize="16" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding PageInfo}" FontSize="10" 
+                                   Foreground="{StaticResource MutedBrush}" 
+                                   FontFamily="Consolas" VerticalAlignment="Center" Margin="4,0"/>
+                        <Button Content="›" Style="{StaticResource SmallIconBtn}" 
+                                Command="{Binding NextPageCommand}" 
+                                FontFamily="Segoe UI" FontSize="16" Margin="6,0,0,0"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Background="{StaticResource PrimaryAccentBrush}" Foreground="White"
+                            Padding="8,4" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"
+                            FontSize="10" FontFamily="Segoe UI" Click="SaveChanges_Click">
+                        <StackPanel Orientation="Horizontal" Margin="2,0">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Save Data" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

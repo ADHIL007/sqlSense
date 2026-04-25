@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using sqlSense.Models;
 using sqlSense.Services;
+using sqlSense.Services.Sql;
 
 namespace sqlSense.UI
 {

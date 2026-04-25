@@ -8,6 +8,10 @@
         xmlns:converters="clr-namespace:sqlSense.Converters"
         xmlns:ui="clr-namespace:sqlSense.UI"
         xmlns:controls="clr-namespace:sqlSense.UI.Controls"
+        xmlns:ai="clr-namespace:sqlSense.UI.Controls.Ai"
+        xmlns:db="clr-namespace:sqlSense.UI.Controls.Database"
+        xmlns:sql="clr-namespace:sqlSense.UI.Controls.Sql"
+        xmlns:cvs="clr-namespace:sqlSense.UI.Controls.Canvas"
         mc:Ignorable="d"
         Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
@@ -165,7 +169,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- LEFT PANEL: Object Explorer -->
-            <ui:ObjectExplorerPanel x:Name="ObjectExplorerPanel" Grid.Column="0" 
+            <db:ObjectExplorerPanel x:Name="ObjectExplorerPanel" Grid.Column="0" 
                                     ItemExpanded="TreeViewItem_Expanded"
                                     SelectedItemChanged="ObjectExplorer_SelectedItemChanged" />
 
@@ -290,7 +294,7 @@
                     <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="0" />
 
                     <!-- SQL Editor Panel -->
-                    <ui:SqlEditorPanel Grid.Column="1" />
+                    <sql:SqlEditorPanel Grid.Column="1" />
 
                     <!-- Resizer between canvas and editor (only in Split mode) -->
                     <GridSplitter Grid.Column="0" Width="4" HorizontalAlignment="Right" VerticalAlignment="Stretch" Cursor="SizeWE">
@@ -331,7 +335,7 @@
 
             <!-- RIGHT PANEL: AI Chat -->
             <Border Grid.Column="2" Background="#1E1E1E" BorderThickness="1,0,0,0" BorderBrush="{StaticResource BorderBrush}">
-                <controls:AiChatInterface />
+                <ai:AiChatInterface />
             </Border>
 
             <!-- AI Chat Resizer -->
