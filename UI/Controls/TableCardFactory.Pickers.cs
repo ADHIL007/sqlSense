@@ -13,9 +13,9 @@ namespace sqlSense.UI.Controls
     public static partial class TableCardFactory
     {
         public static Border CreateTablePicker(
-            IEnumerable<Services.TableInfo> tables,
+            IEnumerable<TableInfo> tables,
             IEnumerable<ReferencedTable>? existingTables,
-            Action<Services.TableInfo> onSelected,
+            Action<TableInfo> onSelected,
             Action onCancel)
         {
             var popup = new Border
