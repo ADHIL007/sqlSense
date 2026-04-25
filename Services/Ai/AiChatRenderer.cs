@@ -45,13 +45,14 @@ namespace sqlSense.Services.Ai
             var viewer = new MarkdownViewer
             {
                 Markdown = markdown,
-                Foreground = new SolidColorBrush(Color.FromRgb(0xE6, 0xED, 0xF3)),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Margin = new Thickness(0),
                 Pipeline = _pipeline,
                 FontFamily = new FontFamily("Segoe UI Emoji, Segoe UI")
             };
+            
+            viewer.SetResourceReference(MarkdownViewer.ForegroundProperty, "TextPrimaryBrush");
             
             ScrollViewer.SetVerticalScrollBarVisibility(viewer, ScrollBarVisibility.Disabled);
             viewer.PreviewMouseWheel += (s, e) => 
@@ -71,13 +72,12 @@ namespace sqlSense.Services.Ai
         public static Expander CreateThoughtExpander(string thinkPart, ScrollViewer parentScroll)
         {
             var thinkTxt = CreateMarkdownViewer(thinkPart, parentScroll);
-            thinkTxt.Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175));
+            thinkTxt.SetResourceReference(MarkdownViewer.ForegroundProperty, "MutedBrush");
             thinkTxt.Margin = new Thickness(8, 4, 8, 4);
 
-            return new Expander
+            var expander = new Expander
             {
                 Header = "Thought Process",
-                Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175)),
                 Content = new Border
                 {
                     Background = new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)),
@@ -89,6 +89,9 @@ namespace sqlSense.Services.Ai
                 Margin = new Thickness(0, 4, 0, 8),
                 IsExpanded = false
             };
+            
+            expander.SetResourceReference(Expander.ForegroundProperty, "MutedBrush");
+            return expander;
         }
     }
 }

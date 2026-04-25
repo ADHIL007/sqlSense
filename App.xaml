@@ -51,7 +51,7 @@
         <!-- Global Styles -->
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji"/>
         </Style>
 
         <Style TargetType="Window">

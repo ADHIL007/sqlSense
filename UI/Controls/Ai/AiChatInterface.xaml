@@ -14,11 +14,12 @@
 
             <!-- FlowDocument base -->
             <Style TargetType="{x:Type FlowDocument}" x:Key="{x:Static md:Styles.DocumentStyleKey}">
-                <Setter Property="FontFamily" Value="Segoe UI, Segoe UI Emoji"/>
+                <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI"/>
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="Foreground" Value="#CCCCCC"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                 <Setter Property="PagePadding" Value="0"/>
                 <Setter Property="TextAlignment" Value="Left"/>
+                <Setter Property="Typography.StandardLigatures" Value="True"/>
             </Style>
 
             <!-- ── Paragraph ────────────────────────────────────────────── -->
@@ -29,37 +30,37 @@
             <!-- ── Headings ─────────────────────────────────────────────── -->
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading1StyleKey}">
                 <Setter Property="FontSize" Value="16"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Margin" Value="0,8,0,4"/>
             </Style>
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading2StyleKey}">
                 <Setter Property="FontSize" Value="15"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Margin" Value="0,6,0,4"/>
             </Style>
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading3StyleKey}">
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Margin" Value="0,6,0,4"/>
             </Style>
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading4StyleKey}">
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="FontWeight" Value="Medium"/>
                 <Setter Property="Margin" Value="0,6,0,4"/>
             </Style>
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading5StyleKey}">
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="FontWeight" Value="Medium"/>
                 <Setter Property="Margin" Value="0,4,0,2"/>
             </Style>
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.Heading6StyleKey}">
                 <Setter Property="FontSize" Value="12"/>
-                <Setter Property="Foreground" Value="#888888"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
                 <Setter Property="FontWeight" Value="Medium"/>
                 <Setter Property="Margin" Value="0,4,0,2"/>
             </Style>
@@ -75,15 +76,15 @@
                 <Setter Property="LineHeight" Value="18"/>
 
                 <!-- Colors -->
-                <Setter Property="Foreground" Value="#D4D4D4"/>
-                <Setter Property="Background" Value="#1E1E1E"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
 
                 <!-- Spacing -->
                 <Setter Property="Padding" Value="14,12,14,12"/>
                 <Setter Property="Margin" Value="0,10,0,10"/>
 
                 <!-- Border for depth -->
-                <Setter Property="BorderBrush" Value="#2D2D30"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource PanelLightBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
 
                 <!-- Rounded feel (if container supports it) -->
@@ -94,40 +95,40 @@
             <Style TargetType="{x:Type Run}" x:Key="{x:Static md:Styles.CodeStyleKey}">
                 <Setter Property="FontFamily" Value="Consolas"/>
                 <Setter Property="FontSize" Value="12"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
-                <Setter Property="Background" Value="#2D2D30"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource PanelLightBrush}"/>
             </Style>
 
             <!-- ── Blockquote ───────────────────────────────────────────── -->
             <Style TargetType="{x:Type Section}" x:Key="{x:Static md:Styles.QuoteBlockStyleKey}">
-                <Setter Property="BorderBrush" Value="#4FC3F7"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="BorderThickness" Value="3,0,0,0"/>
-                <Setter Property="Foreground" Value="#888888"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
                 <Setter Property="Padding" Value="14,4,0,4"/>
                 <Setter Property="Margin" Value="0,6,0,6"/>
             </Style>
 
             <!-- ── Tables ───────────────────────────────────────────────── -->
             <Style TargetType="{x:Type Table}" x:Key="{x:Static md:Styles.TableStyleKey}">
-                <Setter Property="BorderBrush" Value="#3C3C3C"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="0,0,1,1"/>
                 <Setter Property="CellSpacing" Value="0"/>
-                <Setter Property="Foreground" Value="#CCCCCC"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             </Style>
             <Style TargetType="{x:Type TableCell}" x:Key="{x:Static md:Styles.TableCellStyleKey}">
-                <Setter Property="BorderBrush" Value="#3C3C3C"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1,1,0,0"/>
                 <Setter Property="Padding" Value="8,4,8,4"/>
             </Style>
             <Style TargetType="{x:Type TableRow}" x:Key="{x:Static md:Styles.TableHeaderStyleKey}">
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
-                <Setter Property="Background" Value="#333333"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
             </Style>
 
             <!-- ── Hyperlinks ───────────────────────────────────────────── -->
             <Style TargetType="{x:Type Hyperlink}" x:Key="{x:Static md:Styles.HyperlinkStyleKey}">
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
                 <Setter Property="TextDecorations" Value="{x:Null}"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
@@ -141,19 +142,19 @@
             <Style TargetType="{x:Type List}">
                 <Setter Property="Margin" Value="20,4,0,4"/>
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="Foreground" Value="#CCCCCC"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             </Style>
 
             <!-- ── Thematic Break (hr) ──────────────────────────────────── -->
             <Style TargetType="{x:Type Line}" x:Key="{x:Static md:Styles.ThematicBreakStyleKey}">
                 <Setter Property="Stretch" Value="Fill"/>
-                <Setter Property="Stroke" Value="#3C3C3C"/>
+                <Setter Property="Stroke" Value="{DynamicResource BorderBrush}"/>
             </Style>
 
             <!-- ── Task List Checkbox ───────────────────────────────────── -->
             <Style TargetType="{x:Type CheckBox}" x:Key="{x:Static md:Styles.TaskListStyleKey}">
                 <Setter Property="Margin" Value="0,0,4,-2"/>
-                <Setter Property="Foreground" Value="#4FC3F7"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccentBrush}"/>
             </Style>
 
             <!-- ── Inline decorations ───────────────────────────────────── -->
@@ -163,7 +164,7 @@
             </Style>
             <Style TargetType="{x:Type Span}" x:Key="{x:Static md:Styles.StrikeThroughStyleKey}">
                 <Setter Property="TextBlock.TextDecorations" Value="Strikethrough"/>
-                <Setter Property="Foreground" Value="#888888"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
             </Style>
             <Style TargetType="{x:Type Span}" x:Key="{x:Static md:Styles.InsertedStyleKey}">
                 <Setter Property="TextBlock.TextDecorations" Value="Underline"/>
@@ -209,7 +210,7 @@
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderBrush" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Foreground" Value="#D4D4D4"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                 <Setter Property="Padding" Value="10,8"/>
                 <Setter Property="Margin" Value="2"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -308,9 +309,9 @@
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid Background="Transparent">
+    <Grid Background="{DynamicResource BackgroundBrush}">
         <!-- Chat UI (expanded state) -->
-        <Grid x:Name="ChatUI" Background="Transparent" Visibility="Visible" TextElement.FontFamily="Segoe UI, Segoe UI Emoji">
+        <Grid x:Name="ChatUI" Background="{DynamicResource BackgroundBrush}" Visibility="Visible" TextElement.FontFamily="Segoe UI Emoji, Segoe UI">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -319,7 +320,7 @@
             
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,5">
-                <TextBlock Text="Agent" Foreground="#E0E0E0" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Margin="16,0,0,0" />
+                <TextBlock Text="Agent" Foreground="{DynamicResource PrimaryAccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,8,0,8" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,16,0">
                     <Button x:Name="NewChatBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="New Chat" Click="NewChatBtn_Click">
                         <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
@@ -344,13 +345,13 @@
             </ScrollViewer>
             
             <!-- History Overlay -->
-            <Grid x:Name="HistoryOverlay" Grid.Row="1" Grid.RowSpan="2" Background="#1E1E1E" Visibility="Collapsed" Panel.ZIndex="5">
+            <Grid x:Name="HistoryOverlay" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource BackgroundBrush}" Visibility="Collapsed" Panel.ZIndex="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Grid.Row="0" Text="Select a conversation" Foreground="#888888" FontSize="13" Margin="16,16,16,8"/>
+                <TextBlock Grid.Row="0" Text="Select a conversation" Foreground="{DynamicResource MutedBrush}" FontSize="13" Margin="16,16,16,8"/>
                 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,16">
                     <StackPanel x:Name="HistoryListPanel">
@@ -382,25 +383,26 @@
                     <Grid Grid.Row="0">
                         <RichTextBox x:Name="InputTextBox" 
                                      Background="Transparent" 
-                                     Foreground="#E6EDF3" 
-                                     FontFamily="Segoe UI, Segoe UI Emoji"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" 
+                                     FontFamily="Segoe UI Emoji, Segoe UI"
                                      BorderThickness="0" 
                                      Padding="12,8,12,8" 
                                      MinHeight="50"
                                      MaxHeight="200" 
-                                     CaretBrush="#E6EDF3"
+                                     CaretBrush="{DynamicResource TextPrimaryBrush}"
                                      FontSize="13"
                                      VerticalScrollBarVisibility="Auto"
                                      AcceptsReturn="True"
                                      PreviewKeyDown="InputTextBox_PreviewKeyDown"
-                                     TextChanged="InputTextBox_TextChanged">
+                                     TextChanged="InputTextBox_TextChanged"
+                                     Typography.StandardLigatures="True">
                             <FlowDocument LineHeight="20">
                                 <Paragraph Margin="0">
                                     <Run Text=""/>
                                 </Paragraph>
                             </FlowDocument>
                         </RichTextBox>
-                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI" Foreground="#666666" Margin="16,12,0,0" VerticalAlignment="Top" IsHitTestVisible="False"/>
+                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="13" LineHeight="20" Foreground="{DynamicResource MutedBrush}" Margin="12,8,0,0" VerticalAlignment="Top" IsHitTestVisible="False"/>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="8,0,8,8">
@@ -435,8 +437,8 @@
 
                         <!-- Send Button -->
                         <Button x:Name="SendBtn" Grid.Column="2" 
-                                Background="#333333" 
-                                Foreground="#D4D4D4" 
+                                Background="{DynamicResource PrimaryAccentBrush}" 
+                                Foreground="Black" 
                                 BorderThickness="0" 
                                 Width="28" 
                                 Height="28" 
@@ -449,12 +451,13 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="Background" Value="#444444"/>
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource SuccessBrush}"/>
                                         </Trigger>
                                         <Trigger Property="Tag" Value="Stop">
                                             <Setter TargetName="bg" Property="CornerRadius" Value="6"/>
                                             <Setter TargetName="icon" Property="Text" Value="&#xE15B;"/>
-                                            <Setter TargetName="icon" Property="Foreground" Value="#F44336"/>
+                                            <Setter TargetName="icon" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource ErrorBrush}"/>
                                             <Setter TargetName="icon" Property="Margin" Value="0"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
@@ -480,7 +483,7 @@
         </Grid>
         <!-- Custom Popups matching Cursor style -->
         <Popup x:Name="ModePopup" StaysOpen="False" PlacementTarget="{Binding ElementName=FastModeToggleBtn}" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="-8">
-            <Border Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="6" Width="360" Effect="{StaticResource NodeShadow}">
+            <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6" Width="360" Effect="{StaticResource NodeShadow}">
                 <StackPanel>
                     <TextBlock Text="Conversation mode" Foreground="#AAAAAA" FontSize="11" Margin="8,4,8,8"/>
                     
@@ -502,7 +505,7 @@
         </Popup>
 
         <Popup x:Name="ModelPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=ModelSelectorBtn}" Placement="Top" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="-8">
-            <Border Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="6" MinWidth="220" Effect="{StaticResource NodeShadow}">
+            <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6" MinWidth="220" Effect="{StaticResource NodeShadow}">
                 <StackPanel>
                     <TextBlock Text="Model" Foreground="#AAAAAA" FontSize="11" Margin="8,4,8,8"/>
                     <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
