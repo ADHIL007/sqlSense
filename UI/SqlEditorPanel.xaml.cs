@@ -13,6 +13,8 @@ namespace sqlSense.UI
     {
         private MainViewModel? _viewModel;
         private bool _isUpdatingText = false;
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> _dbKeywordCache = new(StringComparer.OrdinalIgnoreCase);
+        private bool _isFetchingKeywords = false;
 
         // ─── Keyword Sets ──────────────────────────────────────────────
         private const string SqlKeywords1 =
@@ -20,6 +22,21 @@ namespace sqlSense.UI
 
         private const string SqlKeywords2 =
             "abs ascii cast ceiling char charindex coalesce concat convert count datename datepart dateadd datediff day getdate getutcdate iif isnull isdate isnumeric left len lower ltrim max min month newid newsequentialid nullif object_id object_name parsename patindex replace right rtrim scope_identity sign space sqrt str stuff substring sum sysdatetime sysutcdatetime trim upper year avg count_big stdev stdevp var varp row_number rank dense_rank ntile lag lead first_value last_value percent_rank cume_dist";
+
+        private System.Drawing.Bitmap CreateColorIcon(System.Drawing.Color color, string letter)
+        {
+            var bmp = new System.Drawing.Bitmap(16, 16);
+            using var g = System.Drawing.Graphics.FromImage(bmp);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var brush = new System.Drawing.SolidBrush(color);
+            g.FillEllipse(brush, 1, 1, 14, 14);
+            using var textBrush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+            using var font = new System.Drawing.Font("Segoe UI", 8, System.Drawing.FontStyle.Bold);
+            
+            var format = new System.Drawing.StringFormat { Alignment = System.Drawing.StringAlignment.Center, LineAlignment = System.Drawing.StringAlignment.Center };
+            g.DrawString(letter, font, textBrush, new System.Drawing.RectangleF(1, 1, 14, 14), format);
+            return bmp;
+        }
 
         public SqlEditorPanel()
         {
@@ -66,6 +83,14 @@ namespace sqlSense.UI
             SqlEditor.DirectMessage(2209,
                 new IntPtr(System.Drawing.ColorTranslator.ToWin32(System.Drawing.Color.White)),
                 IntPtr.Zero);
+
+            // Register AutoComplete Icons
+            SqlEditor.RegisterRgbaImage(1, CreateColorIcon(System.Drawing.Color.Gray, "D")); // Database
+            SqlEditor.RegisterRgbaImage(2, CreateColorIcon(System.Drawing.Color.Goldenrod, "S")); // Schema
+            SqlEditor.RegisterRgbaImage(3, CreateColorIcon(System.Drawing.Color.CornflowerBlue, "T")); // Table
+            SqlEditor.RegisterRgbaImage(4, CreateColorIcon(System.Drawing.Color.MediumSeaGreen, "V")); // View
+            SqlEditor.RegisterRgbaImage(5, CreateColorIcon(System.Drawing.Color.MediumPurple, "P")); // Procedure
+
 
             // ─── Margins ────────────────────────────────────────────
             // Line numbers
@@ -223,19 +248,135 @@ namespace sqlSense.UI
         // ─── Auto-complete trigger ────────────────────────────────────
         private void SqlEditor_CharAdded(object? sender, CharAddedEventArgs e)
         {
-            if (char.IsLetter((char)e.Char) || e.Char == '_')
+            if (char.IsLetter((char)e.Char) || e.Char == '_' || e.Char == '.')
             {
+                int pos = SqlEditor.CurrentPosition;
+                int startPos = pos;
+                while (startPos > 0)
+                {
+                    char c = (char)SqlEditor.GetCharAt(startPos - 1);
+                    if (char.IsLetterOrDigit(c) || c == '_' || c == '.' || c == '[' || c == ']')
+                        startPos--;
+                    else
+                        break;
+                }
+                string contextStr = SqlEditor.GetTextRange(startPos, pos - startPos);
+                string[] parts = contextStr.Split('.');
+                bool isContextual = parts.Length > 1;
+
+                if (isContextual && e.Char == '.')
+                {
+                    string schemaOrDb = parts[parts.Length - 2].Trim('[', ']');
+                    if (!string.IsNullOrEmpty(schemaOrDb))
+                    {
+                        string cacheKey = $"CTX:{schemaOrDb.ToUpperInvariant()}";
+                        if (!_dbKeywordCache.ContainsKey(cacheKey) && !_isFetchingKeywords && _viewModel?.DbService != null && _viewModel?.Explorer.SelectedDatabaseName != null)
+                        {
+                            _isFetchingKeywords = true;
+                            _ = FetchContextualKeywordsAsync(cacheKey, _viewModel.Explorer.SelectedDatabaseName, schemaOrDb);
+                        }
+                    }
+                }
+                else
+                {
+                    var word = parts.Length > 0 ? parts[parts.Length - 1] : "";
+                    if (!string.IsNullOrEmpty(word) && char.IsLetter(word[0]))
+                    {
+                        string prefix = word.ToUpperInvariant();
+                        int requiredCount = 20;
+
+                        // Check how many items we already have cached that match this prefix
+                        var localMatches = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        foreach (var kvp in _dbKeywordCache)
+                        {
+                            if (kvp.Key.StartsWith("CTX:")) continue; // skip contextual cache
+                            foreach (var item in kvp.Value)
+                            {
+                                var namePart = item.Split('?')[0];
+                                if (namePart.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                                    localMatches.Add(namePart);
+                            }
+                        }
+
+                        if (localMatches.Count < requiredCount && !_dbKeywordCache.ContainsKey(prefix) && !_isFetchingKeywords && _viewModel?.DbService != null && _viewModel?.Explorer.SelectedDatabaseName != null)
+                        {
+                            _isFetchingKeywords = true;
+                            _ = FetchDbKeywordsAsync(prefix, _viewModel.Explorer.SelectedDatabaseName);
+                        }
+                    }
+                }
+                
                 ShowAutoComplete();
+            }
+        }
+
+        private async System.Threading.Tasks.Task FetchContextualKeywordsAsync(string cacheKey, string dbName, string schema)
+        {
+            try 
+            {
+                if (_viewModel?.DbService != null) 
+                {
+                    var items = await _viewModel.DbService.GetContextualSuggestionsAsync(dbName, schema);
+                    _dbKeywordCache[cacheKey] = items;
+                    
+                    Dispatcher.InvokeAsync(() => {
+                        if (SqlEditor.AutoCActive) 
+                        {
+                            ShowAutoComplete();
+                        }
+                    });
+                }
+            } 
+            finally 
+            {
+                _isFetchingKeywords = false;
+            }
+        }
+
+        private async System.Threading.Tasks.Task FetchDbKeywordsAsync(string prefix, string dbName)
+        {
+            try 
+            {
+                if (_viewModel?.DbService != null) 
+                {
+                    var items = await _viewModel.DbService.GetAutocompleteSuggestionsAsync(dbName, prefix);
+                    _dbKeywordCache[prefix] = items;
+                    
+                    // Force refresh autocomplete if still typing the same prefix
+                    Dispatcher.InvokeAsync(() => {
+                        if (SqlEditor.AutoCActive) 
+                        {
+                            var currentWord = SqlEditor.GetWordFromPosition(SqlEditor.CurrentPosition);
+                            if (!string.IsNullOrEmpty(currentWord) && currentWord.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) 
+                            {
+                                ShowAutoComplete();
+                            }
+                        }
+                    });
+                }
+            } 
+            finally 
+            {
+                _isFetchingKeywords = false;
             }
         }
 
         // ─── Key bindings ─────────────────────────────────────────────
         private void SqlEditor_KeyDown(object? sender, System.Windows.Forms.KeyEventArgs e)
         {
+            // Ctrl+S = Suppress in Scintilla (prevent DC3 character), let WPF InputBinding handle save
+            if (e.KeyCode == System.Windows.Forms.Keys.S && e.Control)
+            {
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+                return;
+            }
+
             // Ctrl+Space = Force autocomplete
             if (e.KeyCode == System.Windows.Forms.Keys.Space && e.Control)
             {
                 ShowAutoComplete();
+                e.SuppressKeyPress = true;
                 e.Handled = true;
                 return;
             }
@@ -246,6 +387,7 @@ namespace sqlSense.UI
             {
                 if (_viewModel?.RunQueryCommand.CanExecute(null) == true)
                     _viewModel.RunQueryCommand.Execute(null);
+                e.SuppressKeyPress = true;
                 e.Handled = true;
                 return;
             }
@@ -254,47 +396,147 @@ namespace sqlSense.UI
         // ─── Auto-complete logic ──────────────────────────────────────
         private void ShowAutoComplete()
         {
-            var word = SqlEditor.GetWordFromPosition(SqlEditor.CurrentPosition);
+            int pos = SqlEditor.CurrentPosition;
+            int startPos = pos;
+            
+            // Backtrack to find the full multi-part identifier (e.g., db.schema.table)
+            while (startPos > 0)
+            {
+                char c = (char)SqlEditor.GetCharAt(startPos - 1);
+                if (char.IsLetterOrDigit(c) || c == '_' || c == '.' || c == '[' || c == ']')
+                    startPos--;
+                else
+                    break;
+            }
+
+            string contextStr = SqlEditor.GetTextRange(startPos, pos - startPos);
+            string[] parts = contextStr.Split('.');
+            string word = parts.Length > 0 ? parts[parts.Length - 1] : ""; // What the user is currently typing
+            
+            bool isContextual = parts.Length > 1; // It has at least one dot
+
             var keywordsSet = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // 1. SQL Keywords
-            foreach (var kw in SqlKeywords1.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                keywordsSet.Add(kw.ToUpper());
-            foreach (var kw in SqlKeywords2.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                keywordsSet.Add(kw.ToUpper());
-
-            // 2. DB metadata from explorer tree
-            if (_viewModel != null)
+            if (isContextual)
             {
-                ExtractTreeNames(_viewModel.Explorer.TreeItems, keywordsSet);
-                foreach (var w in _viewModel.Explorer.GetCachedAutocompleteWords())
-                    keywordsSet.Add(w);
+                // ─── CONTEXTUAL SSMS-LIKE AUTOCOMPLETE ───
+                string prevPart1 = parts.Length > 1 ? parts[parts.Length - 2].Trim('[', ']') : ""; // schema, db, or alias
+                string prevPart2 = parts.Length > 2 ? parts[parts.Length - 3].Trim('[', ']') : ""; // db
 
-                // 3. Active workbook tables/columns
-                if (_viewModel.ActiveWorkbook != null)
+                if (_viewModel != null)
                 {
-                    foreach (var t in _viewModel.ActiveWorkbook.ReferencedTables)
+                    // 1. Check if prevPart1 is a table alias in the active workbook -> Show columns
+                    if (_viewModel.ActiveWorkbook != null)
                     {
-                        if (!string.IsNullOrEmpty(t.Name)) keywordsSet.Add(t.Name);
-                        if (!string.IsNullOrEmpty(t.Alias)) keywordsSet.Add(t.Alias);
+                        var targetTable = _viewModel.ActiveWorkbook.ReferencedTables.Find(t => 
+                            string.Equals(t.Alias, prevPart1, StringComparison.OrdinalIgnoreCase) || 
+                            string.Equals(t.Name, prevPart1, StringComparison.OrdinalIgnoreCase));
+
+                        if (targetTable != null && _viewModel.ActiveWorkbook.SourceTableAllColumns.TryGetValue(targetTable.FullName, out var cols))
+                        {
+                            foreach (var col in cols) keywordsSet.Add(col);
+                        }
                     }
-                    foreach (var colList in _viewModel.ActiveWorkbook.SourceTableAllColumns.Values)
-                        foreach (var col in colList)
-                            keywordsSet.Add(col);
+
+                    // 2. Check Database Explorer Tree for schemas or tables
+                    foreach (var dbNode in _viewModel.Explorer.TreeItems)
+                    {
+                        bool matchesDb = string.Equals(dbNode.DatabaseName, prevPart1, StringComparison.OrdinalIgnoreCase) || 
+                                         string.Equals(dbNode.DatabaseName, prevPart2, StringComparison.OrdinalIgnoreCase);
+                        bool isCurrentDb = string.Equals(dbNode.DatabaseName, _viewModel.Explorer.SelectedDatabaseName, StringComparison.OrdinalIgnoreCase);
+
+                        if (matchesDb || isCurrentDb)
+                        {
+                            ExtractContextualTreeNames(dbNode.Children, keywordsSet, prevPart1, prevPart2);
+                        }
+                    }
+                    
+                    // Always suggest common schemas if typing directly after a DB
+                    if (parts.Length == 2 && prevPart1.Length > 0 && keywordsSet.Count == 0)
+                    {
+                        keywordsSet.Add("dbo");
+                        keywordsSet.Add("guest");
+                        keywordsSet.Add("sys");
+                        keywordsSet.Add("INFORMATION_SCHEMA");
+                    }
+
+                    // 3. Dynamic Contextual Cache (If tree was not expanded)
+                    string cacheKey = $"CTX:{prevPart1.ToUpperInvariant()}";
+                    if (_dbKeywordCache.TryGetValue(cacheKey, out var ctxItems))
+                    {
+                        foreach (var w in ctxItems)
+                        {
+                            keywordsSet.Add(w);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // ─── STANDARD KEYWORD AUTOCOMPLETE ───
+                
+                // 1. SQL Keywords
+                foreach (var kw in SqlKeywords1.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                    keywordsSet.Add(kw.ToUpper());
+                foreach (var kw in SqlKeywords2.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                    keywordsSet.Add(kw.ToUpper());
+
+                // 2. DB metadata from explorer tree
+                if (_viewModel != null)
+                {
+                    ExtractTreeNames(_viewModel.Explorer.TreeItems, keywordsSet);
+                    foreach (var w in _viewModel.Explorer.GetCachedAutocompleteWords())
+                        keywordsSet.Add(w);
+
+                    // 3. Active workbook tables/columns
+                    if (_viewModel.ActiveWorkbook != null)
+                    {
+                        foreach (var t in _viewModel.ActiveWorkbook.ReferencedTables)
+                        {
+                            if (!string.IsNullOrEmpty(t.Name)) keywordsSet.Add(t.Name);
+                            if (!string.IsNullOrEmpty(t.Alias)) keywordsSet.Add(t.Alias);
+                        }
+                        foreach (var colList in _viewModel.ActiveWorkbook.SourceTableAllColumns.Values)
+                            foreach (var col in colList)
+                                keywordsSet.Add(col);
+                    }
+                }
+
+                // 4. Words already in the editor
+                var text = SqlEditor.Text;
+                if (!string.IsNullOrWhiteSpace(text) && text.Length < 100_000)
+                {
+                    var matches = System.Text.RegularExpressions.Regex.Matches(text, @"\b[a-zA-Z_][a-zA-Z0-9_]{2,}\b");
+                    foreach (System.Text.RegularExpressions.Match m in matches)
+                        keywordsSet.Add(m.Value);
+                }
+
+                // 5. Dynamic Cache from DB (limit to 5 visual suggestions to avoid clutter)
+                if (!string.IsNullOrEmpty(word) && char.IsLetter(word[0]))
+                {
+                    string prefix = word;
+                    int addedDynamicItems = 0;
+                    foreach (var kvp in _dbKeywordCache)
+                    {
+                        if (kvp.Key.StartsWith("CTX:")) continue; // skip contextual cache here
+                        foreach (var w in kvp.Value)
+                        {
+                            var namePart = w.Split('?')[0];
+                            if (namePart.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (addedDynamicItems < 5)
+                                {
+                                    keywordsSet.Add(w);
+                                    addedDynamicItems++;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            // 4. Words already in the editor
-            var text = SqlEditor.Text;
-            if (!string.IsNullOrWhiteSpace(text) && text.Length < 100_000)
-            {
-                var matches = System.Text.RegularExpressions.Regex.Matches(text, @"\b[a-zA-Z_][a-zA-Z0-9_]{2,}\b");
-                foreach (System.Text.RegularExpressions.Match m in matches)
-                    keywordsSet.Add(m.Value);
-            }
-
-            // Nothing typed yet → show all sorted
-            if (string.IsNullOrEmpty(word))
+            // Nothing typed yet (but triggered) → show all sorted
+            if (string.IsNullOrEmpty(word) && keywordsSet.Count > 0)
             {
                 var all = new System.Collections.Generic.List<string>(keywordsSet);
                 all.Sort(StringComparer.OrdinalIgnoreCase);
@@ -327,15 +569,50 @@ namespace sqlSense.UI
             }
         }
 
-        private void ExtractTreeNames(System.Collections.Generic.IEnumerable<sqlSense.Models.DatabaseTreeItem> items,
-                                      System.Collections.Generic.HashSet<string> keywords)
+        private void ExtractContextualTreeNames(System.Collections.Generic.IEnumerable<sqlSense.Models.DatabaseTreeItem>? items, 
+                                                System.Collections.Generic.HashSet<string> keywords, 
+                                                string prevPart1, string prevPart2)
         {
+            if (items == null) return;
+            
             foreach (var item in items)
             {
                 if (item.NodeType == sqlSense.Models.TreeNodeType.Table ||
                     item.NodeType == sqlSense.Models.TreeNodeType.View)
                 {
+                    // If they typed db.. or schema., add tables
+                    if (string.IsNullOrEmpty(prevPart1) || // e.g., db..
+                        string.Equals(item.SchemaName, prevPart1, StringComparison.OrdinalIgnoreCase)) 
+                    {
+                        if (!string.IsNullOrEmpty(item.Tag)) keywords.Add(item.Tag);
+                    }
+                    
+                    // If they typed db. add schemas
+                    if (!string.IsNullOrEmpty(prevPart1) && string.IsNullOrEmpty(prevPart2))
+                    {
+                        if (!string.IsNullOrEmpty(item.SchemaName)) keywords.Add(item.SchemaName);
+                    }
+                }
+                
+                if (item.Children?.Count > 0)
+                    ExtractContextualTreeNames(item.Children, keywords, prevPart1, prevPart2);
+            }
+        }
+
+        private void ExtractTreeNames(System.Collections.Generic.IEnumerable<sqlSense.Models.DatabaseTreeItem> items,
+                                      System.Collections.Generic.HashSet<string> keywords)
+        {
+            foreach (var item in items)
+            {
+                if (item.NodeType == sqlSense.Models.TreeNodeType.Database)
+                {
+                    if (!string.IsNullOrEmpty(item.DatabaseName)) keywords.Add(item.DatabaseName);
+                }
+                else if (item.NodeType == sqlSense.Models.TreeNodeType.Table ||
+                         item.NodeType == sqlSense.Models.TreeNodeType.View)
+                {
                     if (!string.IsNullOrEmpty(item.Tag)) keywords.Add(item.Tag);
+                    if (!string.IsNullOrEmpty(item.SchemaName)) keywords.Add(item.SchemaName);
                 }
                 else if (item.NodeType == sqlSense.Models.TreeNodeType.Column)
                 {

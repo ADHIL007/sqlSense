@@ -21,6 +21,10 @@ namespace sqlSense.Models
         public string SchemaName { get; set; } = "";
         public string DatabaseName { get; set; } = "";
         public string SqlDefinition { get; set; } = "";
+        public bool IsView { get; set; } = false;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? FilePath { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null) => 
@@ -106,7 +110,14 @@ namespace sqlSense.Models
             string having = string.IsNullOrEmpty(HavingClause) ? "" : $"\nHAVING {HavingClause}";
             string orderBy = string.IsNullOrEmpty(OrderByClause) ? "" : $"\nORDER BY {OrderByClause}";
 
-            return $"ALTER VIEW [{SchemaName}].[{ViewName}]\nAS\nSELECT\n    {selectCols}\n{fromClause}{where}{groupBy}{having}";
+            string query = $"SELECT\n    {selectCols}\n{fromClause}{where}{groupBy}{having}";
+
+            if (IsView)
+            {
+                return $"ALTER VIEW [{SchemaName}].[{ViewName}]\nAS\n{query}";
+            }
+
+            return query;
         }
     }
 

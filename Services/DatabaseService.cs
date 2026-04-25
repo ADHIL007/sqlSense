@@ -130,6 +130,81 @@ namespace sqlSense.Services
             return funcs;
         }
 
+        public async Task<List<string>> GetAutocompleteSuggestionsAsync(string database, string prefix)
+        {
+            var suggestions = new List<string>();
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            using var conn = new SqlConnection(connStr);
+            try
+            {
+                await conn.OpenAsync();
+                
+                string sql = @"
+                    SELECT TOP 20 name, '2' as icon FROM sys.schemas WHERE name LIKE @prefix + '%'
+                    UNION
+                    SELECT TOP 20 name, 
+                           CASE 
+                               WHEN type = 'U' THEN '3'
+                               WHEN type = 'V' THEN '4'
+                               ELSE '5' 
+                           END as icon 
+                    FROM sys.objects WHERE type IN ('U','V','P','FN','IF','TF') AND name LIKE @prefix + '%' AND is_ms_shipped = 0
+                    UNION
+                    SELECT TOP 20 name, '1' as icon FROM sys.databases WHERE name LIKE @prefix + '%'
+                ";
+                
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@prefix", prefix);
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    suggestions.Add($"{reader.GetString(0)}?{reader.GetString(1)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError($"GetAutocompleteSuggestionsAsync failed for {database} prefix {prefix}", ex);
+            }
+            return suggestions;
+        }
+
+        public async Task<List<string>> GetContextualSuggestionsAsync(string database, string schema)
+        {
+            var suggestions = new List<string>();
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            using var conn = new SqlConnection(connStr);
+            try
+            {
+                await conn.OpenAsync();
+                
+                string sql = @"
+                    SELECT TOP 200 name, 
+                           CASE 
+                               WHEN type = 'U' THEN '3'
+                               WHEN type = 'V' THEN '4'
+                               ELSE '5' 
+                           END as icon 
+                    FROM sys.objects 
+                    WHERE type IN ('U','V','P','FN','IF','TF') 
+                      AND schema_id = SCHEMA_ID(@schema) 
+                      AND is_ms_shipped = 0
+                ";
+                
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@schema", schema);
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    suggestions.Add($"{reader.GetString(0)}?{reader.GetString(1)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError($"GetContextualSuggestionsAsync failed for {database}.{schema}", ex);
+            }
+            return suggestions;
+        }
+
         public async Task<List<ColumnInfo>> GetColumnsAsync(string database, string schema, string table)
         {
             var columns = new List<ColumnInfo>();
@@ -182,8 +257,9 @@ namespace sqlSense.Services
             // Use QUOTENAME for safe identifier handling
             string sql = $"SELECT TOP {topN} * FROM [{schema}].[{table}]";
             using var cmd = new SqlCommand(sql, conn);
-            using var adapter = new SqlDataAdapter(cmd);
-            adapter.Fill(dt);
+            using var reader = await cmd.ExecuteReaderAsync();
+            
+            await FillDataTableSafelyAsync(dt, reader);
             return dt;
         }
 
@@ -199,14 +275,78 @@ namespace sqlSense.Services
             {
                 await conn.OpenAsync();
                 using var cmd = new SqlCommand(sqlCommand, conn);
-                using var adapter = new SqlDataAdapter(cmd);
-                adapter.Fill(dt);
+                using var reader = await cmd.ExecuteReaderAsync();
+                
+                await FillDataTableSafelyAsync(dt, reader);
                 return dt;
             }
             catch (Exception ex)
             {
                 LoggerService.LogError($"ExecuteQueryAsync Failed for Database {database}", ex);
                 throw;
+            }
+        }
+
+        private async Task FillDataTableSafelyAsync(DataTable dt, SqlDataReader reader)
+        {
+            // Initialize Columns
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                string colName = reader.GetName(i);
+                if (string.IsNullOrEmpty(colName)) colName = $"Column{i}";
+
+                Type colType = typeof(string); // Default fallback
+                try
+                {
+                    colType = reader.GetFieldType(i) ?? typeof(string);
+                }
+                catch
+                {
+                    // Ignore and use string
+                }
+                
+                // If multiple columns have the same name, DataTable throws. Ensure unique.
+                int suffix = 1;
+                string uniqueColName = colName;
+                while (dt.Columns.Contains(uniqueColName))
+                {
+                    uniqueColName = $"{colName}_{suffix++}";
+                }
+
+                dt.Columns.Add(uniqueColName, colType);
+            }
+
+            while (await reader.ReadAsync())
+            {
+                var row = dt.NewRow();
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    try
+                    {
+                        var val = reader.GetValue(i);
+                        if (val == null || val == DBNull.Value)
+                        {
+                            row[i] = DBNull.Value;
+                        }
+                        else
+                        {
+                            if (dt.Columns[i].DataType == typeof(string) && !(val is string))
+                            {
+                                row[i] = val.ToString() ?? "";
+                            }
+                            else
+                            {
+                                row[i] = val;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Fallback if GetValue throws (e.g., missing UDT assembly)
+                        row[i] = "<Unsupported UDT>";
+                    }
+                }
+                dt.Rows.Add(row);
             }
         }
 

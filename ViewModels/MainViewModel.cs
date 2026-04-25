@@ -88,6 +88,8 @@ namespace sqlSense.ViewModels
 
         public event Action? OnNewWorkspaceRequested;
         public event Action? OnCreateTableRequested;
+        /// <summary>Raised when the chart needs to be re-rendered from updated model data.</summary>
+        public event Action? OnChartNeedsRerender;
 
         public MainViewModel()
         {
@@ -100,6 +102,17 @@ namespace sqlSense.ViewModels
                     // Keep active workbook in sync if updated from elsewhere
                     if (Canvas.CurrentViewDefinition != ActiveWorkbook)
                         ActiveWorkbook = Canvas.CurrentViewDefinition;
+                }
+            };
+
+            // When user switches to Chart or Split mode, sync SQL → chart
+            SqlEditor.PropertyChanged += (s, e) => {
+                if (e.PropertyName == nameof(SqlEditorViewModel.ViewMode))
+                {
+                    if (SqlEditor.ShowChart && ActiveWorkbook != null && !SqlEditor.IsChartDisabled)
+                    {
+                        SyncSqlToChart();
+                    }
                 }
             };
         }
@@ -176,6 +189,7 @@ namespace sqlSense.ViewModels
             {
                 StatusMessage = $"Analyzing view {schema}.{viewName}...";
                 Canvas.CurrentViewDefinition = await _dbService.GetViewDefinitionAsync(database, schema, viewName);
+                Canvas.CurrentViewDefinition.IsView = true;
                 if (!OpenWorkbooks.Any(w => w.ViewName == viewName && w.SchemaName == schema))
                     OpenWorkbooks.Add(Canvas.CurrentViewDefinition);
                     
@@ -254,13 +268,21 @@ namespace sqlSense.ViewModels
             if (_dbService == null || Canvas.CurrentViewDefinition == null) return;
             try
             {
-                StatusMessage = "Saving changes...";
+                // If it's not a view yet, promote it to one
+                if (!Canvas.CurrentViewDefinition.IsView)
+                {
+                    Canvas.CurrentViewDefinition.IsView = true;
+                    if (string.IsNullOrEmpty(Canvas.CurrentViewDefinition.SchemaName))
+                        Canvas.CurrentViewDefinition.SchemaName = "dbo";
+                }
+
+                StatusMessage = "Saving changes to database...";
                 string sql = Canvas.CurrentViewDefinition.ToSql();
                 await _dbService.ExecuteNonQueryAsync(Canvas.CurrentViewDefinition.DatabaseName, sql);
-                StatusMessage = "✓ View synchronized.";
+                StatusMessage = $"✓ View {Canvas.CurrentViewDefinition.SchemaName}.{Canvas.CurrentViewDefinition.ViewName} synchronized.";
                 SqlEditor.SqlText = sql;
             }
-            catch (Exception ex) { StatusMessage = $"Error: {ex.Message}"; }
+            catch (Exception ex) { StatusMessage = $"Error syncing view: {ex.Message}"; }
         }
 
         [RelayCommand(CanExecute = nameof(CanModifyView))]
@@ -361,36 +383,69 @@ namespace sqlSense.ViewModels
 
         private bool CanRedo() => _redoStack.Count > 0;
 
+        /// <summary>
+        /// Parses the current SQL editor text and updates the ActiveWorkbook model
+        /// (tables, joins, columns, clauses), then triggers a chart re-render.
+        /// </summary>
+        public void SyncSqlToChart()
+        {
+            if (ActiveWorkbook == null || string.IsNullOrWhiteSpace(SqlEditor.SqlText)) return;
+            if (SqlEditor.IsChartDisabled) return; // SPs/Functions don't have charts
+
+            bool success = SqlParserService.TrySyncSqlToModel(SqlEditor.SqlText, ActiveWorkbook);
+            if (success)
+            {
+                Canvas.CurrentViewDefinition = ActiveWorkbook;
+                OnChartNeedsRerender?.Invoke();
+                StatusMessage = "Chart synced from code.";
+            }
+            else
+            {
+                StatusMessage = "⚠ Could not parse SQL for chart — check syntax.";
+            }
+        }
+
         [RelayCommand(CanExecute = nameof(CanModifyView))]
         private void SaveWorkbook()
         {
             if (ActiveWorkbook == null) return;
 
-            var saveDialog = new SaveFileDialog
-            {
-                Filter = "SqlSense Workbook (*.sqv)|*.sqv",
-                FileName = ActiveWorkbook.ViewName ?? "Workbook1"
-            };
+            // Step 1: Sync SQL code → chart model before saving
+            SyncSqlToChart();
 
-            if (saveDialog.ShowDialog() == true)
+            string? targetFilePath = ActiveWorkbook.FilePath;
+
+            // If we don't have a path, ask the user
+            if (string.IsNullOrEmpty(targetFilePath))
             {
-                try
+                var saveDialog = new SaveFileDialog
                 {
-                    // Update model name to match file name before saving
-                    string newName = Path.GetFileNameWithoutExtension(saveDialog.FileName);
-                    ActiveWorkbook.ViewName = newName;
-                    
-                    // Sync current zoom before saving
-                    ActiveWorkbook.CanvasZoom = Canvas.Zoom;
-                    
-                    _workbookService.SaveWorkbook(ActiveWorkbook, saveDialog.FileName);
-                    HasUnsavedChanges = false;
-                    StatusMessage = $"✓ Workbook saved as {newName}.sqv";
-                }
-                catch (Exception ex)
-                {
-                    StatusMessage = $"Save Error: {ex.Message}";
-                }
+                    Filter = "SqlSense Workbook (*.sqv)|*.sqv",
+                    FileName = ActiveWorkbook.ViewName ?? "Workbook1"
+                };
+
+                if (saveDialog.ShowDialog() != true)
+                    return;
+
+                targetFilePath = saveDialog.FileName;
+                
+                // Update model name to match file name before saving
+                ActiveWorkbook.ViewName = Path.GetFileNameWithoutExtension(targetFilePath);
+                ActiveWorkbook.FilePath = targetFilePath;
+            }
+
+            try
+            {
+                // Sync current zoom before saving
+                ActiveWorkbook.CanvasZoom = Canvas.Zoom;
+                
+                _workbookService.SaveWorkbook(ActiveWorkbook, targetFilePath);
+                HasUnsavedChanges = false;
+                StatusMessage = $"✓ Workbook saved as {ActiveWorkbook.ViewName}.sqv";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Save Error: {ex.Message}";
             }
         }
 
@@ -415,6 +470,7 @@ namespace sqlSense.ViewModels
                 var workbook = _workbookService.LoadWorkbook(path);
                 if (workbook != null)
                 {
+                    workbook.FilePath = path;
                     if (string.IsNullOrEmpty(workbook.ViewName)) 
                         workbook.ViewName = Path.GetFileNameWithoutExtension(path);
                     

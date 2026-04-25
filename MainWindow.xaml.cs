@@ -57,6 +57,13 @@ namespace sqlSense
                         }
                     };
 
+                    // Re-render chart when SQL code is synced to chart model
+                    _viewModel.OnChartNeedsRerender += () =>
+                    {
+                        if (_viewModel.ActiveWorkbook != null)
+                            _graphRenderer?.RenderViewVisualization(_viewModel.ActiveWorkbook);
+                    };
+
                     await _viewModel.LoadDatabaseTreeAsync();
                     
                     // Handle file association (if launched by double-clicking .sqv)
