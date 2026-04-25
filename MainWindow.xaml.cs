@@ -75,11 +75,46 @@ namespace sqlSense
                     }
                     
                     CanvasPanel.CenterCanvas();
+
+                    // Start listening for arguments from other instances
+                    _ = StartPipeServer();
                 };
             }
             else
             {
                 Application.Current.Shutdown();
+            }
+        }
+
+        private async Task StartPipeServer()
+        {
+            const string PipeName = "sqlSense_Communication_Pipe";
+            while (true)
+            {
+                try
+                {
+                    using var server = new System.IO.Pipes.NamedPipeServerStream(PipeName, System.IO.Pipes.PipeDirection.In);
+                    await server.WaitForConnectionAsync();
+                    using var reader = new System.IO.StreamReader(server);
+                    var filePath = await reader.ReadLineAsync();
+
+                    if (!string.IsNullOrEmpty(filePath))
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            _viewModel?.LoadWorkbookFromFile(filePath);
+                            
+                            // Bring window to front
+                            if (this.WindowState == WindowState.Minimized) this.WindowState = WindowState.Normal;
+                            this.Activate();
+                            this.Focus();
+                        });
+                    }
+                }
+                catch
+                {
+                    await Task.Delay(1000); // Wait before retrying on error
+                }
             }
         }
 
@@ -138,6 +173,37 @@ namespace sqlSense
                     await _viewModel.LoadViewDefinitionAsync(item.DatabaseName, item.SchemaName, item.Tag);
                     if (_viewModel.Canvas.CurrentViewDefinition != null)
                         _graphRenderer?.RenderViewVisualization(_viewModel.Canvas.CurrentViewDefinition);
+                }
+                else if (item.NodeType == TreeNodeType.StoredProcedure)
+                {
+                    // Load SP definition — chart disabled, code-only mode
+                    await _viewModel.LoadStoredProcedureAsync(item.DatabaseName, item.SchemaName, item.Tag);
+                }
+                else if (item.NodeType == TreeNodeType.Function)
+                {
+                    // Load function definition — chart disabled, code-only mode
+                    await _viewModel.LoadFunctionAsync(item.DatabaseName, item.SchemaName, item.Tag);
+                }
+                else if (item.NodeType == TreeNodeType.StoredProcedureFolder)
+                {
+                    // Clicking the folder: open a blank SP template in code-only mode
+                    string db = item.DatabaseName;
+                    _viewModel.SqlEditor.SqlText =
+                        $"CREATE OR ALTER PROCEDURE [dbo].[NewProcedure]\r\n" +
+                        $"    -- Add parameters here\r\n" +
+                        $"    @Param1 INT = 0\r\n" +
+                        $"AS\r\n" +
+                        $"BEGIN\r\n" +
+                        $"    SET NOCOUNT ON;\r\n\r\n" +
+                        $"    -- TODO: Add procedure logic here\r\n" +
+                        $"    SELECT 1;\r\n" +
+                        $"END\r\n";
+                    _viewModel.SqlEditor.IsChartDisabled = true;
+                    _viewModel.SqlEditor.ViewMode = 1;
+                    _viewModel.SqlEditor.IsVisible = true;
+                    _viewModel.SqlEditor.LanguageMode = "T-SQL (Procedure)";
+                    _viewModel.Canvas.IsVisible = false;
+                    _viewModel.StatusMessage = "New stored procedure template ready. Edit and press F5 to execute.";
                 }
             }
         }

@@ -75,6 +75,23 @@ namespace sqlSense.ViewModels.Modules
         [ObservableProperty]
         private string _languageMode = "T-SQL";
 
+        /// <summary>
+        /// When true (e.g. viewing a stored proc/function), the Chart and Split
+        /// view modes are disabled — only Code view is available.
+        /// </summary>
+        [ObservableProperty]
+        private bool _isChartDisabled = false;
+
+        partial void OnIsChartDisabledChanged(bool value)
+        {
+            if (value && (IsChartMode || IsSplitMode))
+            {
+                // Force Code-only mode
+                ViewMode = 1;
+                IsVisible = true;
+            }
+        }
+
         public SqlEditorViewModel() { }
 
         partial void OnViewModeChanged(int value)
@@ -89,6 +106,7 @@ namespace sqlSense.ViewModels.Modules
         [RelayCommand]
         private void SetChartMode()
         {
+            if (IsChartDisabled) return;   // chart disabled for procs/functions
             ViewMode = 0;
             IsMaximized = false;
         }
@@ -104,6 +122,7 @@ namespace sqlSense.ViewModels.Modules
         [RelayCommand]
         private void SetSplitMode()
         {
+            if (IsChartDisabled) return;   // split disabled for procs/functions
             ViewMode = 2;
             IsVisible = true;
             IsMaximized = false;

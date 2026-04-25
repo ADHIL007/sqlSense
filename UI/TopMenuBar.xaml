@@ -5,6 +5,44 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="40" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!-- ToolBar icon button -->
+        <Style x:Key="TbBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="7,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="1,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2A2D2E"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#094771"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Vertical divider -->
+        <Style x:Key="TbSep" TargetType="Separator">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Margin" Value="5,6"/>
+            <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
+        </Style>
+    </UserControl.Resources>
     <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
         <DockPanel LastChildFill="False" Margin="10,0">
             <Menu Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
@@ -58,19 +96,56 @@
             
             <!-- Database Selector (SSMS style) -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                <!--<TextBlock Text="&#xE107;" FontFamily="Segoe MDL2 Assets" FontSize="11"--> 
-                           <!--Foreground="{StaticResource PrimaryAccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>-->
+                <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                           Foreground="{StaticResource PrimaryAccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                 <ComboBox ItemsSource="{Binding Explorer.Databases}" 
                           SelectedItem="{Binding Explorer.SelectedDatabaseName}"
-                          Width="220" Height="26" VerticalContentAlignment="Center"/>
+                          Width="200" Height="26" VerticalContentAlignment="Center"/>
             </StackPanel>
 
-            <Separator Background="{StaticResource BorderBrush}" Margin="10,5" Width="1"/>
-            
-            <!-- Quick Action Toolbar -->
-            <!--<Button Command="{Binding ShowCreateTableCommand}" Content="New Table" Background="Transparent" Foreground="{StaticResource PrimaryAccentBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
-            <!--<Button Command="{Binding RunQueryCommand}" Content="▶ Execute" Background="Transparent" Foreground="{StaticResource SuccessBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
-            <!--<Button Command="{Binding ShowMetadataCommand}" Content="⚙ Sync" Background="Transparent" Foreground="{StaticResource WarningBrush}" BorderThickness="0" Margin="5,0" VerticalAlignment="Center"/>-->
+            <Separator Style="{StaticResource TbSep}"/>
+
+            <!-- ═══ Execute / Save Toolbar ═══ -->
+            <!-- Execute Query F5 -->
+            <Button Style="{StaticResource TbBtn}"
+                    Command="{Binding RunQueryCommand}"
+                    ToolTip="Execute Query (F5)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                               Foreground="#4EC94E" VerticalAlignment="Center"/>
+                    <TextBlock Text=" Execute" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" Margin="3,0,0,0"/>
+                </StackPanel>
+            </Button>
+
+            <Separator Style="{StaticResource TbSep}"/>
+
+            <!-- Save Workbook -->
+            <Button Style="{StaticResource TbBtn}"
+                    Command="{Binding SaveWorkbookCommand}"
+                    ToolTip="Save Workbook (Ctrl+S)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text=" Save" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" Margin="3,0,0,0"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Save View to DB -->
+            <Button Style="{StaticResource TbBtn}"
+                    Command="{Binding SaveViewChangesCommand}"
+                    ToolTip="Save All / Sync View to Database">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xEA35;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text=" Save All" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" Margin="3,0,0,0"/>
+                </StackPanel>
+            </Button>
+
+
+            <Separator Style="{StaticResource TbSep}"/>
             
             <!-- AI Chat Toggle -->
             <Button Command="{Binding ToggleAiChatCommand}"

@@ -42,6 +42,7 @@
         <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <converters:InverseBooleanConverter x:Key="InverseBool"/>
         <converters:StringToBrushConverter x:Key="StringToBrush"/>
 
         <!-- Common Effects -->

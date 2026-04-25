@@ -210,6 +210,45 @@ namespace sqlSense.Services
             }
         }
 
+        // === Procedure / Function Definition ===
+
+        /// <summary>Returns the CREATE PROCEDURE definition from sys.sql_modules.</summary>
+        public async Task<string> GetProcedureDefinitionAsync(string database, string schema, string procName)
+        {
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(
+                @"SELECT m.definition
+                  FROM sys.sql_modules m
+                  JOIN sys.procedures p ON m.object_id = p.object_id
+                  JOIN sys.schemas s    ON p.schema_id = s.schema_id
+                  WHERE s.name = @schema AND p.name = @name", conn);
+            cmd.Parameters.AddWithValue("@schema", schema);
+            cmd.Parameters.AddWithValue("@name", procName);
+            var result = await cmd.ExecuteScalarAsync() as string;
+            return result ?? $"-- Definition not available for {schema}.{procName}";
+        }
+
+        /// <summary>Returns the CREATE FUNCTION definition from sys.sql_modules.</summary>
+        public async Task<string> GetFunctionDefinitionAsync(string database, string schema, string funcName)
+        {
+            var connStr = ChangeDatabaseInConnectionString(_connectionString, database);
+            using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand(
+                @"SELECT m.definition
+                  FROM sys.sql_modules m
+                  JOIN sys.objects o ON m.object_id = o.object_id
+                  JOIN sys.schemas s ON o.schema_id = s.schema_id
+                  WHERE s.name = @schema AND o.name = @name
+                    AND o.type IN ('FN','IF','TF','AF')", conn);
+            cmd.Parameters.AddWithValue("@schema", schema);
+            cmd.Parameters.AddWithValue("@name", funcName);
+            var result = await cmd.ExecuteScalarAsync() as string;
+            return result ?? $"-- Definition not available for {schema}.{funcName}";
+        }
+
         // === View Definition / Dependency Analysis ===
 
         /// <summary>

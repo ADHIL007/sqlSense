@@ -182,6 +182,8 @@ namespace sqlSense.ViewModels
                 ActiveWorkbook = Canvas.CurrentViewDefinition;
                 Canvas.IsVisible = true;
                 SqlEditor.SqlText = Canvas.CurrentViewDefinition.SqlDefinition;
+                SqlEditor.IsChartDisabled = false;   // views support chart
+                SqlEditor.LanguageMode = "T-SQL";
                 StatusMessage = $"View {schema}.{viewName} loaded.";
             }
             catch (Exception ex)
@@ -190,6 +192,60 @@ namespace sqlSense.ViewModels
                 Canvas.IsVisible = false;
             }
             finally { Canvas.IsLoading = false; }
+        }
+
+        /// <summary>
+        /// Loads a stored procedure definition into the editor (Code-only mode, chart disabled).
+        /// </summary>
+        public async Task LoadStoredProcedureAsync(string database, string schema, string procName)
+        {
+            if (_dbService == null) return;
+
+            Canvas.IsVisible = false;
+            try
+            {
+                StatusMessage = $"Loading {schema}.{procName}...";
+                var definition = await _dbService.GetProcedureDefinitionAsync(database, schema, procName);
+
+                SqlEditor.SqlText = definition;
+                SqlEditor.IsChartDisabled = true;   // no chart for stored procs
+                SqlEditor.ViewMode = 1;             // force Code mode
+                SqlEditor.IsVisible = true;
+                SqlEditor.LanguageMode = "T-SQL (Procedure)";
+
+                StatusMessage = $"Stored procedure {schema}.{procName} loaded.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error loading procedure: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Loads a function definition into the editor (Code-only mode, chart disabled).
+        /// </summary>
+        public async Task LoadFunctionAsync(string database, string schema, string funcName)
+        {
+            if (_dbService == null) return;
+
+            Canvas.IsVisible = false;
+            try
+            {
+                StatusMessage = $"Loading {schema}.{funcName}...";
+                var definition = await _dbService.GetFunctionDefinitionAsync(database, schema, funcName);
+
+                SqlEditor.SqlText = definition;
+                SqlEditor.IsChartDisabled = true;   // no chart for functions
+                SqlEditor.ViewMode = 1;             // force Code mode
+                SqlEditor.IsVisible = true;
+                SqlEditor.LanguageMode = "T-SQL (Function)";
+
+                StatusMessage = $"Function {schema}.{funcName} loaded.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error loading function: {ex.Message}";
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanModifyView))]
@@ -465,6 +521,8 @@ namespace sqlSense.ViewModels
             OpenWorkbooks.Add(newView);
             ActiveWorkbook = newView;
             SqlEditor.SqlText = "";
+            SqlEditor.IsChartDisabled = false;
+            SqlEditor.LanguageMode = "T-SQL";
             StatusMessage = "New workbook started.";
         }
 

@@ -12,6 +12,15 @@
         Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
         WindowStyle="SingleBorderWindow">
+
+    <Window.InputBindings>
+        <!-- F5 = Execute Query (global, like SSMS) -->
+        <KeyBinding Key="F5" Command="{Binding RunQueryCommand}"/>
+        <!-- Ctrl+E = Execute Query (alternate shortcut) -->
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding RunQueryCommand}"/>
+        <!-- Ctrl+S = Save Workbook -->
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveWorkbookCommand}"/>
+    </Window.InputBindings>
     
     <Window.Style>
         <Style TargetType="Window">
@@ -91,6 +100,10 @@
                                 <Setter TargetName="bd" Property="Background" Value="#15FFFFFF"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.3"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -416,7 +429,8 @@
                             <RadioButton GroupName="StatusViewMode"
                                          Style="{StaticResource StatusModeBtn}"
                                          IsChecked="{Binding SqlEditor.IsChartMode, Mode=OneWay}"
-                                         Command="{Binding SqlEditor.SetChartModeCommand}">
+                                         Command="{Binding SqlEditor.SetChartModeCommand}"
+                                         IsEnabled="{Binding SqlEditor.IsChartDisabled, Converter={StaticResource InverseBool}}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="10"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
@@ -438,7 +452,8 @@
                             <RadioButton GroupName="StatusViewMode"
                                          Style="{StaticResource StatusModeBtn}"
                                          IsChecked="{Binding SqlEditor.IsSplitMode, Mode=OneWay}"
-                                         Command="{Binding SqlEditor.SetSplitModeCommand}">
+                                         Command="{Binding SqlEditor.SetSplitModeCommand}"
+                                         IsEnabled="{Binding SqlEditor.IsChartDisabled, Converter={StaticResource InverseBool}}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="10"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
