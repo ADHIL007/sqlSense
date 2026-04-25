@@ -542,6 +542,54 @@
                 </Setter.Value>
             </Setter>
         </Style>
+  <Style TargetType="ToolTip">
+    <Setter Property="Background" Value="#F2252526"/>
+    <Setter Property="Foreground" Value="#E6E6E6"/>
+    <Setter Property="BorderBrush" Value="#3F3F46"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="MaxWidth" Value="300"/>
+    <Setter Property="TextBlock.TextWrapping" Value="Wrap"/>
+    <Setter Property="HasDropShadow" Value="False"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="ToolTip">
+                <Grid>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6"
+                            SnapsToDevicePixels="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12"
+                                              ShadowDepth="2"
+                                              Opacity="0.35"/>
+                        </Border.Effect>
+
+                        <ContentPresenter Margin="2"
+                                          RecognizesAccessKey="True"/>
+                    </Border>
+                </Grid>
+
+                <ControlTemplate.Triggers>
+                    <!-- Fade-in animation -->
+                    <EventTrigger RoutedEvent="ToolTip.Opened">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation 
+                                    Storyboard.TargetProperty="Opacity"
+                                    From="0" To="1"
+                                    Duration="0:0:0.15"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </ControlTemplate.Triggers>
+
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
