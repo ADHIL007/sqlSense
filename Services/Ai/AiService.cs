@@ -7,12 +7,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
 using sqlSense.Services.Configuration;
+using sqlSense.Services.Http;
+
 
 namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
 
         public static async Task<List<string>> FetchAvailableModelsAsync(string provider, string apiKey, string baseUrl)
         {
@@ -24,7 +25,7 @@ namespace sqlSense.Services.Ai
                     string url = string.IsNullOrWhiteSpace(baseUrl) ? "https://api.openai.com/v1/models" : $"{baseUrl.TrimEnd('/')}/models";
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.Add("Authorization", $"Bearer {apiKey}");
-                    var response = await _httpClient.SendAsync(request);
+                    var response = await HttpService.SendAsync(request, "FetchModels_OpenAI");
                     if (response.IsSuccessStatusCode)
                     {
                         var json = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -37,7 +38,7 @@ namespace sqlSense.Services.Ai
                 else if (provider == "Google Gemini")
                 {
                     string url = $"https://generativelanguage.googleapis.com/v1beta/models?key={apiKey}";
-                    var response = await _httpClient.GetAsync(url);
+                    var response = await HttpService.GetAsync(url, "FetchModels_Gemini");
                     if (response.IsSuccessStatusCode)
                     {
                         var json = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -53,7 +54,7 @@ namespace sqlSense.Services.Ai
                     string url = $"{baseUrl.TrimEnd('/')}/openai/deployments?api-version=2023-05-15";
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.Add("api-key", apiKey);
-                    var response = await _httpClient.SendAsync(request);
+                    var response = await HttpService.SendAsync(request, "FetchModels_Azure");
                     if (response.IsSuccessStatusCode)
                     {
                         var json = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -66,7 +67,7 @@ namespace sqlSense.Services.Ai
                 else if (provider == "Local Model (Ollama)")
                 {
                     string url = string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:11434/api/tags" : $"{baseUrl.TrimEnd('/')}/api/tags";
-                    var response = await _httpClient.GetAsync(url);
+                    var response = await HttpService.GetAsync(url, "FetchModels_Ollama");
                     if (response.IsSuccessStatusCode)
                     {
                         var json = JObject.Parse(await response.Content.ReadAsStringAsync());

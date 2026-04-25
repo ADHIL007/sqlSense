@@ -6,6 +6,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using sqlSense.Services.Http;
+
 
 namespace sqlSense.Services.Ai
 {
@@ -20,11 +22,10 @@ namespace sqlSense.Services.Ai
 
             var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gemini-pro" : SettingsManager.Current.AiModelName;
-            
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:streamGenerateContent?alt=sse&key={apiKey}";
             
             using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await HttpService.SendStreamAsync(request, "AI_Chat_Gemini", ct);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync();

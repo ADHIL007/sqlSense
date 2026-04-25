@@ -6,6 +6,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using sqlSense.Services.Http;
+
 
 namespace sqlSense.Services.Ai
 {
@@ -26,7 +28,7 @@ namespace sqlSense.Services.Ai
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/chat/completions") { Content = content };
             request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await HttpService.SendStreamAsync(request, "AI_Chat_OpenAI", ct);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync();

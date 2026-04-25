@@ -6,6 +6,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using sqlSense.Services.Http;
+
 
 namespace sqlSense.Services.Ai
 {
@@ -25,7 +27,7 @@ namespace sqlSense.Services.Ai
             var baseUrl = string.IsNullOrWhiteSpace(SettingsManager.Current.AiBaseUrl) ? "http://localhost:11434" : SettingsManager.Current.AiBaseUrl;
             
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/chat") { Content = content };
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await HttpService.SendStreamAsync(request, "AI_Chat_Ollama", ct);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync();

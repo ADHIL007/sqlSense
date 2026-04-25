@@ -6,6 +6,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using sqlSense.Services.Http;
+
 
 namespace sqlSense.Services.Ai
 {
@@ -35,7 +37,7 @@ namespace sqlSense.Services.Ai
             var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
             request.Headers.Add("api-key", apiKey);
 
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await HttpService.SendStreamAsync(request, "AI_Chat_Azure", ct);
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync();
