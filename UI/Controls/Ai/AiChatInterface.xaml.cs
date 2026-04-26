@@ -1,17 +1,18 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Windows.Threading;
+using sqlSense.Controllers;
 using sqlSense.Services;
 using sqlSense.Services.Ai;
-using sqlSense.Services.Configuration;
 using sqlSense.Services.Ai;
-using sqlSense.Controllers;
+using sqlSense.Services.Configuration;
 
 namespace sqlSense.UI.Controls.Ai
 {
@@ -245,50 +246,141 @@ namespace sqlSense.UI.Controls.Ai
             var textViewer = (Markdig.Wpf.MarkdownViewer)container.Children[0];
             textViewer.Visibility = Visibility.Collapsed;
 
+            var streamText = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontFamily = new FontFamily("Segoe UI Emoji, Segoe UI"),
+                LineHeight = 20,
+                Margin = new Thickness(0),
+                Visibility = Visibility.Collapsed
+            };
+            streamText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+            container.Children.Add(streamText);
+
             var dots = CreateTypingIndicator();
             container.Children.Add(dots);
             ChatMessagesPanel.Children.Add(assistantBubble);
 
             Expander? thinkExpander = null;
+            TextBlock? streamThinkText = null;
             string thinkBuffer = "";
             string textBuffer = "";
+            bool isThinkUpdatePending = false;
+            bool isTextUpdatePending = false;
+            
+            object bufferLock = new object();
 
-            await _controller.SendMessageStreamAsync(text, 
-                onStart: () => { },
-                onThinkChunk: (chunk) => {
-                    if (thinkExpander == null) {
-                        container.Children.Remove(dots);
-                        thinkExpander = AiChatRenderer.CreateThoughtExpander("", ChatScrollViewer);
-                        thinkExpander.IsExpanded = true;
-                        // Insert at index 0 to be above the textViewer
-                        container.Children.Insert(0, thinkExpander);
+            await Task.Run(async () =>
+            {
+                await _controller.SendMessageStreamAsync(text, 
+                    onStart: () => { },
+                    onThinkChunk: (chunk) =>
+                    {
+                        lock (bufferLock) { thinkBuffer += chunk; }
+
+                        if (!isThinkUpdatePending)
+                        {
+                            isThinkUpdatePending = true;
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                isThinkUpdatePending = false;
+                                
+                                if (thinkExpander == null)
+                                {
+                                    if (dots.Parent != null) container.Children.Remove(dots);
+                                    thinkExpander = AiChatRenderer.CreateThoughtExpander("", ChatScrollViewer);
+                                    thinkExpander.IsExpanded = true;
+                                    
+                                    var thinkMarkdown = (Markdig.Wpf.MarkdownViewer)((Border)thinkExpander.Content).Child;
+                                    thinkMarkdown.Visibility = Visibility.Collapsed;
+
+                                    streamThinkText = new TextBlock
+                                    {
+                                        TextWrapping = TextWrapping.Wrap,
+                                        FontFamily = new FontFamily("Segoe UI Emoji, Segoe UI"),
+                                        Margin = new Thickness(8, 4, 8, 4)
+                                    };
+                                    streamThinkText.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
+
+                                    var thinkBorder = (Border)thinkExpander.Content;
+                                    thinkBorder.Child = null; // Detach before re-adding
+                                    var stack = new StackPanel();
+                                    stack.Children.Add(thinkMarkdown);
+                                    stack.Children.Add(streamThinkText);
+                                    thinkBorder.Child = stack;
+
+                                    container.Children.Insert(0, thinkExpander);
+                                }
+
+                                if (streamThinkText != null)
+                                {
+                                    lock (bufferLock) { streamThinkText.Text = thinkBuffer; }
+                                }
+
+                                ChatScrollViewer.ScrollToEnd();
+                            }, DispatcherPriority.Normal);
+                        }
+                    },
+                    onTextChunk: (chunk) =>
+                    {
+                        lock (bufferLock) { textBuffer += chunk; }
+
+                        if (!isTextUpdatePending)
+                        {
+                            isTextUpdatePending = true;
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                isTextUpdatePending = false;
+                                
+                                if (dots.Parent != null) container.Children.Remove(dots);
+                                
+                                streamText.Visibility = Visibility.Visible;
+                                lock (bufferLock) { streamText.Text = textBuffer; }
+                                ChatScrollViewer.ScrollToEnd();
+                            }, DispatcherPriority.Normal);
+                        }
+                    },
+                    onThinkComplete: (duration) => {
+                        Dispatcher.InvokeAsync(() => {
+                            if (thinkExpander != null) {
+                                thinkExpander.Header = $"Thought for {duration:F1}s";
+                                thinkExpander.IsExpanded = false;
+                                
+                                var thinkBorder = (Border)thinkExpander.Content;
+                                if (thinkBorder.Child is StackPanel stack)
+                                {
+                                    var thinkMarkdown = (Markdig.Wpf.MarkdownViewer)stack.Children[0];
+                                    lock (bufferLock) { thinkMarkdown.Markdown = thinkBuffer; }
+                                    thinkMarkdown.Visibility = Visibility.Visible;
+                                    stack.Children.Remove(streamThinkText);
+                                }
+                            }
+                        }, DispatcherPriority.Normal);
+                    },
+                    onComplete: () => {
+                        Dispatcher.InvokeAsync(() => {
+                            if (dots.Parent != null) container.Children.Remove(dots);
+                            
+                            if (streamText.Parent != null) container.Children.Remove(streamText);
+                            textViewer.Visibility = Visibility.Visible;
+                            lock (bufferLock) { textViewer.Markdown = textBuffer; }
+                            
+                            FinishProcessing();
+                        }, DispatcherPriority.Normal);
+                    },
+                    onError: (ex) => {
+                        Dispatcher.InvokeAsync(() => {
+                            if (dots.Parent != null) container.Children.Remove(dots);
+                            
+                            if (streamText.Parent != null) container.Children.Remove(streamText);
+                            textViewer.Visibility = Visibility.Visible;
+                            lock (bufferLock) { textViewer.Markdown = textBuffer + $"\n\n[Chat Error: {ex.Message}]"; }
+                            
+                            FinishProcessing();
+                        }, DispatcherPriority.Normal);
                     }
-                    thinkBuffer += chunk;
-                    ((Markdig.Wpf.MarkdownViewer)((Border)thinkExpander.Content).Child).Markdown = thinkBuffer;
-                },
-                onTextChunk: (chunk) => {
-                    if (dots.Parent != null) container.Children.Remove(dots);
-                    textViewer.Visibility = Visibility.Visible;
-                    textBuffer += chunk;
-                    textViewer.Markdown = textBuffer;
-                },
-                onThinkComplete: (duration) => {
-                    if (thinkExpander != null) {
-                        thinkExpander.Header = $"Thought for {duration:F1}s";
-                        thinkExpander.IsExpanded = false;
-                    }
-                },
-                onComplete: () => {
-                    if (dots.Parent != null) container.Children.Remove(dots);
-                    FinishProcessing();
-                },
-                onError: (ex) => {
-                    if (dots.Parent != null) container.Children.Remove(dots);
-                    textViewer.Visibility = Visibility.Visible;
-                    textViewer.Markdown += $"\n[Chat Error: {ex.Message}]";
-                    FinishProcessing();
-                }
-            );
+                );
+            });
         }
 
         private void AddMessageToUI(string text, bool isUser, string thinking = null)

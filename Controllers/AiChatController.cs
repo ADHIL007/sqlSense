@@ -44,6 +44,9 @@ namespace sqlSense.Controllers
 
                 await foreach (var chunk in AiService.SendMessageStreamAsync(text, _cts.Token))
                 {
+                    // Force yield to the UI message pump so it can render the updates
+                    await Task.Yield();
+
                     string process = buffer + chunk;
                     buffer = "";
 
@@ -80,6 +83,7 @@ namespace sqlSense.Controllers
                             }
                             else
                             {
+                                // Check for partial <think> at end of buffer
                                 int pIdx = -1;
                                 for (int i = 1; i <= 6 && i <= process.Length; i++) {
                                     if ("<think>".StartsWith(process.Substring(process.Length - i))) { pIdx = process.Length - i; break; }
@@ -104,22 +108,28 @@ namespace sqlSense.Controllers
                             int idx = process.IndexOf("</think>");
                             if (idx >= 0)
                             {
+                                // End of thinking — yield remaining think text, then signal complete
                                 isThinking = false;
                                 sw.Stop();
                                 string thinkPart = process.Substring(0, idx).TrimEnd('\r', '\n');
-                                thinkTextBuffer += thinkPart;
-                                onThinkChunk(thinkPart);
+                                if (thinkPart.Length > 0)
+                                {
+                                    thinkTextBuffer += thinkPart;
+                                    onThinkChunk(thinkPart);
+                                }
                                 onThinkComplete(sw.Elapsed.TotalSeconds);
                                 process = process.Substring(idx + 8).TrimStart('\r', '\n');
                             }
                             else
                             {
+                                // Check for partial </think> at end of buffer
                                 int pIdx = -1;
                                 for (int i = 1; i <= 7 && i <= process.Length; i++) {
                                     if ("</think>".StartsWith(process.Substring(process.Length - i))) { pIdx = process.Length - i; break; }
                                 }
                                 if (pIdx >= 0) {
                                     if (pIdx > 0) {
+                                        // Stream thinking chunk immediately
                                         string thinkPart = process.Substring(0, pIdx);
                                         thinkTextBuffer += thinkPart;
                                         onThinkChunk(thinkPart);
@@ -127,6 +137,7 @@ namespace sqlSense.Controllers
                                     buffer = process.Substring(pIdx);
                                     process = "";
                                 } else {
+                                    // Stream every thinking chunk as it arrives
                                     thinkTextBuffer += process;
                                     onThinkChunk(process);
                                     process = "";

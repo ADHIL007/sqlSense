@@ -26,21 +26,37 @@ namespace sqlSense.Services.Ai
                 thinkValue = isFast ? "low" : "high";
             }
 
-            var payload = new
+            // Build clean message objects — only include fields that have values.
+            // Ollama does NOT expect thinking/tool_calls/tool_name on user messages.
+            var messages = new JArray();
+            foreach (var m in history)
             {
-                model = modelName, 
-                messages = history.Select(m => new { 
-                    role = m.Role, 
-                    content = m.Content,
-                    thinking = m.Thinking,
-                    tool_calls = m.ToolCalls,
-                    tool_name = m.ToolName
-                }).ToArray(),
-                stream = true,
-                think = thinkValue
+                var msg = new JObject
+                {
+                    ["role"] = m.Role,
+                    ["content"] = m.Content ?? ""
+                };
+                if (!string.IsNullOrEmpty(m.Thinking))
+                    msg["thinking"] = m.Thinking;
+                if (m.ToolCalls != null && m.ToolCalls.Count > 0)
+                    msg["tool_calls"] = m.ToolCalls;
+                if (!string.IsNullOrEmpty(m.ToolName))
+                    msg["tool_name"] = m.ToolName;
+                messages.Add(msg);
+            }
+
+            var payloadObj = new JObject
+            {
+                ["model"] = modelName,
+                ["messages"] = messages,
+                ["stream"] = true,
+                ["think"] = JToken.FromObject(thinkValue)
             };
 
-            var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+            var jsonPayload = payloadObj.ToString(Formatting.None);
+            System.Diagnostics.Debug.WriteLine($"[Ollama] Payload: {jsonPayload}");
+
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             var baseUrl = string.IsNullOrWhiteSpace(settings.AiBaseUrl) ? "http://localhost:11434" : settings.AiBaseUrl;
             
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/chat") { Content = content };
@@ -57,6 +73,8 @@ namespace sqlSense.Services.Ai
             {
                 var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
+
+                System.Diagnostics.Debug.WriteLine($"[Ollama] Chunk: {line}");
                 
                 string deltaReasoning = null;
                 string deltaContentText = null;
@@ -71,24 +89,34 @@ namespace sqlSense.Services.Ai
                         deltaContentText = message["content"]?.ToString();
                         deltaToolCalls = message["tool_calls"] as JArray;
                     }
-                } catch { }
+                } catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine($"[Ollama] Parse error: {ex.Message}");
+                }
 
+                // Follow Ollama docs if/elif pattern: thinking and content
+                // are mutually exclusive per chunk. Check non-empty to avoid
+                // empty content="" during thinking from ending the trace.
                 if (!string.IsNullOrEmpty(deltaReasoning))
                 {
-                    if (!reasoningStarted) { reasoningStarted = true; yield return "<think>\n"; }
+                    if (!reasoningStarted) 
+                    { 
+                        reasoningStarted = true; 
+                        yield return "<think>\n"; 
+                    }
                     yield return deltaReasoning;
                 }
-                
-                if (!string.IsNullOrEmpty(deltaContentText))
+                else if (!string.IsNullOrEmpty(deltaContentText))
                 {
-                    if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; yield return "\n</think>\n"; }
+                    if (reasoningStarted && !reasoningEnded) 
+                    { 
+                        reasoningEnded = true; 
+                        yield return "\n</think>\n"; 
+                    }
                     yield return deltaContentText;
                 }
-
-                if (deltaToolCalls != null && deltaToolCalls.Count > 0)
+                else if (deltaToolCalls != null && deltaToolCalls.Count > 0)
                 {
                     if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; yield return "\n</think>\n"; }
-                    // Yield tool calls as a specialized tag that the controller could eventually parse
                     yield return $"<tool_calls>{deltaToolCalls.ToString(Formatting.None)}</tool_calls>";
                 }
             }
