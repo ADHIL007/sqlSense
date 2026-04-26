@@ -8,8 +8,11 @@
         Background="#1E1E1E"
         WindowStyle="None"
         BorderBrush="#3C3C3C"
-        BorderThickness="1"
-        AllowsTransparency="True">
+        BorderThickness="1">
+    
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <ResourceDictionary>
