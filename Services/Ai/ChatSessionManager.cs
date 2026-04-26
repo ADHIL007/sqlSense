@@ -9,8 +9,11 @@ namespace sqlSense.Services.Ai
 {
     public class ChatMessage
     {
-        public string Role { get; set; } // "user", "assistant"
+        public string Role { get; set; } // "user", "assistant", "tool"
         public string Content { get; set; }
+        public string Thinking { get; set; }
+        public string ToolName { get; set; }
+        public JArray ToolCalls { get; set; }
         public DateTime Timestamp { get; set; }
     }
 
@@ -51,7 +54,7 @@ namespace sqlSense.Services.Ai
             return CurrentSession;
         }
 
-        public static void AddMessage(string role, string content)
+        public static void AddMessage(string role, string content, string thinking = null, JArray toolCalls = null, string toolName = null)
         {
             if (CurrentSession == null)
             {
@@ -62,6 +65,9 @@ namespace sqlSense.Services.Ai
             {
                 Role = role,
                 Content = content,
+                Thinking = thinking,
+                ToolCalls = toolCalls,
+                ToolName = toolName,
                 Timestamp = DateTime.UtcNow
             };
             

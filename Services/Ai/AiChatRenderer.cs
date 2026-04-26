@@ -15,7 +15,7 @@ namespace sqlSense.Services.Ai
             .UsePipeTables()
             .Build();
 
-        public static Border CreateMessageBubble(string content, bool isUser, ScrollViewer parentScroll)
+        public static Border CreateMessageBubble(string content, bool isUser, ScrollViewer parentScroll, string thinking = null)
         {
             var border = new Border
             {
@@ -32,11 +32,18 @@ namespace sqlSense.Services.Ai
             border.CornerRadius = isUser ? new CornerRadius(12, 12, 4, 12) : new CornerRadius(12, 12, 12, 4);
 
             var container = new StackPanel { Orientation = Orientation.Vertical };
+            
+            if (!string.IsNullOrEmpty(thinking))
+            {
+                var expander = CreateThoughtExpander(thinking, parentScroll);
+                expander.IsExpanded = false;
+                container.Children.Add(expander);
+            }
+
             var textBox = CreateMarkdownViewer(content, parentScroll);
-
             container.Children.Add(textBox);
+            
             border.Child = container;
-
             return border;
         }
 

@@ -38,6 +38,7 @@ namespace sqlSense.Controllers
                 string buffer = "";
                 string thinkTextBuffer = "";
                 string currentTextBuffer = "";
+                string toolCallsJsonBuffer = "";
                 bool isThinking = false;
                 Stopwatch sw = new Stopwatch();
 
@@ -45,6 +46,20 @@ namespace sqlSense.Controllers
                 {
                     string process = buffer + chunk;
                     buffer = "";
+
+                    // Extract tool calls if present
+                    while (process.Contains("<tool_calls>"))
+                    {
+                        int start = process.IndexOf("<tool_calls>");
+                        int end = process.IndexOf("</tool_calls>", start);
+                        if (end >= 0)
+                        {
+                            string json = process.Substring(start + 12, end - (start + 12));
+                            toolCallsJsonBuffer += (toolCallsJsonBuffer.Length > 0 ? "," : "") + json.Trim('[', ']');
+                            process = process.Remove(start, (end + 13) - start);
+                        }
+                        else break; // Wait for end tag
+                    }
 
                     while (process.Length > 0)
                     {
@@ -121,10 +136,13 @@ namespace sqlSense.Controllers
                     }
                 }
 
-                string finalContent = "";
-                if (!string.IsNullOrEmpty(thinkTextBuffer)) finalContent += $"<think>\n{thinkTextBuffer}\n</think>\n\n";
-                finalContent += currentTextBuffer;
-                ChatSessionManager.AddMessage("assistant", finalContent);
+                Newtonsoft.Json.Linq.JArray toolCalls = null;
+                if (!string.IsNullOrEmpty(toolCallsJsonBuffer))
+                {
+                    try { toolCalls = Newtonsoft.Json.Linq.JArray.Parse("[" + toolCallsJsonBuffer + "]"); } catch { }
+                }
+
+                ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
                 onComplete();
             }
             catch (OperationCanceledException) { }

@@ -191,7 +191,7 @@ namespace sqlSense.UI.Controls.Ai
             ChatMessagesPanel.Children.Clear();
             foreach (var msg in session.Messages)
             {
-                var bubble = AiChatRenderer.CreateMessageBubble(msg.Content, msg.Role == "user", ChatScrollViewer);
+                var bubble = AiChatRenderer.CreateMessageBubble(msg.Content, msg.Role == "user", ChatScrollViewer, msg.Thinking);
                 ChatMessagesPanel.Children.Add(bubble);
             }
             ChatScrollViewer.ScrollToEnd();
@@ -260,7 +260,8 @@ namespace sqlSense.UI.Controls.Ai
                         container.Children.Remove(dots);
                         thinkExpander = AiChatRenderer.CreateThoughtExpander("", ChatScrollViewer);
                         thinkExpander.IsExpanded = true;
-                        container.Children.Add(thinkExpander);
+                        // Insert at index 0 to be above the textViewer
+                        container.Children.Insert(0, thinkExpander);
                     }
                     thinkBuffer += chunk;
                     ((Markdig.Wpf.MarkdownViewer)((Border)thinkExpander.Content).Child).Markdown = thinkBuffer;
@@ -290,9 +291,9 @@ namespace sqlSense.UI.Controls.Ai
             );
         }
 
-        private void AddMessageToUI(string text, bool isUser)
+        private void AddMessageToUI(string text, bool isUser, string thinking = null)
         {
-            var bubble = AiChatRenderer.CreateMessageBubble(text, isUser, ChatScrollViewer);
+            var bubble = AiChatRenderer.CreateMessageBubble(text, isUser, ChatScrollViewer, thinking);
             ChatMessagesPanel.Children.Add(bubble);
             ChatScrollViewer.ScrollToEnd();
         }
