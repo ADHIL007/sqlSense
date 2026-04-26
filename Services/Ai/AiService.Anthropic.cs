@@ -18,7 +18,7 @@ namespace sqlSense.Services.Ai
             var payload = new
             {
                 model = modelName,
-                max_tokens = 1000,
+                max_tokens = 8192,
                 messages = new[] { new { role = "user", content = prompt } },
                 stream = true
             };

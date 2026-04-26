@@ -196,7 +196,7 @@
                                 Padding="0" Margin="0"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Focusable="False" />
+                                Focusable="True" />
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>

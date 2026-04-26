@@ -192,7 +192,9 @@ namespace sqlSense.UI.Controls.Ai
             ChatMessagesPanel.Children.Clear();
             foreach (var msg in session.Messages)
             {
-                var bubble = AiChatRenderer.CreateMessageBubble(msg.Content, msg.Role == "user", ChatScrollViewer, msg.Thinking);
+                var bubble = AiChatRenderer.CreateMessageBubble(msg.Content, msg.Role == "user", ChatScrollViewer, msg.Thinking,
+                    onEdit: (msg.Role == "user") ? new Action<string>(t => { SetInputText(t); InputTextBox.Focus(); }) : null,
+                    onRetry: (msg.Role != "user") ? new Action(() => RetryLastMessage()) : null);
                 ChatMessagesPanel.Children.Add(bubble);
             }
             ChatScrollViewer.ScrollToEnd();
@@ -241,7 +243,7 @@ namespace sqlSense.UI.Controls.Ai
             InputTextBox.IsEnabled = false;
             SendBtn.Tag = "Stop";
 
-            var assistantBubble = AiChatRenderer.CreateMessageBubble("", false, ChatScrollViewer);
+            var assistantBubble = AiChatRenderer.CreateMessageBubble("", false, ChatScrollViewer, null, null, new Action(() => RetryLastMessage()));
             var container = (StackPanel)assistantBubble.Child;
             var textViewer = (Markdig.Wpf.MarkdownViewer)container.Children[0];
             textViewer.Visibility = Visibility.Collapsed;
@@ -385,9 +387,21 @@ namespace sqlSense.UI.Controls.Ai
 
         private void AddMessageToUI(string text, bool isUser, string thinking = null)
         {
-            var bubble = AiChatRenderer.CreateMessageBubble(text, isUser, ChatScrollViewer, thinking);
+            var bubble = AiChatRenderer.CreateMessageBubble(text, isUser, ChatScrollViewer, thinking,
+                onEdit: isUser ? new Action<string>(t => { SetInputText(t); InputTextBox.Focus(); }) : null,
+                onRetry: !isUser ? new Action(() => RetryLastMessage()) : null);
             ChatMessagesPanel.Children.Add(bubble);
             ChatScrollViewer.ScrollToEnd();
+        }
+
+        private void RetryLastMessage()
+        {
+            if (_controller.IsStreaming) return;
+            var lastUserMsg = ChatSessionManager.CurrentSession?.Messages.LastOrDefault(m => m.Role == "user");
+            if (lastUserMsg != null && !string.IsNullOrWhiteSpace(lastUserMsg.Content))
+            {
+                ProcessMessage(lastUserMsg.Content);
+            }
         }
 
         private void FinishProcessing()
