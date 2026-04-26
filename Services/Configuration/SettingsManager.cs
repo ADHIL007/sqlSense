@@ -26,6 +26,8 @@ namespace sqlSense.Services.Configuration
 
         public static AppSettings Current { get; private set; }
 
+        public static event EventHandler SettingsSaved;
+
         static SettingsManager()
         {
             Load();
@@ -57,6 +59,7 @@ namespace sqlSense.Services.Configuration
             {
                 string json = JsonConvert.SerializeObject(Current, Formatting.Indented);
                 File.WriteAllText(SettingsFile, json);
+                SettingsSaved?.Invoke(null, EventArgs.Empty);
             }
             catch (Exception ex)
             {

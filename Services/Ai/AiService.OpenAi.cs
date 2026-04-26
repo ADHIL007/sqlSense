@@ -16,15 +16,30 @@ namespace sqlSense.Services.Ai
         private static async IAsyncEnumerable<string> CallOpenAiStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gpt-3.5-turbo" : SettingsManager.Current.AiModelName;
-            var payload = new
+            var settings = SettingsManager.Current;
+            var isFast = settings.AiFastMode;
+            
+            var payload = new JObject
             {
-                model = modelName,
-                messages = new[] { new { role = "user", content = prompt } },
-                stream = true
+                ["model"] = modelName,
+                ["messages"] = JArray.FromObject(new[] { new { role = "user", content = prompt } }),
+                ["stream"] = true,
+                ["temperature"] = isFast ? 0.7 : 1.0,
+                ["max_tokens"] = isFast ? 300 : 2000
+            };
+
+            // Dynamic thinking/reasoning parameters based on Fast Mode
+            payload["extra_body"] = new JObject
+            {
+                ["chat_template_kwargs"] = new JObject
+                {
+                    ["thinking"] = !isFast,
+                    ["reasoning_effort"] = isFast ? "low" : "high"
+                }
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
-            var baseUrl = string.IsNullOrWhiteSpace(SettingsManager.Current.AiBaseUrl) ? "https://api.openai.com/v1" : SettingsManager.Current.AiBaseUrl;
+            var baseUrl = string.IsNullOrWhiteSpace(settings.AiBaseUrl) ? "https://api.openai.com/v1" : settings.AiBaseUrl;
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/chat/completions") { Content = content };
             request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
@@ -48,8 +63,13 @@ namespace sqlSense.Services.Ai
                     string deltaContentText = null;
                     try {
                         var json = JObject.Parse(jsonStr);
-                        deltaReasoning = json["choices"]?[0]?["delta"]?["reasoning_content"]?.ToString();
-                        deltaContentText = json["choices"]?[0]?["delta"]?["content"]?.ToString();
+                        var delta = json["choices"]?[0]?["delta"];
+                        if (delta != null)
+                        {
+                            // Support both "reasoning_content" and "reasoning"
+                            deltaReasoning = delta["reasoning_content"]?.ToString() ?? delta["reasoning"]?.ToString();
+                            deltaContentText = delta["content"]?.ToString();
+                        }
                     } catch { } 
                         
                     if (!string.IsNullOrEmpty(deltaReasoning))

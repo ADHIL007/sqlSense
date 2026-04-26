@@ -75,7 +75,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Model Name:" Style="{StaticResource SettingLabel}"/>
-                <ComboBox x:Name="CmbModelName" Style="{StaticResource SettingComboBox}" Grid.Column="1" Height="28" IsEditable="True" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" ToolTip="e.g. gpt-4, claude-3-opus-20240229, gemini-pro, llama3"/>
+                <ComboBox x:Name="CmbModelName" Style="{StaticResource SettingComboBox}" Grid.Column="1" Height="28" IsEditable="True" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" ToolTip="e.g. gpt-4, claude-3-opus-20240229, gemini-pro, llama3" SelectionChanged="CmbModelName_SelectionChanged"/>
                 <Button x:Name="BtnLoadModels" Grid.Column="2" Content="Load Models" Margin="10,0,0,0" Height="28" Padding="10,0" Background="#333333" Foreground="White" BorderThickness="0" Cursor="Hand" Click="BtnLoadModels_Click" IsEnabled="False"/>
             </Grid>
 

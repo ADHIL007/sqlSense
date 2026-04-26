@@ -23,6 +23,18 @@ namespace sqlSense.UI.Controls.Ai
         {
             InitializeComponent();
             this.Loaded += AiChatInterface_Loaded;
+            this.Unloaded += AiChatInterface_Unloaded;
+            SettingsManager.SettingsSaved += SettingsManager_SettingsSaved;
+        }
+
+        private void SettingsManager_SettingsSaved(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(UpdateToolbarUI);
+        }
+
+        private void AiChatInterface_Unloaded(object sender, RoutedEventArgs e)
+        {
+            SettingsManager.SettingsSaved -= SettingsManager_SettingsSaved;
         }
 
         private void AiChatInterface_Loaded(object sender, RoutedEventArgs e)

@@ -159,5 +159,18 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
                 UpdateLoadModelsButtonState();
             }
         }
+        private void CmbModelName_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbModelName.SelectedItem == null) return;
+            
+            var selectedModel = CmbModelName.SelectedItem.ToString();
+            var appSettings = sqlSense.Services.Configuration.SettingsManager.Current;
+            
+            if (appSettings.AiModelName != selectedModel)
+            {
+                appSettings.AiModelName = selectedModel;
+                sqlSense.Services.Configuration.SettingsManager.Save();
+            }
+        }
     }
 }
