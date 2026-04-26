@@ -64,6 +64,12 @@ namespace sqlSense.UI.MenueItems.Settings
             appSettings.AiApiVersion = PageAI.TbApiVersion.Text;
             appSettings.AiSendSchema = PageAI.CbSendSchema.IsChecked ?? false;
             appSettings.AiFastMode = PageAI.CbFastMode.IsChecked ?? false;
+            
+            if (int.TryParse(PageAI.TbMaxTokens.Text, out int maxTokens) && maxTokens > 0)
+                appSettings.AiMaxTokens = maxTokens;
+            else
+                appSettings.AiMaxTokens = 0;
+                
             appSettings.EnableHttpLogging = PageLogging.CbEnableLogging.IsChecked ?? false;
 
             sqlSense.Services.Configuration.SettingsManager.Save();

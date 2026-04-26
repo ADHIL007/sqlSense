@@ -25,6 +25,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             TbApiVersion.Text = appSettings.AiApiVersion;
             CbSendSchema.IsChecked = appSettings.AiSendSchema;
             CbFastMode.IsChecked = appSettings.AiFastMode;
+            TbMaxTokens.Text = appSettings.AiMaxTokens > 0 ? appSettings.AiMaxTokens.ToString() : "";
 
             foreach (ComboBoxItem item in CmbProvider.Items)
             {
@@ -104,6 +105,25 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             {
                 AzureExtraOptionsGrid.Visibility = Visibility.Collapsed;
             }
+
+            if (TxtMaxTokensDefault != null)
+            {
+                bool isFast = sqlSense.Services.Configuration.SettingsManager.Current.AiFastMode;
+                if (CbFastMode != null) isFast = CbFastMode.IsChecked ?? false;
+
+                string defaultTokens = "Model Default";
+                if (provider == "OpenAI" || provider == "Microsoft Azure OpenAI")
+                    defaultTokens = isFast ? "4096" : "16384";
+                else if (provider == "Anthropic Claude")
+                    defaultTokens = "8192";
+
+                TxtMaxTokensDefault.Text = $"(0 uses default: {defaultTokens})";
+            }
+        }
+
+        private void CbFastMode_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            UpdateDynamicUI();
         }
 
         private void UpdateLoadModelsButtonState()

@@ -15,15 +15,15 @@ namespace sqlSense.Services.Ai
         private static async IAsyncEnumerable<string> CallAnthropicStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "claude-3-opus-20240229" : SettingsManager.Current.AiModelName;
-            var payload = new
+            var payloadObj = new JObject
             {
-                model = modelName,
-                max_tokens = 8192,
-                messages = new[] { new { role = "user", content = prompt } },
-                stream = true
+                ["model"] = modelName,
+                ["max_tokens"] = SettingsManager.Current.AiMaxTokens > 0 ? SettingsManager.Current.AiMaxTokens : 8192,
+                ["messages"] = JArray.FromObject(new[] { new { role = "user", content = prompt } }),
+                ["stream"] = true
             };
 
-            var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+            var content = new StringContent(payloadObj.ToString(Formatting.None), Encoding.UTF8, "application/json");
             var baseUrl = string.IsNullOrWhiteSpace(SettingsManager.Current.AiBaseUrl) ? "https://api.anthropic.com/v1" : SettingsManager.Current.AiBaseUrl;
             
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/messages") { Content = content };

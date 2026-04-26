@@ -41,7 +41,7 @@ namespace sqlSense.Services.Ai
                 ["messages"] = messages,
                 ["stream"] = true,
                 ["temperature"] = isFast ? 0.7 : 1.0,
-                ["max_tokens"] = isFast ? 4096 : 16384
+                ["max_tokens"] = settings.AiMaxTokens > 0 ? settings.AiMaxTokens : (isFast ? 4096 : 16384)
             };
 
             // Dynamic thinking/reasoning parameters based on Fast Mode

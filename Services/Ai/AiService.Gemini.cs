@@ -15,12 +15,19 @@ namespace sqlSense.Services.Ai
     {
         private static async IAsyncEnumerable<string> CallGeminiStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
-            var payload = new
+            var payloadObj = new JObject
             {
-                contents = new[] { new { parts = new[] { new { text = prompt } } } }
+                ["contents"] = JArray.FromObject(new[] { new { parts = new[] { new { text = prompt } } } })
             };
+            if (SettingsManager.Current.AiMaxTokens > 0)
+            {
+                payloadObj["generationConfig"] = new JObject
+                {
+                    ["maxOutputTokens"] = SettingsManager.Current.AiMaxTokens
+                };
+            }
 
-            var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+            var content = new StringContent(payloadObj.ToString(Formatting.None), Encoding.UTF8, "application/json");
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gemini-pro" : SettingsManager.Current.AiModelName;
             // Strip the thinking icon if present
             modelName = modelName.Replace(" 🧠", "");

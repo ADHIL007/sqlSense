@@ -115,9 +115,20 @@
                         <TextBlock Text="Overrides Base URL:" Style="{StaticResource SettingLabel}"/>
                         <TextBox x:Name="TbBaseUrl" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center"/>
                     </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Max Tokens:" Style="{StaticResource SettingLabel}"/>
+                        <TextBox x:Name="TbMaxTokens" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="Leave empty or 0 to use defaults"/>
+                        <TextBlock x:Name="TxtMaxTokensDefault" Grid.Column="2" Text="(0 for default)" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    </Grid>
                     <StackPanel Margin="0,10,0,0">
                         <CheckBox x:Name="CbFastMode" Content="Fast Mode (Disable Reasoning/Thinking)" 
-                                  Style="{StaticResource SettingCheckBox}" IsChecked="False"/>
+                                  Style="{StaticResource SettingCheckBox}" IsChecked="False"
+                                  Checked="CbFastMode_CheckedChanged" Unchecked="CbFastMode_CheckedChanged"/>
                         <TextBlock Text="Instructs models to skip chain-of-thought processing and strip reasoning tags for faster replies." 
                                    Style="{StaticResource SettingDescription}" Margin="24,4,0,0"/>
                     </StackPanel>

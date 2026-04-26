@@ -53,6 +53,14 @@ namespace sqlSense.Services.Ai
                 ["think"] = JToken.FromObject(thinkValue)
             };
 
+            if (settings.AiMaxTokens > 0)
+            {
+                payloadObj["options"] = new JObject
+                {
+                    ["num_predict"] = settings.AiMaxTokens
+                };
+            }
+
             var jsonPayload = payloadObj.ToString(Formatting.None);
             System.Diagnostics.Debug.WriteLine($"[Ollama] Payload: {jsonPayload}");
 

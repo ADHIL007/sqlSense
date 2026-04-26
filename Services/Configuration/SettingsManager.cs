@@ -18,6 +18,7 @@ namespace sqlSense.Services.Configuration
         public bool AiFastMode { get; set; } = false;
         public bool EnableHttpLogging { get; set; } = true;
         public System.Collections.Generic.Dictionary<string, string> SavedApiKeys { get; set; } = new System.Collections.Generic.Dictionary<string, string>();
+        public int AiMaxTokens { get; set; } = 0;
     }
 
     public static class SettingsManager
