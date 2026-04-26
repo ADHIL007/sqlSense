@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace sqlSense.Services.Ai.prompt
+namespace sqlSense.Services.Ai
 {
-    class prompt
+    internal class PromptSections
     {
     }
 }
