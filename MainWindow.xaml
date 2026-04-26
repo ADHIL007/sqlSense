@@ -432,6 +432,7 @@
                         <StackPanel Orientation="Horizontal">
                             <RadioButton GroupName="StatusViewMode"
                                          Style="{StaticResource StatusModeBtn}"
+                                         Visibility="Collapsed"
                                          IsChecked="{Binding SqlEditor.IsChartMode, Mode=OneWay}"
                                          Command="{Binding SqlEditor.SetChartModeCommand}"
                                          IsEnabled="{Binding SqlEditor.IsChartDisabled, Converter={StaticResource InverseBool}}">
@@ -455,6 +456,7 @@
 
                             <RadioButton GroupName="StatusViewMode"
                                          Style="{StaticResource StatusModeBtn}"
+                                         Visibility="Collapsed"
                                          IsChecked="{Binding SqlEditor.IsSplitMode, Mode=OneWay}"
                                          Command="{Binding SqlEditor.SetSplitModeCommand}"
                                          IsEnabled="{Binding SqlEditor.IsChartDisabled, Converter={StaticResource InverseBool}}">

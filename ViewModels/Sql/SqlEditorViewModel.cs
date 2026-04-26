@@ -9,10 +9,10 @@ namespace sqlSense.ViewModels.Modules
     public partial class SqlEditorViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string _sqlText = "-- Select a table from the Object Explorer\n-- to preview its data here";
+        private string _sqlText = "";
 
         [ObservableProperty]
-        private bool _isVisible = false;
+        private bool _isVisible = true;
 
         [ObservableProperty]
         private bool _isMaximized = false;
@@ -44,13 +44,13 @@ namespace sqlSense.ViewModels.Modules
         // ─── View Mode (Chart / Code / Split) ─────────────────────────
         // 0 = Visual (Chart), 1 = Code, 2 = Split
         [ObservableProperty]
-        private int _viewMode = 0;
+        private int _viewMode = 1;
 
         [ObservableProperty]
-        private bool _isChartMode = true;
+        private bool _isChartMode = false;
 
         [ObservableProperty]
-        private bool _isCodeMode = false;
+        private bool _isCodeMode = true;
 
         [ObservableProperty]
         private bool _isSplitMode = false;
@@ -60,10 +60,10 @@ namespace sqlSense.ViewModels.Modules
 
         // Derived visibility helpers for binding
         [ObservableProperty]
-        private bool _showChart = true;
+        private bool _showChart = false;
 
         [ObservableProperty]
-        private bool _showCode = false;
+        private bool _showCode = true;
 
         // Cursor position display
         [ObservableProperty]
