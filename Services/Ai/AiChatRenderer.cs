@@ -73,13 +73,44 @@ namespace sqlSense.Services.Ai
                         textContainer.OpacityMask = mask;
 
                         var clickOverlay = new Border { Background = Brushes.Transparent, Cursor = Cursors.Hand, ToolTip = "Click to expand" };
-                        clickOverlay.MouseLeftButtonDown += (sender, args) =>
+                        
+                        Action collapse = () =>
+                        {
+                            isExpanded = false;
+                            textContainer.MaxHeight = 120;
+                            textContainer.OpacityMask = mask;
+                            clickOverlay.Visibility = Visibility.Visible;
+                        };
+
+                        Action expand = () =>
                         {
                             isExpanded = true;
                             textContainer.MaxHeight = double.PositiveInfinity;
                             textContainer.OpacityMask = null;
                             clickOverlay.Visibility = Visibility.Collapsed;
                         };
+
+                        clickOverlay.MouseLeftButtonDown += (sender, args) =>
+                        {
+                            expand();
+                            args.Handled = true;
+                        };
+
+                        MouseButtonEventHandler onParentClick = (sender, args) =>
+                        {
+                            if (isExpanded)
+                            {
+                                var pos = args.GetPosition(textContainer);
+                                if (pos.X < 0 || pos.Y < 0 || pos.X > textContainer.ActualWidth || pos.Y > textContainer.ActualHeight)
+                                {
+                                    collapse();
+                                }
+                            }
+                        };
+                        
+                        parentScroll.PreviewMouseLeftButtonDown += onParentClick;
+                        border.Unloaded += (sender, args) => parentScroll.PreviewMouseLeftButtonDown -= onParentClick;
+
                         textContainer.Children.Add(clickOverlay);
                     }
                 };
