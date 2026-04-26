@@ -51,7 +51,7 @@ namespace sqlSense.Services.Ai
                    "- Generate:\n" +
                    "\t- Return ONLY SQL in ```sql block\n" +
                    "- Explain/Analyze/Debug:\n" +
-                   "\t- Brief explanation (2–4 lines)\n" +
+                   "\t- Brief explanation (2â€“4 lines)\n" +
                    "\t- Include SQL if needed\n" +
                    "- Fix/Optimize:\n" +
                    "\t- Return improved SQL\n" +
@@ -74,7 +74,10 @@ namespace sqlSense.Services.Ai
             return "# Task\n" +
                    "Respond with useful answers.\n" +
                    "Do NOT repeat the user's question.\n" +
-                   "If unsure, clearly say you don't know instead of echoing.";
+                   "If the user asks about SQLSense, its developer, or software info:\n" +
+                   "- You MUST call the function get_software_information\n" +
+                   "- Do NOT answer from your own knowledge\n" +
+                   "Use tools whenever they provide better or required information.";
         }
     }
 }

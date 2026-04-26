@@ -125,7 +125,7 @@ namespace sqlSense.Services.Ai
 
             IAsyncEnumerable<string> stream = null;
             System.Diagnostics.Debug.WriteLine($"[AiService] Sending message via {settings.AiProvider} (Model: {settings.AiModelName})");
-            System.Diagnostics.Debug.WriteLine($"[AiService] FastMode: {settings.AiFastMode}, Message Length: {message.Length}");
+            System.Diagnostics.Debug.WriteLine($"[AiService] FastMode: {settings.AiFastMode}, Message Length: {message?.Length ?? 0}");
 
             ResetUsageCounters();
 
@@ -141,15 +141,17 @@ namespace sqlSense.Services.Ai
                     history.AddRange(sessionMessages);
                 }
 
-                if (history.Count > 1 && history.Last().Role == "user")
+                if (!string.IsNullOrEmpty(userInput))
                 {
-                    var last = history.Last();
-                    history[history.Count - 1] = new ChatMessage { Role = "user", Content = userInput, Timestamp = last.Timestamp };
-                }
-                else
-                {
-                    // This handles case where history only has the system message we just added
-                    history.Add(new ChatMessage { Role = "user", Content = userInput });
+                    if (history.Count > 1 && history.Last().Role == "user")
+                    {
+                        var last = history.Last();
+                        history[history.Count - 1] = new ChatMessage { Role = "user", Content = userInput, Timestamp = last.Timestamp };
+                    }
+                    else
+                    {
+                        history.Add(new ChatMessage { Role = "user", Content = userInput });
+                    }
                 }
 
                 switch (settings.AiProvider)
@@ -207,7 +209,7 @@ namespace sqlSense.Services.Ai
                 }
                 else
                 {
-                    promptTokens = Math.Max(1, message.Length / 4);
+                    promptTokens = Math.Max(1, (message?.Length ?? 0) / 4);
                     completionTokens = Math.Max(1, completionChars / 4);
                 }
                 string providerLabel = settings.AiProvider ?? "Unknown";

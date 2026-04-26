@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using sqlSense.Services.Ai;
 using sqlSense.Services;
+using Newtonsoft.Json.Linq;
 
 namespace sqlSense.Controllers
 {
@@ -24,14 +25,21 @@ namespace sqlSense.Controllers
             Action<string> onTextChunk,
             Action<double> onThinkComplete,
             Action onComplete,
-            Action<Exception> onError)
+            Action<Exception> onError,
+            bool isToolRecursion = false)
         {
-            if (string.IsNullOrWhiteSpace(text)) return;
+            if (string.IsNullOrWhiteSpace(text) && !isToolRecursion) return;
 
-            ChatSessionManager.AddMessage("user", text);
-            IsStreaming = true;
-            _cts = new CancellationTokenSource();
-            onStart();
+            if (!string.IsNullOrWhiteSpace(text) && !isToolRecursion)
+            {
+                ChatSessionManager.AddMessage("user", text);
+            }
+            if (!isToolRecursion)
+            {
+                IsStreaming = true;
+                _cts = new CancellationTokenSource();
+                onStart();
+            }
 
             string buffer = "";
             string thinkTextBuffer = "";
@@ -154,7 +162,38 @@ namespace sqlSense.Controllers
                     try { toolCalls = Newtonsoft.Json.Linq.JArray.Parse("[" + toolCallsJsonBuffer + "]"); } catch { }
                 }
 
-                ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
+                if (toolCalls != null && toolCalls.Count > 0)
+                {
+                    ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
+                    foreach (var tc in toolCalls)
+                    {
+                        var funcName = tc["function"]?["name"]?.ToString();
+                        var callId = tc["id"]?.ToString();
+                        var argsToken = tc["function"]?["arguments"];
+                        JObject argsObj = null;
+                        if (argsToken != null)
+                        {
+                            if (argsToken.Type == JTokenType.String)
+                            {
+                                try { argsObj = JObject.Parse(argsToken.ToString()); } catch { }
+                            }
+                            else if (argsToken.Type == JTokenType.Object)
+                            {
+                                argsObj = argsToken as JObject;
+                            }
+                        }
+                        string result = AiToolRegistry.ExecuteTool(funcName, argsObj);
+                        ChatSessionManager.AddMessage("tool", result, null, null, funcName, callId);
+                    }
+                    await SendMessageStreamAsync(null, onStart, onThinkChunk, onTextChunk, onThinkComplete, onComplete, onError, true);
+                    return; // Important: let the recursive call trigger onComplete
+                }
+                
+                if (!isToolRecursion || !string.IsNullOrEmpty(currentTextBuffer) || !string.IsNullOrEmpty(thinkTextBuffer))
+                {
+                    ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
+                }
+                
                 onComplete();
             }
             catch (OperationCanceledException) 
@@ -179,7 +218,10 @@ namespace sqlSense.Controllers
             }
             finally
             {
-                IsStreaming = false;
+                if (!isToolRecursion)
+                {
+                    IsStreaming = false;
+                }
             }
         }
     }

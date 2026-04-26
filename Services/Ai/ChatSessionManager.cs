@@ -13,6 +13,7 @@ namespace sqlSense.Services.Ai
         public string Content { get; set; }
         public string Thinking { get; set; }
         public string ToolName { get; set; }
+        public string ToolCallId { get; set; }
         public JArray ToolCalls { get; set; }
         public DateTime Timestamp { get; set; }
     }
@@ -54,7 +55,7 @@ namespace sqlSense.Services.Ai
             return CurrentSession;
         }
 
-        public static void AddMessage(string role, string content, string thinking = null, JArray toolCalls = null, string toolName = null)
+        public static void AddMessage(string role, string content, string thinking = null, JArray toolCalls = null, string toolName = null, string toolCallId = null)
         {
             if (CurrentSession == null)
             {
@@ -68,6 +69,7 @@ namespace sqlSense.Services.Ai
                 Thinking = thinking,
                 ToolCalls = toolCalls,
                 ToolName = toolName,
+                ToolCallId = toolCallId,
                 Timestamp = DateTime.UtcNow
             };
             

@@ -32,6 +32,8 @@ namespace sqlSense.Services.Ai
                     msg["tool_calls"] = m.ToolCalls;
                 if (!string.IsNullOrEmpty(m.ToolName))
                     msg["tool_name"] = m.ToolName;
+                if (!string.IsNullOrEmpty(m.ToolCallId))
+                    msg["tool_call_id"] = m.ToolCallId;
                 messages.Add(msg);
             }
 
@@ -42,7 +44,8 @@ namespace sqlSense.Services.Ai
                 ["stream"] = true,
                 ["temperature"] = isFast ? 0.7 : 1.0,
                 ["max_tokens"] = settings.AiMaxTokens > 0 ? settings.AiMaxTokens : (isFast ? 4096 : 16384),
-                ["stream_options"] = new JObject { ["include_usage"] = true }
+                ["stream_options"] = new JObject { ["include_usage"] = true },
+                ["tools"] = AiToolRegistry.GetAvailableTools()
             };
 
             // Dynamic thinking/reasoning parameters based on Fast Mode

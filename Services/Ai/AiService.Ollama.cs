@@ -42,6 +42,8 @@ namespace sqlSense.Services.Ai
                     msg["tool_calls"] = m.ToolCalls;
                 if (!string.IsNullOrEmpty(m.ToolName))
                     msg["tool_name"] = m.ToolName;
+                if (!string.IsNullOrEmpty(m.ToolCallId))
+                    msg["tool_call_id"] = m.ToolCallId;
                 messages.Add(msg);
             }
 
@@ -50,7 +52,8 @@ namespace sqlSense.Services.Ai
                 ["model"] = modelName,
                 ["messages"] = messages,
                 ["stream"] = true,
-                ["think"] = JToken.FromObject(thinkValue)
+                ["think"] = JToken.FromObject(thinkValue),
+                ["tools"] = AiToolRegistry.GetAvailableTools()
             };
 
             if (settings.AiMaxTokens > 0)
