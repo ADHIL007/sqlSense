@@ -13,7 +13,7 @@ namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
-        private static async IAsyncEnumerable<string> CallAzureStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
+        private static async IAsyncEnumerable<string> CallAzureStreamAsync(string systemInstruction, string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var baseUrl = SettingsManager.Current.AiBaseUrl;
             var deployment = SettingsManager.Current.AiDeploymentName;
@@ -29,7 +29,11 @@ namespace sqlSense.Services.Ai
 
             var payload = new
             {
-                messages = new[] { new { role = "user", content = prompt } },
+                messages = new[]
+                {
+                    new { role = "system", content = systemInstruction }, // FIRST
+                    new { role = "user", content = prompt }
+                },
                 stream = true
             };
 

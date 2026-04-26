@@ -12,12 +12,13 @@ namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
-        private static async IAsyncEnumerable<string> CallAnthropicStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
+        private static async IAsyncEnumerable<string> CallAnthropicStreamAsync(string systemInstruction, string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "claude-3-opus-20240229" : SettingsManager.Current.AiModelName;
             var payloadObj = new JObject
             {
                 ["model"] = modelName,
+                ["system"] = systemInstruction,
                 ["max_tokens"] = SettingsManager.Current.AiMaxTokens > 0 ? SettingsManager.Current.AiMaxTokens : 8192,
                 ["messages"] = JArray.FromObject(new[] { new { role = "user", content = prompt } }),
                 ["stream"] = true

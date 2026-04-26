@@ -120,7 +120,8 @@ namespace sqlSense.Services.Ai
                 yield break;
             }
 
-            message = PromptBuilder.BuildPrompt(message, settings.AiFastMode);
+            var systemInstruction = new SystemInstruction().GetSystemInstruction();
+            var userInput = message;
 
             IAsyncEnumerable<string> stream = null;
             System.Diagnostics.Debug.WriteLine($"[AiService] Sending message via {settings.AiProvider} (Model: {settings.AiModelName})");
@@ -131,10 +132,24 @@ namespace sqlSense.Services.Ai
             string setupError = null;
             try
             {
-                var history = new List<ChatMessage>(ChatSessionManager.CurrentSession?.Messages ?? new List<ChatMessage>());
-                if (history.Count > 0 && history.Last().Role == "user")
+                var history = new List<ChatMessage>();
+                history.Add(new ChatMessage { Role = "system", Content = systemInstruction }); // FIRST
+
+                var sessionMessages = ChatSessionManager.CurrentSession?.Messages ?? new List<ChatMessage>();
+                if (sessionMessages.Count > 0)
                 {
-                    history[history.Count - 1] = new ChatMessage { Role = "user", Content = message, Timestamp = history.Last().Timestamp };
+                    history.AddRange(sessionMessages);
+                }
+
+                if (history.Count > 1 && history.Last().Role == "user")
+                {
+                    var last = history.Last();
+                    history[history.Count - 1] = new ChatMessage { Role = "user", Content = userInput, Timestamp = last.Timestamp };
+                }
+                else
+                {
+                    // This handles case where history only has the system message we just added
+                    history.Add(new ChatMessage { Role = "user", Content = userInput });
                 }
 
                 switch (settings.AiProvider)
@@ -143,13 +158,13 @@ namespace sqlSense.Services.Ai
                         stream = CallOpenAiStreamAsync(history, settings.AiApiKey, cancellationToken);
                         break;
                     case "Microsoft Azure OpenAI":
-                        stream = CallAzureStreamAsync(message, settings.AiApiKey, cancellationToken);
+                        stream = CallAzureStreamAsync(systemInstruction, userInput, settings.AiApiKey, cancellationToken);
                         break;
                     case "Google Gemini":
-                        stream = CallGeminiStreamAsync(message, settings.AiApiKey, cancellationToken);
+                        stream = CallGeminiStreamAsync(systemInstruction, userInput, settings.AiApiKey, cancellationToken);
                         break;
                     case "Anthropic Claude":
-                        stream = CallAnthropicStreamAsync(message, settings.AiApiKey, cancellationToken);
+                        stream = CallAnthropicStreamAsync(systemInstruction, userInput, settings.AiApiKey, cancellationToken);
                         break;
                     case "Local Model (Ollama)":
                         stream = CallOllamaStreamAsync(history, cancellationToken);

@@ -13,11 +13,15 @@ namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
-        private static async IAsyncEnumerable<string> CallGeminiStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
+        private static async IAsyncEnumerable<string> CallGeminiStreamAsync(string systemInstruction, string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var payloadObj = new JObject
             {
-                ["contents"] = JArray.FromObject(new[] { new { parts = new[] { new { text = prompt } } } })
+                ["systemInstruction"] = new JObject
+                {
+                    ["parts"] = new JArray { new JObject { ["text"] = systemInstruction } }
+                },
+                ["contents"] = JArray.FromObject(new[] { new { role = "user", parts = new[] { new { text = prompt } } } })
             };
             if (SettingsManager.Current.AiMaxTokens > 0)
             {
