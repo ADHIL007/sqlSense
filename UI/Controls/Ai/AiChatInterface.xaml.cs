@@ -97,7 +97,7 @@ namespace sqlSense.UI.Controls.Ai
                 foreach (var m in models)
                 {
                     var btn = new Button { Style = (Style)FindResource("PopupItemButton"), Tag = (m == settings.AiModelName ? "Selected" : "") };
-                    btn.Content = new TextBlock { Text = m, FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)) };
+                    btn.Content = new TextBlock { Text = m, FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 280 };
                     btn.Click += (s, args) => {
                         settings.AiModelName = m;
                         SettingsManager.Save();

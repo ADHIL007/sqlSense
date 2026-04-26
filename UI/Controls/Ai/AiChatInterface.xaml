@@ -402,7 +402,7 @@
                                 </Paragraph>
                             </FlowDocument>
                         </RichTextBox>
-                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="13" LineHeight="20" Foreground="{DynamicResource MutedBrush}" Margin="16,8,0,0" VerticalAlignment="Top" IsHitTestVisible="False"/>
+                        <TextBlock x:Name="WatermarkText" Text="Ask anything, @ to mention" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="13" LineHeight="20" Foreground="{DynamicResource MutedBrush}" Margin="16,8,0,0" VerticalAlignment="Top" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="8,0,8,8">
@@ -430,7 +430,7 @@
                             <Button x:Name="ModelSelectorBtn" Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" ToolTip="Select Model" Padding="4,4,8,4" Click="ModelSelectorBtn_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock x:Name="CurrentModelLabel" Text="" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="CurrentModelLabel" Text="" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="120"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
