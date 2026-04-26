@@ -13,16 +13,32 @@ namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
-        private static async IAsyncEnumerable<string> CallOpenAiStreamAsync(string prompt, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
+        private static async IAsyncEnumerable<string> CallOpenAiStreamAsync(List<ChatMessage> history, string apiKey, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             var modelName = string.IsNullOrWhiteSpace(SettingsManager.Current.AiModelName) ? "gpt-3.5-turbo" : SettingsManager.Current.AiModelName;
             var settings = SettingsManager.Current;
             var isFast = settings.AiFastMode;
             
+            var messages = new JArray();
+            foreach (var m in history)
+            {
+                var msg = new JObject
+                {
+                    ["role"] = m.Role,
+                    ["content"] = m.Content ?? ""
+                };
+                // OpenRouter and some OpenAI compatible endpoints accept tool_calls, etc.
+                if (m.ToolCalls != null && m.ToolCalls.Count > 0)
+                    msg["tool_calls"] = m.ToolCalls;
+                if (!string.IsNullOrEmpty(m.ToolName))
+                    msg["tool_name"] = m.ToolName;
+                messages.Add(msg);
+            }
+
             var payload = new JObject
             {
                 ["model"] = modelName,
-                ["messages"] = JArray.FromObject(new[] { new { role = "user", content = prompt } }),
+                ["messages"] = messages,
                 ["stream"] = true,
                 ["temperature"] = isFast ? 0.7 : 1.0,
                 ["max_tokens"] = isFast ? 300 : 2000
@@ -61,6 +77,8 @@ namespace sqlSense.Services.Ai
                     string jsonStr = line.Substring(6);
                     string deltaReasoning = null;
                     string deltaContentText = null;
+                    JArray deltaToolCalls = null;
+
                     try {
                         var json = JObject.Parse(jsonStr);
                         var delta = json["choices"]?[0]?["delta"];
@@ -69,19 +87,32 @@ namespace sqlSense.Services.Ai
                             // Support both "reasoning_content" and "reasoning"
                             deltaReasoning = delta["reasoning_content"]?.ToString() ?? delta["reasoning"]?.ToString();
                             deltaContentText = delta["content"]?.ToString();
+                            deltaToolCalls = delta["tool_calls"] as JArray;
                         }
                     } catch { } 
                         
                     if (!string.IsNullOrEmpty(deltaReasoning))
                     {
-                        if (!reasoningStarted) { reasoningStarted = true; yield return "<think>\n"; }
+                        if (!reasoningStarted) 
+                        { 
+                            reasoningStarted = true; 
+                            yield return "<think>\n"; 
+                        }
                         yield return deltaReasoning;
                     }
-                    
-                    if (!string.IsNullOrEmpty(deltaContentText))
+                    else if (!string.IsNullOrEmpty(deltaContentText))
+                    {
+                        if (reasoningStarted && !reasoningEnded) 
+                        { 
+                            reasoningEnded = true; 
+                            yield return "\n</think>\n"; 
+                        }
+                        yield return deltaContentText;
+                    }
+                    else if (deltaToolCalls != null && deltaToolCalls.Count > 0)
                     {
                         if (reasoningStarted && !reasoningEnded) { reasoningEnded = true; yield return "\n</think>\n"; }
-                        yield return deltaContentText;
+                        yield return $"<tool_calls>{deltaToolCalls.ToString(Formatting.None)}</tool_calls>";
                     }
                 }
             }

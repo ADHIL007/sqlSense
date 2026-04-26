@@ -33,12 +33,13 @@ namespace sqlSense.Controllers
             _cts = new CancellationTokenSource();
             onStart();
 
+            string buffer = "";
+            string thinkTextBuffer = "";
+            string currentTextBuffer = "";
+            string toolCallsJsonBuffer = "";
+
             try
             {
-                string buffer = "";
-                string thinkTextBuffer = "";
-                string currentTextBuffer = "";
-                string toolCallsJsonBuffer = "";
                 bool isThinking = false;
                 Stopwatch sw = new Stopwatch();
 
@@ -156,7 +157,22 @@ namespace sqlSense.Controllers
                 ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
                 onComplete();
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) 
+            {
+                // When cancelled by user, still save the partial message and signal completion to reset UI
+                Newtonsoft.Json.Linq.JArray toolCalls = null;
+                if (!string.IsNullOrEmpty(toolCallsJsonBuffer))
+                {
+                    try { toolCalls = Newtonsoft.Json.Linq.JArray.Parse("[" + toolCallsJsonBuffer + "]"); } catch { }
+                }
+
+                string cancelText = currentTextBuffer.Length > 0 ? "\n\n*[User canceled the request]*" : "*[User canceled the request]*";
+                currentTextBuffer += cancelText;
+                onTextChunk(cancelText);
+
+                ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
+                onComplete();
+            }
             catch (Exception ex)
             {
                 onError(ex);

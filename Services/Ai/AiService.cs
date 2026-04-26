@@ -116,10 +116,16 @@ namespace sqlSense.Services.Ai
             string setupError = null;
             try
             {
+                var history = new List<ChatMessage>(ChatSessionManager.CurrentSession?.Messages ?? new List<ChatMessage>());
+                if (history.Count > 0 && history.Last().Role == "user")
+                {
+                    history[history.Count - 1] = new ChatMessage { Role = "user", Content = message, Timestamp = history.Last().Timestamp };
+                }
+
                 switch (settings.AiProvider)
                 {
                     case "OpenAI":
-                        stream = CallOpenAiStreamAsync(message, settings.AiApiKey, cancellationToken);
+                        stream = CallOpenAiStreamAsync(history, settings.AiApiKey, cancellationToken);
                         break;
                     case "Microsoft Azure OpenAI":
                         stream = CallAzureStreamAsync(message, settings.AiApiKey, cancellationToken);
@@ -131,11 +137,6 @@ namespace sqlSense.Services.Ai
                         stream = CallAnthropicStreamAsync(message, settings.AiApiKey, cancellationToken);
                         break;
                     case "Local Model (Ollama)":
-                        var history = new List<ChatMessage>(ChatSessionManager.CurrentSession?.Messages ?? new List<ChatMessage>());
-                        if (history.Count > 0 && history.Last().Role == "user")
-                        {
-                            history[history.Count - 1] = new ChatMessage { Role = "user", Content = message, Timestamp = history.Last().Timestamp };
-                        }
                         stream = CallOllamaStreamAsync(history, cancellationToken);
                         break;
                     default:
