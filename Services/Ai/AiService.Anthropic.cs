@@ -50,7 +50,29 @@ namespace sqlSense.Services.Ai
                     try {
                         var jsonStr = line.Substring(6);
                         var json = JObject.Parse(jsonStr);
-                        if (json["type"]?.ToString() == "content_block_delta")
+                        var eventType = json["type"]?.ToString();
+
+                        // Anthropic sends input_tokens in message_start
+                        if (eventType == "message_start")
+                        {
+                            var inputTokens = json["message"]?["usage"]?["input_tokens"]?.Value<int>();
+                            if (inputTokens.HasValue)
+                            {
+                                _lastPromptTokens = inputTokens.Value;
+                                _lastUsageAvailable = true;
+                            }
+                        }
+                        // Anthropic sends output_tokens in message_delta
+                        else if (eventType == "message_delta")
+                        {
+                            var outputTokens = json["usage"]?["output_tokens"]?.Value<int>();
+                            if (outputTokens.HasValue)
+                            {
+                                _lastCompletionTokens = outputTokens.Value;
+                                _lastUsageAvailable = true;
+                            }
+                        }
+                        else if (eventType == "content_block_delta")
                         {
                             var deltaObj = json["delta"];
                             if (deltaObj?["type"]?.ToString() == "thinking_delta")

@@ -97,6 +97,15 @@ namespace sqlSense.Services.Ai
                         deltaContentText = message["content"]?.ToString();
                         deltaToolCalls = message["tool_calls"] as JArray;
                     }
+                    // Ollama's final chunk (done=true) contains real token counts
+                    if (json["done"]?.Value<bool>() == true)
+                    {
+                        var promptEval = json["prompt_eval_count"]?.Value<int>();
+                        var evalCount = json["eval_count"]?.Value<int>();
+                        if (promptEval.HasValue) _lastPromptTokens = promptEval.Value;
+                        if (evalCount.HasValue) _lastCompletionTokens = evalCount.Value;
+                        if (promptEval.HasValue || evalCount.HasValue) _lastUsageAvailable = true;
+                    }
                 } catch (Exception ex) {
                     System.Diagnostics.Debug.WriteLine($"[Ollama] Parse error: {ex.Message}");
                 }

@@ -31,8 +31,26 @@ namespace sqlSense.UI.MenueItems.Settings
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.ClickCount == 2)
+            {
+                ToggleMaximize();
+                return;
+            }
             if (e.ChangedButton == MouseButton.Left)
                 this.DragMove();
+        }
+
+        private void Maximize_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleMaximize();
+        }
+
+        private void ToggleMaximize()
+        {
+            if (this.WindowState == WindowState.Maximized)
+                this.WindowState = WindowState.Normal;
+            else
+                this.WindowState = WindowState.Maximized;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -102,6 +120,7 @@ namespace sqlSense.UI.MenueItems.Settings
                 case "Canvas": PageCanvas.Visibility = Visibility.Visible; break;
                 case "SQL Engine": PageSQLEngine.Visibility = Visibility.Visible; break;
                 case "Keyboard": PageKeyboard.Visibility = Visibility.Visible; break;
+                case "Model Usage": PageModelUsage.Visibility = Visibility.Visible; break;
                 case "About": PageAbout.Visibility = Visibility.Visible; break;
                 case "Logging": PageLogging.Visibility = Visibility.Visible; break;
             }

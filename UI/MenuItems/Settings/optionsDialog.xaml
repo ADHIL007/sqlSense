@@ -4,7 +4,7 @@
         xmlns:pages="clr-namespace:sqlSense.UI.MenueItems.Settings.Pages"
         Title="SQLSense Options"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
+        ResizeMode="CanResize"
         Background="#1E1E1E"
         WindowStyle="None"
         BorderBrush="#3C3C3C"
@@ -49,6 +49,24 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
+                <!-- Maximize / Restore Button -->
+                <Button DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" 
+                        BorderThickness="0" Width="34" Click="Maximize_Click" Cursor="Hand" ToolTip="Maximize">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" Padding="8">
+                                <TextBlock x:Name="maxIcon" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" 
+                                           FontSize="10" Foreground="#888888" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#3E3E42"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </DockPanel>
         </Border>
 
@@ -86,6 +104,8 @@
                                      Tag="&#xE70F;" Checked="Nav_Checked"/>
                         <RadioButton x:Name="RbAIAssistant" Content="AI Assistant" Style="{StaticResource NavButton}" 
                               Tag="&#xE968;" Checked="Nav_Checked"/>
+                        <RadioButton Content="Model Usage" Style="{StaticResource NavButton}" 
+                       Tag="&#xE9D2;" Checked="Nav_Checked"/>
                         <RadioButton Content="DB Connection" Style="{StaticResource NavButton}" 
                                      Tag="&#xE968;" Checked="Nav_Checked"/>
                         <RadioButton Content="Theme" Style="{StaticResource NavButton}" 
@@ -96,6 +116,7 @@
                                      Tag="&#xE756;" Checked="Nav_Checked"/>
                         <RadioButton Content="Keyboard" Style="{StaticResource NavButton}" 
                                      Tag="&#xE92E;" Checked="Nav_Checked"/>
+              
                         <RadioButton Content="About" Style="{StaticResource NavButton}" 
                                      Tag="&#xE946;" Checked="Nav_Checked"/>
                         <RadioButton Content="Logging" Style="{StaticResource NavButton}" 
@@ -120,6 +141,7 @@
                         <pages:CanvasSettingsPage x:Name="PageCanvas" Visibility="Collapsed"/>
                         <pages:SqlEngineSettingsPage x:Name="PageSQLEngine" Visibility="Collapsed"/>
                         <pages:KeyboardSettingsPage x:Name="PageKeyboard" Visibility="Collapsed"/>
+                        <pages:ModelUsageSettingsPage x:Name="PageModelUsage" Visibility="Collapsed"/>
                         <pages:AboutSettingsPage x:Name="PageAbout" Visibility="Collapsed"/>
                         <pages:LoggingSettingsPage x:Name="PageLogging" Visibility="Collapsed"/>
                     </Grid>

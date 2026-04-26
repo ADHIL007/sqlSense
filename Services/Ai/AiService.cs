@@ -15,6 +15,19 @@ namespace sqlSense.Services.Ai
 {
     public static partial class AiService
     {
+        // Per-request token usage captured from the actual API response.
+        // Set by each provider's streaming method; consumed by SendMessageStreamAsync.
+        [ThreadStatic] private static int _lastPromptTokens;
+        [ThreadStatic] private static int _lastCompletionTokens;
+        [ThreadStatic] private static bool _lastUsageAvailable;
+
+        private static void ResetUsageCounters()
+        {
+            _lastPromptTokens = 0;
+            _lastCompletionTokens = 0;
+            _lastUsageAvailable = false;
+        }
+
 
         public static async Task<List<string>> FetchAvailableModelsAsync(string provider, string apiKey, string baseUrl)
         {
@@ -113,6 +126,8 @@ namespace sqlSense.Services.Ai
             System.Diagnostics.Debug.WriteLine($"[AiService] Sending message via {settings.AiProvider} (Model: {settings.AiModelName})");
             System.Diagnostics.Debug.WriteLine($"[AiService] FastMode: {settings.AiFastMode}, Message Length: {message.Length}");
 
+            ResetUsageCounters();
+
             string setupError = null;
             try
             {
@@ -157,10 +172,36 @@ namespace sqlSense.Services.Ai
 
             if (stream == null) yield break;
 
+            int completionChars = 0;
             var processedStream = AgentService.ProcessStreamAsync(stream, settings.AiFastMode, cancellationToken);
             await foreach (var chunk in processedStream.WithCancellation(cancellationToken))
             {
+                completionChars += (chunk ?? "").Length;
                 yield return chunk;
+            }
+
+            // Record usage: prefer real token counts from the API response,
+            // fall back to character-based estimation (~4 chars/token) if the API didn't report usage.
+            try
+            {
+                int promptTokens, completionTokens;
+                if (_lastUsageAvailable)
+                {
+                    promptTokens = _lastPromptTokens;
+                    completionTokens = _lastCompletionTokens;
+                }
+                else
+                {
+                    promptTokens = Math.Max(1, message.Length / 4);
+                    completionTokens = Math.Max(1, completionChars / 4);
+                }
+                string providerLabel = settings.AiProvider ?? "Unknown";
+                string modelLabel = settings.AiModelName ?? "Unknown";
+                ModelUsageTracker.RecordUsage(modelLabel, providerLabel, promptTokens, completionTokens);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AiService] Error recording usage: {ex.Message}");
             }
         }
 

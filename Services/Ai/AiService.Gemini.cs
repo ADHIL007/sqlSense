@@ -78,6 +78,16 @@ namespace sqlSense.Services.Ai
                                     }
                                 }
                             }
+                            // Parse real usage from Gemini's usageMetadata
+                            var usageMeta = json["usageMetadata"];
+                            if (usageMeta != null)
+                            {
+                                var pt = usageMeta["promptTokenCount"]?.Value<int>();
+                                var ct2 = usageMeta["candidatesTokenCount"]?.Value<int>();
+                                if (pt.HasValue) _lastPromptTokens = pt.Value;
+                                if (ct2.HasValue) _lastCompletionTokens = ct2.Value;
+                                if (pt.HasValue || ct2.HasValue) _lastUsageAvailable = true;
+                            }
                         }
                     } catch { }
                     foreach(var token in tokensToYield) yield return token;

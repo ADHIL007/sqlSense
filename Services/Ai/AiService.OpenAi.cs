@@ -41,7 +41,8 @@ namespace sqlSense.Services.Ai
                 ["messages"] = messages,
                 ["stream"] = true,
                 ["temperature"] = isFast ? 0.7 : 1.0,
-                ["max_tokens"] = settings.AiMaxTokens > 0 ? settings.AiMaxTokens : (isFast ? 4096 : 16384)
+                ["max_tokens"] = settings.AiMaxTokens > 0 ? settings.AiMaxTokens : (isFast ? 4096 : 16384),
+                ["stream_options"] = new JObject { ["include_usage"] = true }
             };
 
             // Dynamic thinking/reasoning parameters based on Fast Mode
@@ -88,6 +89,14 @@ namespace sqlSense.Services.Ai
                             deltaReasoning = delta["reasoning_content"]?.ToString() ?? delta["reasoning"]?.ToString();
                             deltaContentText = delta["content"]?.ToString();
                             deltaToolCalls = delta["tool_calls"] as JArray;
+                        }
+                        // Parse real usage from the streaming response (last chunk contains it)
+                        var usage = json["usage"];
+                        if (usage != null)
+                        {
+                            _lastPromptTokens = usage["prompt_tokens"]?.Value<int>() ?? 0;
+                            _lastCompletionTokens = usage["completion_tokens"]?.Value<int>() ?? 0;
+                            _lastUsageAvailable = true;
                         }
                     } catch { } 
                         

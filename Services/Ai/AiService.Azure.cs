@@ -53,6 +53,14 @@ namespace sqlSense.Services.Ai
                     try {
                         var json = JObject.Parse(line.Substring(6));
                         delta = json["choices"]?[0]?["delta"]?["content"]?.ToString();
+                        // Parse real usage from Azure's streaming response
+                        var usage = json["usage"];
+                        if (usage != null)
+                        {
+                            _lastPromptTokens = usage["prompt_tokens"]?.Value<int>() ?? 0;
+                            _lastCompletionTokens = usage["completion_tokens"]?.Value<int>() ?? 0;
+                            _lastUsageAvailable = true;
+                        }
                     } catch { }
                     if (!string.IsNullOrEmpty(delta)) yield return delta;
                 }
