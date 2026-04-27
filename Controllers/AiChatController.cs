@@ -170,6 +170,11 @@ namespace sqlSense.Controllers
                         var funcName = tc["function"]?["name"]?.ToString();
                         var callId = tc["id"]?.ToString();
                         var argsToken = tc["function"]?["arguments"];
+                        
+                        // Emit LOADING status
+                        string friendlyName = AiToolStatusManager.GetFriendlyName(funcName);
+                        onTextChunk(AiToolStatusManager.GetStatusTag(callId ?? funcName, ToolStatusState.Loading, $"Checking {friendlyName}..."));
+                        
                         JObject argsObj = null;
                         if (argsToken != null)
                         {
@@ -182,8 +187,23 @@ namespace sqlSense.Controllers
                                 argsObj = argsToken as JObject;
                             }
                         }
-                        string result = AiToolRegistry.ExecuteTool(funcName, argsObj);
-                        ChatSessionManager.AddMessage("tool", result, null, null, funcName, callId);
+                        
+                        try
+                        {
+                            string result = AiToolRegistry.ExecuteTool(funcName, argsObj);
+                            
+                            // Emit SUCCESS status
+                            onTextChunk(AiToolStatusManager.GetStatusTag(callId ?? funcName, ToolStatusState.Success, $"{friendlyName} retrieved"));
+                            
+                            ChatSessionManager.AddMessage("tool", result, null, null, funcName, callId);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Emit ERROR status
+                            onTextChunk(AiToolStatusManager.GetStatusTag(callId ?? funcName, ToolStatusState.Error, $"{friendlyName} failed"));
+                            
+                            ChatSessionManager.AddMessage("tool", $"Error executing tool {funcName}: {ex.Message}", null, null, funcName, callId);
+                        }
                     }
                     await SendMessageStreamAsync(null, onStart, onThinkChunk, onTextChunk, onThinkComplete, onComplete, onError, true);
                     return; // Important: let the recursive call trigger onComplete

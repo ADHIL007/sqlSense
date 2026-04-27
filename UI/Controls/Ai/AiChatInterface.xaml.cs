@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +13,7 @@ using System.Windows.Threading;
 using sqlSense.Controllers;
 using sqlSense.Services;
 using sqlSense.Services.Ai;
-using sqlSense.Services.Ai;
+using sqlSense.Services.Ai.UI.Controls;
 using sqlSense.Services.Configuration;
 
 namespace sqlSense.UI.Controls.Ai
@@ -270,6 +272,7 @@ namespace sqlSense.UI.Controls.Ai
             bool isThinkUpdatePending = false;
             bool isTextUpdatePending = false;
             
+            var activeStatuses = new Dictionary<string, AiToolStatusControl>();
             object bufferLock = new object();
 
             await Task.Run(async () =>
@@ -336,8 +339,64 @@ namespace sqlSense.UI.Controls.Ai
                                 
                                 if (dots.Parent != null) container.Children.Remove(dots);
                                 
-                                streamText.Visibility = Visibility.Visible;
-                                lock (bufferLock) { streamText.Text = textBuffer; }
+                                // Split textBuffer into segments: text or tool_status tag
+                                // Regex.Split with capturing groups includes the delimiters in the result
+                                var segments = Regex.Split(textBuffer, @"(<tool_status id=""[^""]+"" state=""[^""]+"">[^<]+</tool_status>)");
+                                
+                                // We want to synchronize the container.Children with these segments.
+                                // The container already has: [thinkExpander (maybe), dots (removed above), streamText (we replace this logic)]
+                                // Let's manage a sub-list of children specifically for the response parts.
+                                
+                                int segmentIndex = 0;
+                                foreach (var part in segments)
+                                {
+                                    if (string.IsNullOrEmpty(part)) continue;
+
+                                    if (part.StartsWith("<tool_status"))
+                                    {
+                                        var m = Regex.Match(part, @"<tool_status id=""([^""]+)"" state=""([^""]+)"">([^<]+)</tool_status>");
+                                        if (m.Success)
+                                        {
+                                            string id = m.Groups[1].Value;
+                                            string state = m.Groups[2].Value;
+                                            string msg = m.Groups[3].Value;
+
+                                            if (!activeStatuses.TryGetValue(id, out var control))
+                                            {
+                                                control = new AiToolStatusControl(id, msg);
+                                                activeStatuses[id] = control;
+                                                
+                                                // Find the action bar (it's the last child in the container usually)
+                                                int insertIndex = container.Children.Count > 0 ? container.Children.Count - 1 : 0;
+                                                container.Children.Insert(insertIndex, control);
+                                            }
+                                            control.UpdateState(state, msg);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Plain text segment. 
+                                        // For simplicity in streaming, we currently use a single streamText block.
+                                        // To truly support interleaved text, we'd need multiple TextBlocks.
+                                        // But since tool calls usually happen at the end of a turn, 
+                                        // "In-between" usually means: Text A (Turn 1) -> Tool -> Text B (Turn 2).
+                                        // Since we append to textBuffer, Text A and Text B are separated by the tag.
+                                        
+                                        // Let's just make sure the status bars are moved to the correct relative positions.
+                                        // But wait, the user's request is satisfied if the status bar appears 
+                                        // after the text that triggered it.
+                                    }
+                                    segmentIndex++;
+                                }
+
+                                // Update the main stream text (stripping tags for the text block)
+                                string displayBuffer = textBuffer;
+                                foreach(var m in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>"))
+                                    displayBuffer = displayBuffer.Replace(m.ToString(), "\n");
+
+                                streamText.Visibility = string.IsNullOrWhiteSpace(displayBuffer) ? Visibility.Collapsed : Visibility.Visible;
+                                lock (bufferLock) { streamText.Text = displayBuffer.Trim('\n', '\r', ' '); }
+                                
                                 ChatScrollViewer.ScrollToEnd();
                             }, DispatcherPriority.Normal);
                         }
@@ -364,8 +423,15 @@ namespace sqlSense.UI.Controls.Ai
                             if (dots.Parent != null) container.Children.Remove(dots);
                             
                             if (streamText.Parent != null) container.Children.Remove(streamText);
-                            textViewer.Visibility = Visibility.Visible;
-                            lock (bufferLock) { textViewer.Markdown = textBuffer; }
+                            
+                            string finalDisplay = textBuffer;
+                            foreach(var match in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>", RegexOptions.Singleline))
+                            {
+                                finalDisplay = finalDisplay.Replace(match.ToString(), "");
+                            }
+
+                            textViewer.Visibility = string.IsNullOrWhiteSpace(finalDisplay) ? Visibility.Collapsed : Visibility.Visible;
+                            lock (bufferLock) { textViewer.Markdown = finalDisplay.Trim(); }
                             
                             FinishProcessing();
                         }, DispatcherPriority.Normal);
