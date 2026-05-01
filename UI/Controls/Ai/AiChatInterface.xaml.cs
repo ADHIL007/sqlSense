@@ -50,7 +50,7 @@ namespace sqlSense.UI.Controls.Ai
             var settings = SettingsManager.Current;
             FastModeText.Text = settings.AiFastMode ? "Fast" : "Reason";
             FastModeText.Foreground = settings.AiFastMode ? new SolidColorBrush(Color.FromRgb(136, 136, 136)) : new SolidColorBrush(Color.FromRgb(79, 195, 247));
-            
+
             bool isConnected = !string.IsNullOrEmpty(settings.AiProvider) && !settings.AiProvider.Equals("None", StringComparison.OrdinalIgnoreCase);
 
             if (!isConnected)
@@ -105,7 +105,7 @@ namespace sqlSense.UI.Controls.Ai
             ModelPopup.IsOpen = true;
 
             var models = await AiService.FetchAvailableModelsAsync(settings.AiProvider, settings.AiApiKey, settings.AiBaseUrl);
-            
+
             ModelListPanel.Children.Clear();
             if (models?.Count > 0)
             {
@@ -113,7 +113,8 @@ namespace sqlSense.UI.Controls.Ai
                 {
                     var btn = new Button { Style = (Style)FindResource("PopupItemButton"), Tag = (m == settings.AiModelName ? "Selected" : "") };
                     btn.Content = new TextBlock { Text = m, FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 280 };
-                    btn.Click += (s, args) => {
+                    btn.Click += (s, args) =>
+                    {
                         settings.AiModelName = m;
                         SettingsManager.Save();
                         UpdateToolbarUI();
@@ -135,6 +136,20 @@ namespace sqlSense.UI.Controls.Ai
             HistoryOverlay.Visibility = Visibility.Collapsed;
         }
 
+        private void ExpandBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (Application.Current.MainWindow.DataContext is sqlSense.ViewModels.MainViewModel vm)
+            {
+                var newView = new sqlSense.Models.ViewDefinitionInfo
+                {
+                    ViewName = "chat with AI",
+                    DatabaseName = vm.Explorer.SelectedDatabaseName ?? "master"
+                };
+                vm.OpenWorkbooks.Add(newView);
+                vm.ActiveWorkbook = newView;
+                vm.IsAiChatVisible = false;
+            }
+        }
         private void HistoryBtn_Click(object sender, RoutedEventArgs e)
         {
             if (HistoryOverlay.Visibility == Visibility.Collapsed)
@@ -153,7 +168,7 @@ namespace sqlSense.UI.Controls.Ai
             HistoryListPanel.Children.Clear();
             HistoryListPanel.Children.Add(new TextBlock { Text = "Recent Output", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 11, Margin = new Thickness(0, 16, 0, 8) });
 
-            foreach(var session in ChatSessionManager.GetRecentSessions())
+            foreach (var session in ChatSessionManager.GetRecentSessions())
             {
                 var btn = new Button { Style = (Style)FindResource("PopupItemButton"), HorizontalContentAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 2, 0, 2) };
                 if (ChatSessionManager.CurrentSession?.SessionId == session.SessionId) btn.Tag = "Selected";
@@ -164,7 +179,7 @@ namespace sqlSense.UI.Controls.Ai
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
                 grid.Children.Add(new TextBlock { Text = session.Title, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), TextTrimming = TextTrimming.CharacterEllipsis, FontSize = 13 });
-                
+
                 var timeTxt = new TextBlock { Text = ChatSessionManager.GetRelativeTime(session.UpdatedAt), Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 11, Margin = new Thickness(8, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
                 Grid.SetColumn(timeTxt, 1);
                 grid.Children.Add(timeTxt);
@@ -174,7 +189,8 @@ namespace sqlSense.UI.Controls.Ai
                 Grid.SetColumn(delBtn, 2);
                 grid.Children.Add(delBtn);
 
-                delBtn.Click += (s, ev) => {
+                delBtn.Click += (s, ev) =>
+                {
                     ev.Handled = true;
                     ChatSessionManager.DeleteSession(session.SessionId);
                     RefreshHistoryPanel();
@@ -239,7 +255,7 @@ namespace sqlSense.UI.Controls.Ai
         private async void ProcessMessage(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
-            
+
             AddMessageToUI(text, true);
             SetInputText("");
             InputTextBox.IsEnabled = false;
@@ -271,13 +287,13 @@ namespace sqlSense.UI.Controls.Ai
             string textBuffer = "";
             bool isThinkUpdatePending = false;
             bool isTextUpdatePending = false;
-            
+
             var activeStatuses = new Dictionary<string, AiToolStatusControl>();
             object bufferLock = new object();
 
             await Task.Run(async () =>
             {
-                await _controller.SendMessageStreamAsync(text, 
+                await _controller.SendMessageStreamAsync(text,
                     onStart: () => { },
                     onThinkChunk: (chunk) =>
                     {
@@ -289,13 +305,13 @@ namespace sqlSense.UI.Controls.Ai
                             Dispatcher.InvokeAsync(() =>
                             {
                                 isThinkUpdatePending = false;
-                                
+
                                 if (thinkExpander == null)
                                 {
                                     if (dots.Parent != null) container.Children.Remove(dots);
                                     thinkExpander = AiChatRenderer.CreateThoughtExpander("", ChatScrollViewer);
                                     thinkExpander.IsExpanded = true;
-                                    
+
                                     var thinkMarkdown = (Markdig.Wpf.MarkdownViewer)((Border)thinkExpander.Content).Child;
                                     thinkMarkdown.Visibility = Visibility.Collapsed;
 
@@ -336,17 +352,17 @@ namespace sqlSense.UI.Controls.Ai
                             Dispatcher.InvokeAsync(() =>
                             {
                                 isTextUpdatePending = false;
-                                
+
                                 if (dots.Parent != null) container.Children.Remove(dots);
-                                
+
                                 // Split textBuffer into segments: text or tool_status tag
                                 // Regex.Split with capturing groups includes the delimiters in the result
                                 var segments = Regex.Split(textBuffer, @"(<tool_status id=""[^""]+"" state=""[^""]+"">[^<]+</tool_status>)");
-                                
+
                                 // We want to synchronize the container.Children with these segments.
                                 // The container already has: [thinkExpander (maybe), dots (removed above), streamText (we replace this logic)]
                                 // Let's manage a sub-list of children specifically for the response parts.
-                                
+
                                 int segmentIndex = 0;
                                 foreach (var part in segments)
                                 {
@@ -365,7 +381,7 @@ namespace sqlSense.UI.Controls.Ai
                                             {
                                                 control = new AiToolStatusControl(id, msg);
                                                 activeStatuses[id] = control;
-                                                
+
                                                 // Find the action bar (it's the last child in the container usually)
                                                 int insertIndex = container.Children.Count > 0 ? container.Children.Count - 1 : 0;
                                                 container.Children.Insert(insertIndex, control);
@@ -381,7 +397,7 @@ namespace sqlSense.UI.Controls.Ai
                                         // But since tool calls usually happen at the end of a turn, 
                                         // "In-between" usually means: Text A (Turn 1) -> Tool -> Text B (Turn 2).
                                         // Since we append to textBuffer, Text A and Text B are separated by the tag.
-                                        
+
                                         // Let's just make sure the status bars are moved to the correct relative positions.
                                         // But wait, the user's request is satisfied if the status bar appears 
                                         // after the text that triggered it.
@@ -391,22 +407,25 @@ namespace sqlSense.UI.Controls.Ai
 
                                 // Update the main stream text (stripping tags for the text block)
                                 string displayBuffer = textBuffer;
-                                foreach(var m in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>"))
+                                foreach (var m in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>"))
                                     displayBuffer = displayBuffer.Replace(m.ToString(), "\n");
 
                                 streamText.Visibility = string.IsNullOrWhiteSpace(displayBuffer) ? Visibility.Collapsed : Visibility.Visible;
                                 lock (bufferLock) { streamText.Text = displayBuffer.Trim('\n', '\r', ' '); }
-                                
+
                                 ChatScrollViewer.ScrollToEnd();
                             }, DispatcherPriority.Normal);
                         }
                     },
-                    onThinkComplete: (duration) => {
-                        Dispatcher.InvokeAsync(() => {
-                            if (thinkExpander != null) {
+                    onThinkComplete: (duration) =>
+                    {
+                        Dispatcher.InvokeAsync(() =>
+                        {
+                            if (thinkExpander != null)
+                            {
                                 thinkExpander.Header = $"Thought for {duration:F1}s";
                                 thinkExpander.IsExpanded = false;
-                                
+
                                 var thinkBorder = (Border)thinkExpander.Content;
                                 if (thinkBorder.Child is StackPanel stack)
                                 {
@@ -418,32 +437,36 @@ namespace sqlSense.UI.Controls.Ai
                             }
                         }, DispatcherPriority.Normal);
                     },
-                    onComplete: () => {
-                        Dispatcher.InvokeAsync(() => {
+                    onComplete: () =>
+                    {
+                        Dispatcher.InvokeAsync(() =>
+                        {
                             if (dots.Parent != null) container.Children.Remove(dots);
-                            
+
                             if (streamText.Parent != null) container.Children.Remove(streamText);
-                            
+
                             string finalDisplay = textBuffer;
-                            foreach(var match in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>", RegexOptions.Singleline))
+                            foreach (var match in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>", RegexOptions.Singleline))
                             {
                                 finalDisplay = finalDisplay.Replace(match.ToString(), "");
                             }
 
                             textViewer.Visibility = string.IsNullOrWhiteSpace(finalDisplay) ? Visibility.Collapsed : Visibility.Visible;
                             lock (bufferLock) { textViewer.Markdown = finalDisplay.Trim(); }
-                            
+
                             FinishProcessing();
                         }, DispatcherPriority.Normal);
                     },
-                    onError: (ex) => {
-                        Dispatcher.InvokeAsync(() => {
+                    onError: (ex) =>
+                    {
+                        Dispatcher.InvokeAsync(() =>
+                        {
                             if (dots.Parent != null) container.Children.Remove(dots);
-                            
+
                             if (streamText.Parent != null) container.Children.Remove(streamText);
                             textViewer.Visibility = Visibility.Visible;
                             lock (bufferLock) { textViewer.Markdown = textBuffer + $"\n\n[Chat Error: {ex.Message}]"; }
-                            
+
                             FinishProcessing();
                         }, DispatcherPriority.Normal);
                     }
@@ -482,12 +505,12 @@ namespace sqlSense.UI.Controls.Ai
         {
             var dotsBorder = new Border { Height = 20, HorizontalAlignment = HorizontalAlignment.Left };
             var typingPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            
+
             for (int i = 0; i < 3; i++)
             {
                 var dot = new Ellipse { Width = 7, Height = 7, Fill = new SolidColorBrush(Color.FromRgb(156, 163, 175)), Margin = new Thickness(3, 0, 3, 0), RenderTransform = new ScaleTransform() };
                 typingPanel.Children.Add(dot);
-                
+
                 var anim = new DoubleAnimation { From = 1.0, To = 1.2, Duration = TimeSpan.FromMilliseconds(400), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromMilliseconds(i * 150) };
                 dot.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
                 dot.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);

@@ -291,10 +291,46 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Canvas Panel -->
-                    <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="0" />
+                    <ui:InfiniteCanvasPanel x:Name="CanvasPanel" Grid.Column="0">
+                        <ui:InfiniteCanvasPanel.Style>
+                            <Style TargetType="ui:InfiniteCanvasPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveWorkbook.ViewName}" Value="chat with AI">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:InfiniteCanvasPanel.Style>
+                    </ui:InfiniteCanvasPanel>
 
                     <!-- SQL Editor Panel -->
-                    <sql:SqlEditorPanel Grid.Column="1" />
+                    <sql:SqlEditorPanel Grid.Column="1">
+                        <sql:SqlEditorPanel.Style>
+                            <Style TargetType="sql:SqlEditorPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveWorkbook.ViewName}" Value="chat with AI">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </sql:SqlEditorPanel.Style>
+                    </sql:SqlEditorPanel>
+
+                    <!-- Center AI Chat Interface -->
+                    <ai:AiChatInterface Grid.Column="0" Grid.ColumnSpan="2">
+                        <ai:AiChatInterface.Style>
+                            <Style TargetType="ai:AiChatInterface">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveWorkbook.ViewName}" Value="chat with AI">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ai:AiChatInterface.Style>
+                    </ai:AiChatInterface>
 
                     <!-- Resizer between canvas and editor (only in Split mode) -->
                     <GridSplitter Grid.Column="0" Width="4" HorizontalAlignment="Right" VerticalAlignment="Stretch" Cursor="SizeWE">

@@ -67,9 +67,9 @@
 
             <!-- ── Code ─────────────────────────────────────────────────── -->
             <!-- Fenced / indented code blocks -->
-   <!-- Enhanced Code Block Style -->
+            <!-- Enhanced Code Block Style -->
             <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static md:Styles.CodeBlockStyleKey}">
-                
+
                 <!-- Typography -->
                 <Setter Property="FontFamily" Value="Cascadia Code, Consolas"/>
                 <Setter Property="FontSize" Value="13"/>
@@ -317,7 +317,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            
+
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,5">
                 <TextBlock Text="Agent" Foreground="{DynamicResource PrimaryAccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,8,0,8" />
@@ -331,28 +331,35 @@
                     <Button x:Name="MoreOptionsBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="More Options" Click="MoreOptionsBtn_Click">
                         <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                     </Button>
+                    <Button x:Name="ExpandBtn"
+                        Style="{StaticResource PopupItemButton}"
+                        Padding="4"
+                        ToolTip="Expand / Collapse"
+                        Click="ExpandBtn_Click">
+                        <TextBlock Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
                     <Button x:Name="CloseBtn" Style="{StaticResource PopupItemButton}" Padding="4" ToolTip="Close" Command="{Binding DataContext.ToggleAiChatCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                         <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                     </Button>
                 </StackPanel>
             </Grid>
-            
+
             <!-- Chat Area -->
             <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,0" Padding="0,0,16,0" PanningMode="VerticalFirst">
                 <StackPanel x:Name="ChatMessagesPanel" Margin="0,16,0,16">
                     <!-- Dynamic chat messages go here -->
                 </StackPanel>
             </ScrollViewer>
-            
+
             <!-- History Overlay -->
             <Grid x:Name="HistoryOverlay" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource BackgroundBrush}" Visibility="Collapsed" Panel.ZIndex="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                
+
                 <TextBlock Grid.Row="0" Text="Select a conversation" Foreground="{DynamicResource MutedBrush}" FontSize="13" Margin="16,16,16,8"/>
-                
+
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="16,0,16,16">
                     <StackPanel x:Name="HistoryListPanel">
                     </StackPanel>
@@ -379,7 +386,7 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
+
                     <Grid Grid.Row="0">
                         <RichTextBox x:Name="InputTextBox" 
                                      Background="Transparent" 
@@ -411,13 +418,13 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
+
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- Plus Button -->
                             <Button Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" ToolTip="Add Context" Padding="4">
                                 <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                             </Button>
-                            
+
                             <!-- Fast Toggle -->
                             <Button x:Name="FastModeToggleBtn" Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" ToolTip="Toggle Fast Mode" Click="FastModeToggleBtn_Click" Padding="4,4,8,4">
                                 <StackPanel Orientation="Horizontal">
@@ -425,7 +432,7 @@
                                     <TextBlock x:Name="FastModeText" Text="Fast" FontSize="12" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <!-- Model Selector -->
                             <Button x:Name="ModelSelectorBtn" Background="Transparent" Foreground="#888888" BorderThickness="0" Cursor="Hand" ToolTip="Select Model" Padding="4,4,8,4" Click="ModelSelectorBtn_Click">
                                 <StackPanel Orientation="Horizontal">
@@ -486,14 +493,14 @@
             <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6" Width="360" Effect="{StaticResource NodeShadow}">
                 <StackPanel>
                     <TextBlock Text="Conversation mode" Foreground="#AAAAAA" FontSize="11" Margin="8,4,8,8"/>
-                    
+
                     <Button x:Name="ModeReasonBtn" Style="{StaticResource PopupItemButton}" Click="ModeReasonBtn_Click">
                         <StackPanel>
                             <TextBlock Text="Reason" FontSize="13" FontWeight="SemiBold" Foreground="#E0E0E0" Margin="0,0,0,4"/>
                             <TextBlock Text="Agent can reason before executing tasks. Use for deep research, complex tasks, or collaborative work" FontSize="11" Foreground="#999999" TextWrapping="Wrap" LineHeight="16"/>
                         </StackPanel>
                     </Button>
-                    
+
                     <Button x:Name="ModeFastBtn" Style="{StaticResource PopupItemButton}" Click="ModeFastBtn_Click">
                         <StackPanel>
                             <TextBlock Text="Fast" FontSize="13" FontWeight="SemiBold" Foreground="#E0E0E0" Margin="0,0,0,4"/>
