@@ -38,11 +38,74 @@ namespace sqlSense.UI.Controls.Ai
         private void AiChatInterface_Unloaded(object sender, RoutedEventArgs e)
         {
             SettingsManager.SettingsSaved -= SettingsManager_SettingsSaved;
+            if (Application.Current.MainWindow.DataContext is sqlSense.ViewModels.MainViewModel vm)
+            {
+                vm.PropertyChanged -= Vm_PropertyChanged;
+            }
         }
 
         private void AiChatInterface_Loaded(object sender, RoutedEventArgs e)
         {
             UpdateToolbarUI();
+            if (Application.Current.MainWindow.DataContext is sqlSense.ViewModels.MainViewModel vm)
+            {
+                // Prevent duplicate subscriptions
+                vm.PropertyChanged -= Vm_PropertyChanged;
+                vm.PropertyChanged += Vm_PropertyChanged;
+                UpdateExpandIcon(vm);
+            }
+            SyncSessionState();
+        }
+
+        private void Vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(sqlSense.ViewModels.MainViewModel.ActiveWorkbook))
+            {
+                UpdateExpandIcon(sender as sqlSense.ViewModels.MainViewModel);
+                SyncSessionState();
+            }
+            else if (e.PropertyName == nameof(sqlSense.ViewModels.MainViewModel.IsAiChatVisible))
+            {
+                SyncSessionState();
+            }
+        }
+
+        private void SyncSessionState()
+        {
+            if (ChatSessionManager.CurrentSession != null)
+            {
+                if (_controller.IsStreaming) return;
+
+                if (ChatMessagesPanel.Children.Count != ChatSessionManager.CurrentSession.Messages.Count)
+                {
+                    LoadSessionIntoUI(ChatSessionManager.CurrentSession.SessionId);
+                }
+            }
+            else
+            {
+                if (ChatMessagesPanel.Children.Count > 0)
+                {
+                    ChatMessagesPanel.Children.Clear();
+                }
+            }
+        }
+
+        private void UpdateExpandIcon(sqlSense.ViewModels.MainViewModel vm)
+        {
+            if (vm == null) return;
+            if (ExpandBtn.Content is TextBlock tb)
+            {
+                if (vm.ActiveWorkbook?.ViewName == "chat with AI")
+                {
+                    tb.Text = "\xE73F"; // Minimize / Back icon
+                    ExpandBtn.ToolTip = "Minimize";
+                }
+                else
+                {
+                    tb.Text = "\xE740"; // Expand icon
+                    ExpandBtn.ToolTip = "Expand";
+                }
+            }
         }
 
         private void UpdateToolbarUI()
@@ -140,14 +203,32 @@ namespace sqlSense.UI.Controls.Ai
         {
             if (Application.Current.MainWindow.DataContext is sqlSense.ViewModels.MainViewModel vm)
             {
-                var newView = new sqlSense.Models.ViewDefinitionInfo
+                if (vm.ActiveWorkbook?.ViewName == "chat with AI")
                 {
-                    ViewName = "chat with AI",
-                    DatabaseName = vm.Explorer.SelectedDatabaseName ?? "master"
-                };
-                vm.OpenWorkbooks.Add(newView);
-                vm.ActiveWorkbook = newView;
-                vm.IsAiChatVisible = false;
+                    // Currently expanded, so minimize
+                    vm.CloseWorkbookCommand.Execute(vm.ActiveWorkbook);
+                    vm.IsAiChatVisible = true;
+                }
+                else
+                {
+                    // Currently minimized, so expand
+                    var existingView = vm.OpenWorkbooks.FirstOrDefault(w => w.ViewName == "chat with AI");
+                    if (existingView != null)
+                    {
+                        vm.ActiveWorkbook = existingView;
+                    }
+                    else
+                    {
+                        var newView = new sqlSense.Models.ViewDefinitionInfo
+                        {
+                            ViewName = "chat with AI",
+                            DatabaseName = vm.Explorer.SelectedDatabaseName ?? "master"
+                        };
+                        vm.OpenWorkbooks.Add(newView);
+                        vm.ActiveWorkbook = newView;
+                    }
+                    vm.IsAiChatVisible = false;
+                }
             }
         }
         private void HistoryBtn_Click(object sender, RoutedEventArgs e)
