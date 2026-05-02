@@ -31,9 +31,7 @@ namespace sqlSense.Services.Ai
 
     public static class ChatSessionManager
     {
-        private static readonly string SessionDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "sqlSense", "sessions");
+        private static readonly string SessionDir = Path.Combine(AppConstants.AppDataFolder, "sessions");
 
         public static ChatSession CurrentSession { get; set; }
 

@@ -16,8 +16,7 @@ namespace sqlSense.Views
         public bool IsConnected { get; private set; }
 
         private static readonly string HistoryFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "sqlSense", "server_history.json");
+            AppConstants.AppDataFolder, "server_history.json");
 
         public ConnectWindow()
         {

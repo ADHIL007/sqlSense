@@ -11,7 +11,7 @@ namespace sqlSense.Services.Http
     public static class HttpService
     {
         private static readonly HttpClient _httpClient = new HttpClient();
-        private static readonly string LogDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "sqlSense", "logs");
+        private static readonly string LogDir = Path.Combine(AppConstants.LocalAppDataFolder, "logs");
         
         private static string GetLogPath() => Path.Combine(LogDir, $"http_{DateTime.Now:yyyyMMdd}.log");
 

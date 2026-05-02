@@ -14,8 +14,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
     public partial class ConnectionSettingsPage : UserControl
     {
         private static readonly string HistoryFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "sqlSense", "server_history.json");
+            AppConstants.AppDataFolder, "server_history.json");
 
         public ConnectionSettingsPage()
         {

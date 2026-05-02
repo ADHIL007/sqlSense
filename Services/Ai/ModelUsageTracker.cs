@@ -28,9 +28,7 @@ namespace sqlSense.Services.Ai
 
     public static class ModelUsageTracker
     {
-        private static readonly string UsageDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "sqlSense", "usage");
+        private static readonly string UsageDir = Path.Combine(AppConstants.AppDataFolder, "usage");
 
         private static readonly string UsageFile;
 

@@ -9,7 +9,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
 {
     public partial class LoggingSettingsPage : UserControl
     {
-        private readonly string LogDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "sqlSense", "logs");
+        private readonly string LogDir = Path.Combine(AppConstants.LocalAppDataFolder, "logs");
 
         public LoggingSettingsPage()
         {
