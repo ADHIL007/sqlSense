@@ -20,10 +20,37 @@ namespace sqlSense.Services.Ai
 
     public class ChatSession
     {
+        [JsonProperty("session_id")]
         public string SessionId { get; set; }
+        
+        [JsonProperty("title")]
         public string Title { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        
+        [JsonProperty("created_at_ms")]
+        public long CreatedAtMs { get; set; }
+        
+        [JsonProperty("updated_at_ms")]
+        public long UpdatedAtMs { get; set; }
+        
+        [JsonProperty("type")]
+        public string Type { get; set; } = "session_meta";
+        
+        [JsonProperty("version")]
+        public int Version { get; set; } = 1;
+
+        [JsonIgnore]
+        public DateTime CreatedAt 
+        { 
+            get => DateTimeOffset.FromUnixTimeMilliseconds(CreatedAtMs).UtcDateTime;
+            set => CreatedAtMs = new DateTimeOffset(value).ToUnixTimeMilliseconds();
+        }
+
+        [JsonIgnore]
+        public DateTime UpdatedAt 
+        { 
+            get => DateTimeOffset.FromUnixTimeMilliseconds(UpdatedAtMs).UtcDateTime;
+            set => UpdatedAtMs = new DateTimeOffset(value).ToUnixTimeMilliseconds();
+        }
         
         [JsonIgnore]
         public List<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
