@@ -79,8 +79,6 @@ namespace sqlSense.Services.Ai
             return "# Task\n" +
                    "Respond with useful answers.\n" +
                    "Do NOT repeat the user's question.\n" +
-                   "If the user asks about SQLSense, its developer, or software info:\n" +
-                   "- You MUST call the function get_software_information\n" +
                    "- Do NOT answer from your own knowledge\n" +
                    "Use tools whenever they provide better or required information.";
         }

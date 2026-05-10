@@ -42,7 +42,26 @@ namespace sqlSense.Services.Ai
             request.Headers.Add("api-key", apiKey);
 
             using var response = await HttpService.SendStreamAsync(request, "AI_Chat_Azure", ct);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                string errMsg = response.ReasonPhrase;
+                try
+                {
+                    var errJson = JObject.Parse(errorBody);
+                    if (errJson["error"] != null && errJson["error"]["message"] != null)
+                    {
+                        errMsg = errJson["error"]["message"].ToString();
+                    }
+                }
+                catch { errMsg = string.IsNullOrWhiteSpace(errorBody) ? errMsg : errorBody; }
+
+                if (errMsg != null && (errMsg.IndexOf("tool", StringComparison.OrdinalIgnoreCase) >= 0 || errMsg.IndexOf("function", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    throw new Exception($"The selected model does not support tools/function calling. Please select a different model. (Details: {errMsg})");
+                }
+                throw new Exception($"API Error {(int)response.StatusCode}: {errMsg}");
+            }
 
             using var stream = await response.Content.ReadAsStreamAsync();
             using var reader = new System.IO.StreamReader(stream);

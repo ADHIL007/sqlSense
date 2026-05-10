@@ -234,7 +234,18 @@ namespace sqlSense.Controllers
             }
             catch (Exception ex)
             {
-                onError(ex);
+                Newtonsoft.Json.Linq.JArray toolCalls = null;
+                if (!string.IsNullOrEmpty(toolCallsJsonBuffer))
+                {
+                    try { toolCalls = Newtonsoft.Json.Linq.JArray.Parse("[" + toolCallsJsonBuffer + "]"); } catch { }
+                }
+
+                string errorText = currentTextBuffer.Length > 0 ? $"\n\n*[Chat Error: {ex.Message}]*" : $"*[Chat Error: {ex.Message}]*";
+                currentTextBuffer += errorText;
+                onTextChunk(errorText);
+
+                ChatSessionManager.AddMessage("assistant", currentTextBuffer, thinkTextBuffer, toolCalls);
+                onComplete();
             }
             finally
             {

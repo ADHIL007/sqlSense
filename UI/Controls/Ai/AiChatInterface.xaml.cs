@@ -337,6 +337,11 @@ namespace sqlSense.UI.Controls.Ai
         {
             if (string.IsNullOrWhiteSpace(text)) return;
 
+            if (ChatSessionManager.CurrentSession == null)
+            {
+                ChatSessionManager.CreateNewSession();
+            }
+
             AddMessageToUI(text, true);
             SetInputText("");
             InputTextBox.IsEnabled = false;
