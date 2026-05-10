@@ -21,6 +21,7 @@ namespace sqlSense.Services.Ai
                 ["system"] = systemInstruction,
                 ["max_tokens"] = SettingsManager.Current.AiMaxTokens > 0 ? SettingsManager.Current.AiMaxTokens : 8192,
                 ["messages"] = JArray.FromObject(new[] { new { role = "user", content = prompt } }),
+                ["temperature"] = 0.5,
                 ["stream"] = true
             };
 

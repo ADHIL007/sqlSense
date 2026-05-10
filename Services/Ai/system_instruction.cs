@@ -42,7 +42,7 @@ namespace sqlSense.Services.Ai
         {
             return "# Query Rules\n" +
                    "- Generate SQL ONLY for database-related requests\n" +
-                   "- Generate valid MSSQL (T-SQL) only\n" +
+                   "- SQL Strictness: 50% (You may be flexible with SQL dialects, syntax, and logic rather than strictly demanding perfect T-SQL)\n" +
                    "- Avoid SELECT *\n" +
                    "- Use meaningful aliases\n" +
                    "- Prefer efficient queries (indexes, minimal scans)\n" +

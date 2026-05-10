@@ -27,7 +27,15 @@ namespace sqlSense.Services.Ai
             {
                 payloadObj["generationConfig"] = new JObject
                 {
-                    ["maxOutputTokens"] = SettingsManager.Current.AiMaxTokens
+                    ["maxOutputTokens"] = SettingsManager.Current.AiMaxTokens,
+                    ["temperature"] = 0.5
+                };
+            }
+            else
+            {
+                payloadObj["generationConfig"] = new JObject
+                {
+                    ["temperature"] = 0.5
                 };
             }
 

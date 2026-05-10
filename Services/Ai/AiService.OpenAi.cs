@@ -42,7 +42,7 @@ namespace sqlSense.Services.Ai
                 ["model"] = modelName,
                 ["messages"] = messages,
                 ["stream"] = true,
-                ["temperature"] = isFast ? 0.7 : 1.0,
+                ["temperature"] = 0.5,
                 ["max_tokens"] = settings.AiMaxTokens > 0 ? settings.AiMaxTokens : (isFast ? 4096 : 16384),
                 ["stream_options"] = new JObject { ["include_usage"] = true },
                 ["tools"] = AiToolRegistry.GetAvailableTools()
