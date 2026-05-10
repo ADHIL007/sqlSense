@@ -9,13 +9,31 @@ namespace sqlSense.Services.Ai
 {
     public class ChatMessage
     {
-        public string Role { get; set; } // "user", "assistant", "tool"
+        public string Role { get; set; } // "user", "assistant", "tool", "system"
         public string Content { get; set; }
         public string Thinking { get; set; }
         public string ToolName { get; set; }
         public string ToolCallId { get; set; }
         public JArray ToolCalls { get; set; }
         public DateTime Timestamp { get; set; }
+    }
+
+    public class CompactionMeta
+    {
+        [JsonProperty("count")]
+        public int Count { get; set; }
+        
+        [JsonProperty("last_summary")]
+        public string LastSummary { get; set; }
+    }
+
+    public class UsageMeta
+    {
+        [JsonProperty("input_tokens")]
+        public int InputTokens { get; set; }
+        
+        [JsonProperty("output_tokens")]
+        public int OutputTokens { get; set; }
     }
 
     public class ChatSession
@@ -51,6 +69,12 @@ namespace sqlSense.Services.Ai
             get => DateTimeOffset.FromUnixTimeMilliseconds(UpdatedAtMs).UtcDateTime;
             set => UpdatedAtMs = new DateTimeOffset(value).ToUnixTimeMilliseconds();
         }
+        
+        [JsonProperty("compaction")]
+        public CompactionMeta Compaction { get; set; } = new CompactionMeta();
+        
+        [JsonProperty("usage")]
+        public UsageMeta Usage { get; set; } = new UsageMeta();
         
         [JsonIgnore]
         public List<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
@@ -106,8 +130,28 @@ namespace sqlSense.Services.Ai
                 CurrentSession.Title = content.Length > 45 ? content.Substring(0, 45) + "..." : content;
             }
 
-            AppendMessageToFile(CurrentSession.SessionId, msg);
+            bool wasCompacted = ContextBuilders.ContextHandler.CheckAndCompactSession(CurrentSession, RewriteSessionFile);
+
+            if (!wasCompacted)
+            {
+                AppendMessageToFile(CurrentSession.SessionId, msg);
+            }
+            
             SaveSessionMeta(CurrentSession);
+        }
+
+        internal static void RewriteSessionFile(ChatSession session)
+        {
+            try
+            {
+                string path = Path.Combine(SessionDir, $"{session.SessionId}.jsonl");
+                var lines = session.Messages.Select(m => JsonConvert.SerializeObject(new { type = "message", message = m }));
+                File.WriteAllLines(path, lines);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ChatSessionManager] Error rewriting session file: {ex.Message}");
+            }
         }
 
         private static void AppendMessageToFile(string sessionId, ChatMessage msg)

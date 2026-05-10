@@ -12,6 +12,7 @@
         xmlns:db="clr-namespace:sqlSense.UI.Controls.Database"
         xmlns:sql="clr-namespace:sqlSense.UI.Controls.Sql"
         xmlns:cvs="clr-namespace:sqlSense.UI.Controls.Canvas"
+        xmlns:appControls="clr-namespace:sqlSense.Controls"
         mc:Ignorable="d"
         Title="{Binding ActiveWorkbook.ViewName, StringFormat='sqlSense - {0}', TargetNullValue='sqlSense'}"
         Background="{StaticResource BackgroundBrush}"
@@ -37,6 +38,8 @@
     </Window.Style>
 
     <Window.Resources>
+        <converters:CircularProgressConverter x:Key="CircularProgressConverter" />
+        
         <!-- ═══ Segmented Tab Button Style ═══ -->
         <Style x:Key="SegmentedTabBtn" TargetType="RadioButton">
             <Setter Property="Background" Value="Transparent"/>
@@ -467,6 +470,47 @@
                             <TextBlock Text="Run" Foreground="#E0E0E0" FontSize="10" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
+
+                    <!-- Context Window Toggle -->
+                    <ToggleButton x:Name="ContextStatsButton" Background="Transparent" 
+                                  BorderThickness="0" Cursor="Hand" VerticalAlignment="Center"
+                                  Margin="0,0,12,0" ToolTip="Context Window">
+                        <ToggleButton.Template>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Border Background="Transparent" Padding="2">
+                                    <ContentPresenter/>
+                                </Border>
+                            </ControlTemplate>
+                        </ToggleButton.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="12" Height="12" Margin="0,0,6,0">
+                                <Ellipse Stroke="#444444" StrokeThickness="2" />
+                                <Ellipse Stroke="{Binding ElementName=ContextPopupControl, Path=DataContext.BarColor, FallbackValue=#007ACC}" 
+                                         StrokeThickness="2"
+                                         StrokeDashArray="{Binding ElementName=ContextPopupControl, Path=DataContext.Stats.PercentageUsed, Converter={StaticResource CircularProgressConverter}, ConverterParameter=15.708, FallbackValue='0,100'}"
+                                         RenderTransformOrigin="0.5,0.5">
+                                    <Ellipse.RenderTransform>
+                                        <RotateTransform Angle="-90"/>
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Grid>
+                            <TextBlock Text="{Binding ElementName=ContextPopupControl, Path=DataContext.FormattedPercentage, FallbackValue='0%'}" Foreground="#E0E0E0" FontSize="10" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <!-- Context Window Popup -->
+                    <Popup IsOpen="{Binding IsChecked, ElementName=ContextStatsButton}" 
+                           StaysOpen="False" 
+                           PlacementTarget="{Binding ElementName=ContextStatsButton}" 
+                           Placement="Top"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           VerticalOffset="-8"
+                           HorizontalOffset="-140">
+                           <appControls:ContextWindowControl x:Name="ContextPopupControl" />
+                    </Popup>
 
                     <Separator Width="1" Background="#40FFFFFF" Margin="0,4,12,4"/>
 

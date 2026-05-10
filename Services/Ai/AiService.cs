@@ -215,6 +215,18 @@ namespace sqlSense.Services.Ai
                 string providerLabel = settings.AiProvider ?? "Unknown";
                 string modelLabel = settings.AiModelName ?? "Unknown";
                 ModelUsageTracker.RecordUsage(modelLabel, providerLabel, promptTokens, completionTokens);
+
+                if (ChatSessionManager.CurrentSession != null)
+                {
+                    ChatSessionManager.CurrentSession.Usage.InputTokens += promptTokens;
+                    ChatSessionManager.CurrentSession.Usage.OutputTokens += completionTokens;
+                    
+                    // We don't save the full session file here, but we can save meta
+                    // because usage is now part of ChatSession (which gets saved to .meta)
+                    // The easiest way is to let the standard save handle it, or invoke SaveSessionMeta directly.
+                    // But ChatSessionManager doesn't expose SaveSessionMeta publicly. Let's make a public method if needed, or reflect it.
+                    // For now, it will be saved on the next message addition.
+                }
             }
             catch (Exception ex)
             {
