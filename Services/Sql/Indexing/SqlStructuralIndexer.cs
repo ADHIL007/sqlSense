@@ -33,21 +33,30 @@ namespace sqlSense.Services.Sql.Indexing
 
         public async Task<SqlFileIndex> IndexFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            var index = new SqlFileIndex { FilePath = filePath };
-            
-            if (!File.Exists(filePath)) return index;
+            if (!File.Exists(filePath)) return new SqlFileIndex { FilePath = filePath };
 
             var fileInfo = new FileInfo(filePath);
-            index.FileSize = fileInfo.Length;
-
-            // In a massive file scenario, we would use memory mapped files or stream readers
-            // For now, we'll read large chunks or lines
+            
             string content;
             using (var reader = new StreamReader(new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan)))
             {
                 content = await reader.ReadToEndAsync(cancellationToken);
             }
-            
+
+            var index = await IndexTextAsync(content, cancellationToken);
+            index.FilePath = filePath;
+            index.FileSize = fileInfo.Length;
+
+            return index;
+        }
+
+        public Task<SqlFileIndex> IndexTextAsync(string content, CancellationToken cancellationToken = default)
+        {
+            var index = new SqlFileIndex();
+
+            if (string.IsNullOrEmpty(content))
+                return Task.FromResult(index);
+
             // Simple hash
             index.FileHash = content.GetHashCode().ToString();
 
@@ -55,7 +64,7 @@ namespace sqlSense.Services.Sql.Indexing
             var batches = SplitIntoBatches(content, cancellationToken);
             index.Batches = batches;
 
-            return index;
+            return Task.FromResult(index);
         }
 
         private List<BatchIndex> SplitIntoBatches(string content, CancellationToken cancellationToken)

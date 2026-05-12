@@ -22,6 +22,10 @@ namespace sqlSense.Services.Ai
             return toolName switch
             {
                 "get_software_information" => "Software Info",
+                "get_active_document" => "Reading Editor",
+                "SEARCH_INDEX" => "Searching Index",
+                "LOAD_SPAN" => "Loading Code",
+                "PARSE_QUERY_AST" => "Parsing AST",
                 "parsing" => "Parsing",
                 "analyzing" => "Analyzing",
                 "debugging" => "Debugging",

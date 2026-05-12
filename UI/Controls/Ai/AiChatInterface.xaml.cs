@@ -446,21 +446,26 @@ namespace sqlSense.UI.Controls.Ai
                                 if (dots.Parent != null) container.Children.Remove(dots);
 
                                 // Split textBuffer into segments: text or tool_status tag
-                                // Regex.Split with capturing groups includes the delimiters in the result
-                                var segments = Regex.Split(textBuffer, @"(<tool_status id=""[^""]+"" state=""[^""]+"">[^<]+</tool_status>)");
+                                var segments = System.Text.RegularExpressions.Regex.Split(textBuffer, @"(<tool_status id=""[^""]+"" state=""[^""]+"">[^<]+</tool_status>)");
 
-                                // We want to synchronize the container.Children with these segments.
-                                // The container already has: [thinkExpander (maybe), dots (removed above), streamText (we replace this logic)]
-                                // Let's manage a sub-list of children specifically for the response parts.
+                                // Keep only thinkExpander
+                                var childrenToKeep = new System.Collections.Generic.List<System.Windows.UIElement>();
+                                if (thinkExpander != null && container.Children.Contains(thinkExpander))
+                                    childrenToKeep.Add(thinkExpander);
+                                
+                                container.Children.Clear();
+                                foreach (var child in childrenToKeep) container.Children.Add(child);
 
-                                int segmentIndex = 0;
+                                // Track which tool IDs have already been added in this render pass
+                                var addedToolIds = new System.Collections.Generic.HashSet<string>();
+
                                 foreach (var part in segments)
                                 {
-                                    if (string.IsNullOrEmpty(part)) continue;
+                                    if (string.IsNullOrWhiteSpace(part)) continue;
 
                                     if (part.StartsWith("<tool_status"))
                                     {
-                                        var m = Regex.Match(part, @"<tool_status id=""([^""]+)"" state=""([^""]+)"">([^<]+)</tool_status>");
+                                        var m = System.Text.RegularExpressions.Regex.Match(part, @"<tool_status id=""([^""]+)"" state=""([^""]+)"">([^<]+)</tool_status>");
                                         if (m.Success)
                                         {
                                             string id = m.Groups[1].Value;
@@ -471,40 +476,38 @@ namespace sqlSense.UI.Controls.Ai
                                             {
                                                 control = new AiToolStatusControl(id, msg);
                                                 activeStatuses[id] = control;
-
-                                                // Find the action bar (it's the last child in the container usually)
-                                                int insertIndex = container.Children.Count > 0 ? container.Children.Count - 1 : 0;
-                                                container.Children.Insert(insertIndex, control);
                                             }
                                             control.UpdateState(state, msg);
+                                            
+                                            // Only add each control ONCE per render pass (use latest state)
+                                            if (!addedToolIds.Contains(id))
+                                            {
+                                                addedToolIds.Add(id);
+                                                control.Margin = new System.Windows.Thickness(0, 4, 0, 4);
+                                                container.Children.Add(control);
+                                            }
                                         }
                                     }
                                     else
                                     {
-                                        // Plain text segment. 
-                                        // For simplicity in streaming, we currently use a single streamText block.
-                                        // To truly support interleaved text, we'd need multiple TextBlocks.
-                                        // But since tool calls usually happen at the end of a turn, 
-                                        // "In-between" usually means: Text A (Turn 1) -> Tool -> Text B (Turn 2).
-                                        // Since we append to textBuffer, Text A and Text B are separated by the tag.
-
-                                        // Let's just make sure the status bars are moved to the correct relative positions.
-                                        // But wait, the user's request is satisfied if the status bar appears 
-                                        // after the text that triggered it.
+                                        var tb = new System.Windows.Controls.TextBlock
+                                        {
+                                            TextWrapping = System.Windows.TextWrapping.Wrap,
+                                            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Emoji, Segoe UI"),
+                                            LineHeight = 20,
+                                            Margin = new System.Windows.Thickness(0, 4, 0, 4),
+                                            Text = part.Trim('\n', '\r')
+                                        };
+                                        tb.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty, "TextPrimaryBrush");
+                                        container.Children.Add(tb);
                                     }
-                                    segmentIndex++;
                                 }
 
-                                // Update the main stream text (stripping tags for the text block)
-                                string displayBuffer = textBuffer;
-                                foreach (var m in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>"))
-                                    displayBuffer = displayBuffer.Replace(m.ToString(), "\n");
-
-                                streamText.Visibility = string.IsNullOrWhiteSpace(displayBuffer) ? Visibility.Collapsed : Visibility.Visible;
-                                lock (bufferLock) { streamText.Text = displayBuffer.Trim('\n', '\r', ' '); }
+                                if (dots.Parent != null) ((System.Windows.Controls.Panel)dots.Parent).Children.Remove(dots);
+                                container.Children.Add(dots);
 
                                 ChatScrollViewer.ScrollToEnd();
-                            }, DispatcherPriority.Normal);
+                            }, System.Windows.Threading.DispatcherPriority.Normal);
                         }
                     },
                     onThinkComplete: (duration) =>
@@ -516,33 +519,63 @@ namespace sqlSense.UI.Controls.Ai
                                 thinkExpander.Header = $"Thought for {duration:F1}s";
                                 thinkExpander.IsExpanded = false;
 
-                                var thinkBorder = (Border)thinkExpander.Content;
-                                if (thinkBorder.Child is StackPanel stack)
+                                var thinkBorder = (System.Windows.Controls.Border)thinkExpander.Content;
+                                if (thinkBorder.Child is System.Windows.Controls.StackPanel stack)
                                 {
                                     var thinkMarkdown = (Markdig.Wpf.MarkdownViewer)stack.Children[0];
                                     lock (bufferLock) { thinkMarkdown.Markdown = thinkBuffer; }
-                                    thinkMarkdown.Visibility = Visibility.Visible;
+                                    thinkMarkdown.Visibility = System.Windows.Visibility.Visible;
                                     stack.Children.Remove(streamThinkText);
                                 }
                             }
-                        }, DispatcherPriority.Normal);
+                        }, System.Windows.Threading.DispatcherPriority.Normal);
                     },
                     onComplete: () =>
                     {
                         Dispatcher.InvokeAsync(() =>
                         {
-                            if (dots.Parent != null) container.Children.Remove(dots);
+                            if (dots.Parent != null) ((System.Windows.Controls.Panel)dots.Parent).Children.Remove(dots);
 
-                            if (streamText.Parent != null) container.Children.Remove(streamText);
+                            var segments = System.Text.RegularExpressions.Regex.Split(textBuffer, @"(<tool_status id=""[^""]+"" state=""[^""]+"">[^<]+</tool_status>)");
 
-                            string finalDisplay = textBuffer;
-                            foreach (var match in Regex.Matches(textBuffer, @"<tool_status[^>]*>.*?</tool_status>", RegexOptions.Singleline))
+                            // Keep only thinkExpander
+                            var childrenToKeep = new System.Collections.Generic.List<System.Windows.UIElement>();
+                            if (thinkExpander != null && container.Children.Contains(thinkExpander))
+                                childrenToKeep.Add(thinkExpander);
+                            
+                            container.Children.Clear();
+                            foreach (var child in childrenToKeep) container.Children.Add(child);
+
+                            var addedToolIds = new System.Collections.Generic.HashSet<string>();
+
+                            foreach (var part in segments)
                             {
-                                finalDisplay = finalDisplay.Replace(match.ToString(), "");
-                            }
+                                if (string.IsNullOrWhiteSpace(part)) continue;
 
-                            textViewer.Visibility = string.IsNullOrWhiteSpace(finalDisplay) ? Visibility.Collapsed : Visibility.Visible;
-                            lock (bufferLock) { textViewer.Markdown = finalDisplay.Trim(); }
+                                if (part.StartsWith("<tool_status"))
+                                {
+                                    var m = System.Text.RegularExpressions.Regex.Match(part, @"<tool_status id=""([^""]+)"" state=""([^""]+)"">([^<]+)</tool_status>");
+                                    if (m.Success)
+                                    {
+                                        string id = m.Groups[1].Value;
+                                        if (!addedToolIds.Contains(id) && activeStatuses.TryGetValue(id, out var control))
+                                        {
+                                            addedToolIds.Add(id);
+                                            control.Margin = new System.Windows.Thickness(0, 4, 0, 4);
+                                            container.Children.Add(control);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    var mdViewer = new Markdig.Wpf.MarkdownViewer
+                                    {
+                                        Markdown = part.Trim('\n', '\r'),
+                                        Margin = new System.Windows.Thickness(0, 4, 0, 4)
+                                    };
+                                    container.Children.Add(mdViewer);
+                                }
+                            }
 
                             FinishProcessing();
                         }, DispatcherPriority.Normal);

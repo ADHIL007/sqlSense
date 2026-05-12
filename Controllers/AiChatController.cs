@@ -175,6 +175,9 @@ namespace sqlSense.Controllers
                         string friendlyName = AiToolStatusManager.GetFriendlyName(funcName);
                         onTextChunk(AiToolStatusManager.GetStatusTag(callId ?? funcName, ToolStatusState.Loading, $"Checking {friendlyName}..."));
                         
+                        // Force a yield to ensure the UI has time to process the loading state
+                        await Task.Delay(50);
+                        
                         JObject argsObj = null;
                         if (argsToken != null)
                         {
@@ -190,7 +193,7 @@ namespace sqlSense.Controllers
                         
                         try
                         {
-                            string result = AiToolRegistry.ExecuteTool(funcName, argsObj);
+                            string result = await AiToolRegistry.ExecuteToolAsync(funcName, argsObj, _cts?.Token ?? CancellationToken.None);
                             
                             // Emit SUCCESS status
                             onTextChunk(AiToolStatusManager.GetStatusTag(callId ?? funcName, ToolStatusState.Success, $"{friendlyName} retrieved"));

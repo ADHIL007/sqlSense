@@ -11,6 +11,34 @@ namespace sqlSense.ViewModels.Modules
         [ObservableProperty]
         private string _sqlText = "";
 
+        private readonly sqlSense.Services.Sql.Indexing.SqlStructuralIndexer _indexer = new();
+        private System.Threading.CancellationTokenSource? _indexCts;
+        public sqlSense.Services.Sql.Indexing.SqlFileIndex? CurrentIndex { get; private set; }
+
+        partial void OnSqlTextChanged(string value)
+        {
+            _indexCts?.Cancel();
+            _indexCts = new System.Threading.CancellationTokenSource();
+            
+            var token = _indexCts.Token;
+
+            System.Threading.Tasks.Task.Run(async () =>
+            {
+                try
+                {
+                    await System.Threading.Tasks.Task.Delay(1500, token); // 1.5s debounce
+                    if (token.IsCancellationRequested) return;
+
+                    var index = await _indexer.IndexTextAsync(value, token);
+                    if (!token.IsCancellationRequested)
+                    {
+                        CurrentIndex = index;
+                    }
+                }
+                catch (System.Threading.Tasks.TaskCanceledException) { }
+            }, token);
+        }
+
         [ObservableProperty]
         private bool _isVisible = true;
 
