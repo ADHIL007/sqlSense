@@ -265,15 +265,19 @@ namespace sqlSense.UI.Controls.Ai
                 Grid.SetColumn(timeTxt, 1);
                 grid.Children.Add(timeTxt);
 
-                var delBtn = new Button { Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), Cursor = Cursors.Hand };
-                delBtn.Content = new TextBlock { Text = "\xE74D", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 12 };
+                var delBtn = new Border { Background = Brushes.Transparent, Cursor = Cursors.Hand, Padding = new Thickness(4) };
+                delBtn.Child = new TextBlock { Text = "\xE74D", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), VerticalAlignment = VerticalAlignment.Center };
                 Grid.SetColumn(delBtn, 2);
                 grid.Children.Add(delBtn);
 
-                delBtn.Click += (s, ev) =>
+                delBtn.PreviewMouseLeftButtonDown += (s, ev) =>
                 {
                     ev.Handled = true;
                     ChatSessionManager.DeleteSession(session.SessionId);
+                    if (ChatSessionManager.CurrentSession == null)
+                    {
+                        ChatMessagesPanel.Children.Clear();
+                    }
                     RefreshHistoryPanel();
                 };
 

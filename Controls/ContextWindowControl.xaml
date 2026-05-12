@@ -89,12 +89,12 @@
             <TextBlock Text="User Context" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,8" Foreground="#E0E0E0"/>
             
             <Grid Margin="0,0,0,4">
-                <TextBlock Text="Messages" FontSize="12" Foreground="#AAAAAA"/>
-                <TextBlock Text="{Binding MessagesPctStr}" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Right"/>
+                <TextBlock Text="Summary + Messages" FontSize="12" Foreground="#AAAAAA"/>
+                <TextBlock Text="{Binding UserContextPctStr}" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Right"/>
             </Grid>
             <Grid Margin="0,0,0,15">
-                <TextBlock Text="Tool Results" FontSize="12" Foreground="#AAAAAA"/>
-                <TextBlock Text="{Binding ToolResultsPctStr}" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Right"/>
+                <TextBlock Text="Tool Usage" FontSize="12" Foreground="#AAAAAA"/>
+                <TextBlock Text="{Binding ToolUsagePctStr}" FontSize="12" Foreground="#AAAAAA" HorizontalAlignment="Right"/>
             </Grid>
 
             <!-- Compact Button -->

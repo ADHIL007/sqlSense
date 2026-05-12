@@ -31,6 +31,7 @@ namespace sqlSense.Services
         public static void Configure(ScintillaWPF editor)
         {
             // ─── General ──────────────────────────────────────────────
+            editor.BorderStyle = System.Windows.Forms.BorderStyle.None;
             editor.WrapMode = WrapMode.None;
             editor.IndentationGuides = IndentView.LookBoth;
             editor.ScrollWidthTracking = true;

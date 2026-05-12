@@ -29,10 +29,10 @@ namespace sqlSense.ViewModels
         private string toolDefinitionsPctStr = "0.0%";
 
         [ObservableProperty]
-        private string messagesPctStr = "0.0%";
+        private string userContextPctStr = "0.0%";
 
         [ObservableProperty]
-        private string toolResultsPctStr = "0.0%";
+        private string toolUsagePctStr = "0.0%";
 
         public ContextWindowViewModel()
         {
@@ -52,8 +52,8 @@ namespace sqlSense.ViewModels
             // Breakdown percentages (each is share of MaxTokens)
             SystemInstructionsPctStr = FormatPct(Stats.SystemInstructionsPercentage);
             ToolDefinitionsPctStr = FormatPct(Stats.ToolDefinitionsPercentage);
-            MessagesPctStr = FormatPct(Stats.MessagesPercentage);
-            ToolResultsPctStr = FormatPct(Stats.ToolResultsPercentage);
+            UserContextPctStr = FormatPct(Stats.UserContextPercentage);
+            ToolUsagePctStr = FormatPct(Stats.ToolUsagePercentage);
 
             // Color thresholds
             double clampedPct = Math.Min(Stats.PercentageUsed, 1.0);

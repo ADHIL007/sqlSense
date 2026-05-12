@@ -8,10 +8,15 @@ namespace sqlSense.Models
         public int MaxTokens { get; set; } = 10000;
         public int ReservedTokens { get; set; } = 4096;
         
+        // Layer 1: System (static, always sent)
         public int SystemInstructionsTokens { get; set; }
         public int ToolDefinitionsTokens { get; set; }
-        public int MessagesTokens { get; set; }
-        public int ToolResultsTokens { get; set; }
+
+        // Layer 2: User Context (summary + user/assistant text messages)
+        public int UserContextTokens { get; set; }
+
+        // Layer 3: Tool Usage (assistant tool calls + tool result messages)
+        public int ToolUsageTokens { get; set; }
 
         /// <summary>Fraction of MaxTokens that is used (0.0 – 1.0+)</summary>
         public double PercentageUsed => MaxTokens > 0 ? (double)TotalUsedTokens / MaxTokens : 0;
@@ -23,7 +28,7 @@ namespace sqlSense.Models
         // so they visually sum to PercentageUsed in the UI.
         public double SystemInstructionsPercentage => MaxTokens > 0 ? (double)SystemInstructionsTokens / MaxTokens : 0;
         public double ToolDefinitionsPercentage => MaxTokens > 0 ? (double)ToolDefinitionsTokens / MaxTokens : 0;
-        public double MessagesPercentage => MaxTokens > 0 ? (double)MessagesTokens / MaxTokens : 0;
-        public double ToolResultsPercentage => MaxTokens > 0 ? (double)ToolResultsTokens / MaxTokens : 0;
+        public double UserContextPercentage => MaxTokens > 0 ? (double)UserContextTokens / MaxTokens : 0;
+        public double ToolUsagePercentage => MaxTokens > 0 ? (double)ToolUsageTokens / MaxTokens : 0;
     }
 }
