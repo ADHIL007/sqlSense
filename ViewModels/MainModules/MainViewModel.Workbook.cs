@@ -26,6 +26,8 @@ namespace sqlSense.ViewModels
         {
             if (workbook == null) return;
             
+            _closedWorkbooks.Push(workbook);
+
             int index = OpenWorkbooks.IndexOf(workbook);
             bool wasActive = (ActiveWorkbook == workbook);
             
@@ -95,6 +97,8 @@ namespace sqlSense.ViewModels
             }
         }
 
+        private readonly System.Collections.Generic.Stack<ViewDefinitionInfo> _closedWorkbooks = new();
+
         public void LoadWorkbookFromFile(string path)
         {
             try
@@ -116,6 +120,79 @@ namespace sqlSense.ViewModels
             {
                 StatusMessage = $"Open Error: {ex.Message}";
             }
+        }
+
+        [RelayCommand]
+        public void CloseActiveWorkbook()
+        {
+            if (ActiveWorkbook != null)
+                CloseWorkbook(ActiveWorkbook);
+        }
+
+        [RelayCommand]
+        public void ReopenClosedTab()
+        {
+            if (_closedWorkbooks.Count > 0)
+            {
+                var wb = _closedWorkbooks.Pop();
+                if (!OpenWorkbooks.Contains(wb))
+                {
+                    OpenWorkbooks.Add(wb);
+                    ActiveWorkbook = wb;
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void SaveAllWorkbooks()
+        {
+            var originalActive = ActiveWorkbook;
+            foreach (var wb in OpenWorkbooks.ToList())
+            {
+                ActiveWorkbook = wb;
+                if (CanModifyView())
+                    SaveWorkbookCommand.Execute(null);
+            }
+            ActiveWorkbook = originalActive;
+            StatusMessage = "All workbooks saved.";
+        }
+
+        [RelayCommand]
+        public void NextTab()
+        {
+            if (OpenWorkbooks.Count <= 1 || ActiveWorkbook == null) return;
+            int idx = OpenWorkbooks.IndexOf(ActiveWorkbook);
+            idx = (idx + 1) % OpenWorkbooks.Count;
+            ActiveWorkbook = OpenWorkbooks[idx];
+        }
+
+        [RelayCommand]
+        public void PreviousTab()
+        {
+            if (OpenWorkbooks.Count <= 1 || ActiveWorkbook == null) return;
+            int idx = OpenWorkbooks.IndexOf(ActiveWorkbook);
+            idx = (idx - 1 + OpenWorkbooks.Count) % OpenWorkbooks.Count;
+            ActiveWorkbook = OpenWorkbooks[idx];
+        }
+
+        [RelayCommand]
+        public void OpenSettings()
+        {
+            var optionsWindow = new sqlSense.UI.MenueItems.Settings.optionsDialog();
+            optionsWindow.Owner = System.Windows.Application.Current.MainWindow;
+            optionsWindow.ShowDialog();
+        }
+
+        [RelayCommand]
+        public void CommandPalette()
+        {
+            System.Windows.MessageBox.Show("Command Palette is not implemented yet.", "Coming Soon", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+
+        [RelayCommand]
+        public void QuickFileSearch()
+        {
+            OpenWorkbook();
         }
     }
 }

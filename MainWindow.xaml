@@ -25,6 +25,26 @@
         <KeyBinding Key="E" Modifiers="Control" Command="{Binding RunQueryCommand}"/>
         <!-- Ctrl+S = Save Workbook -->
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveWorkbookCommand}"/>
+        <!-- Ctrl+N = New Workbook -->
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewWorkspaceCommand}"/>
+        <!-- Ctrl+O = Open file -->
+        <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenWorkbookCommand}"/>
+        <!-- Ctrl+Shift+S = Save all -->
+        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SaveAllWorkbooksCommand}"/>
+        <!-- Ctrl+W = Close tab -->
+        <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseActiveWorkbookCommand}"/>
+        <!-- Ctrl+Shift+T = Reopen closed tab -->
+        <KeyBinding Key="T" Modifiers="Control+Shift" Command="{Binding ReopenClosedTabCommand}"/>
+        <!-- Ctrl+Tab = Next tab -->
+        <KeyBinding Key="Tab" Modifiers="Control" Command="{Binding NextTabCommand}"/>
+        <!-- Ctrl+Shift+Tab = Previous tab -->
+        <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}"/>
+        <!-- Ctrl+P = Quick file search -->
+        <KeyBinding Key="P" Modifiers="Control" Command="{Binding QuickFileSearchCommand}"/>
+        <!-- Ctrl+, = Settings -->
+        <KeyBinding Key="OemComma" Modifiers="Control" Command="{Binding OpenSettingsCommand}"/>
+        <!-- Ctrl+Shift+P = Command palette -->
+        <KeyBinding Key="P" Modifiers="Control+Shift" Command="{Binding CommandPaletteCommand}"/>
     </Window.InputBindings>
     
     <Window.Style>

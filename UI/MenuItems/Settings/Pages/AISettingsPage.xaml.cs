@@ -26,6 +26,7 @@ namespace sqlSense.UI.MenueItems.Settings.Pages
             CbSendSchema.IsChecked = appSettings.AiSendSchema;
             CbFastMode.IsChecked = appSettings.AiFastMode;
             TbMaxTokens.Text = appSettings.AiMaxTokens > 0 ? appSettings.AiMaxTokens.ToString() : "";
+            TbAutoCompactTokens.Text = appSettings.AiAutoCompactTokens > 0 ? appSettings.AiAutoCompactTokens.ToString() : "10000";
 
             foreach (ComboBoxItem item in CmbProvider.Items)
             {

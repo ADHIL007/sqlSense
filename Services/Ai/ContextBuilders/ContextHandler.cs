@@ -10,9 +10,7 @@ namespace sqlSense.Services.Ai.ContextBuilders
     {
         public static bool CheckAndCompactSession(ChatSession session, Action<ChatSession> rewriteSessionFileAction, bool force = false)
         {
-            int thresholdTokens = 10000;
-            var envThreshold = Environment.GetEnvironmentVariable("SQLSENSE_AUTO_COMPACT_INPUT_TOKENS");
-            if (int.TryParse(envThreshold, out int parsedThreshold)) thresholdTokens = parsedThreshold;
+            int thresholdTokens = sqlSense.Services.Configuration.SettingsManager.Current.AiAutoCompactTokens;
 
             // Use the shared estimation function (sqlSense formula: chars/4 + message_count)
             int estTokens = TokenAnalyzerService.EstimateTotalSessionTokens(session);

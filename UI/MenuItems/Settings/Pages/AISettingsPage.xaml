@@ -125,6 +125,16 @@
                         <TextBox x:Name="TbMaxTokens" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="Leave empty or 0 to use defaults"/>
                         <TextBlock x:Name="TxtMaxTokensDefault" Grid.Column="2" Text="(0 for default)" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Auto-Compact Tokens:" Style="{StaticResource SettingLabel}"/>
+                        <TextBox x:Name="TbAutoCompactTokens" Grid.Column="1" Height="28" Background="#252526" Foreground="White" BorderBrush="#3C3C3C" BorderThickness="1" Padding="8,0" VerticalContentAlignment="Center" ToolTip="Threshold to trigger session compaction (default 10000)"/>
+                        <TextBlock Grid.Column="2" Text="(Limit before summarizing chat history)" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    </Grid>
                     <StackPanel Margin="0,10,0,0">
                         <CheckBox x:Name="CbFastMode" Content="Fast Mode (Disable Reasoning/Thinking)" 
                                   Style="{StaticResource SettingCheckBox}" IsChecked="False"

@@ -19,6 +19,7 @@ namespace sqlSense.Services.Configuration
         public bool EnableHttpLogging { get; set; } = true;
         public System.Collections.Generic.Dictionary<string, string> SavedApiKeys { get; set; } = new System.Collections.Generic.Dictionary<string, string>();
         public int AiMaxTokens { get; set; } = 0;
+        public int AiAutoCompactTokens { get; set; } = 10000;
     }
 
     public static class SettingsManager
