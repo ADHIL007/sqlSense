@@ -25,6 +25,176 @@ namespace sqlSense.Services.Ai
             }));
             _router.RegisterTool(new ParseQueryAstTool());
             
+            _router.RegisterTool(new GetActiveDocumentIndexTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.SqlEditor?.SqlText;
+                        }
+                        return string.Empty;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.SqlEditor?.CurrentIndex;
+                        }
+                        return null;
+                    });
+                },
+                (index) => {
+                    System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            if (vm.SqlEditor != null)
+                            {
+                                vm.SqlEditor.CurrentIndex = index;
+                            }
+                        }
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetTableSchemaTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetFunctionsListTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetStoredProceduresListTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetViewCodeTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetStoredProcedureDefinitionTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetFunctionDefinitionTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
+
+            _router.RegisterTool(new GetAttachedWorkbookContentTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.OpenWorkbooks.ToList();
+                        }
+                        return new List<sqlSense.Models.ViewDefinitionInfo>();
+                    });
+                }
+            ));
+            
             // Wire up the indexer tools to the actual MainWindow DataContext safely
             _router.RegisterTool(new SearchIndexTool(() => {
                 return System.Windows.Application.Current?.Dispatcher.Invoke(() => {

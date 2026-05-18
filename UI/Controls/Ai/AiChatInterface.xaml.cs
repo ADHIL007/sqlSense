@@ -21,6 +21,15 @@ namespace sqlSense.UI.Controls.Ai
     public partial class AiChatInterface : UserControl
     {
         private readonly AiChatController _controller = new();
+        private readonly List<ChatContextItem> _activeContexts = new();
+
+        public class ChatContextItem
+        {
+            public string Type { get; set; } // "Workbook", "Table", "View", "SP", "Function"
+            public string Name { get; set; } // Name to show
+            public string Schema { get; set; } // Schema if applicable
+            public object Tag { get; set; } // ViewDefinitionInfo, etc.
+        }
 
         public AiChatInterface()
         {
@@ -197,6 +206,8 @@ namespace sqlSense.UI.Controls.Ai
             ChatMessagesPanel.Children.Clear();
             ChatSessionManager.CreateNewSession();
             HistoryOverlay.Visibility = Visibility.Collapsed;
+            _activeContexts.Clear();
+            UpdateContextPillsUI();
         }
 
         private void ExpandBtn_Click(object sender, RoutedEventArgs e)
@@ -212,6 +223,17 @@ namespace sqlSense.UI.Controls.Ai
                 else
                 {
                     // Currently minimized, so expand
+                    var previousActive = vm.ActiveWorkbook;
+                    if (previousActive != null && previousActive.ViewName != "chat with AI")
+                    {
+                        AddContextItem(new ChatContextItem
+                        {
+                            Type = "Workbook",
+                            Name = previousActive.ViewName ?? "query.sql",
+                            Tag = previousActive
+                        });
+                    }
+
                     var existingView = vm.OpenWorkbooks.FirstOrDefault(w => w.ViewName == "chat with AI");
                     if (existingView != null)
                     {
@@ -381,9 +403,20 @@ namespace sqlSense.UI.Controls.Ai
             var activeStatuses = new Dictionary<string, AiToolStatusControl>();
             object bufferLock = new object();
 
+            string messageToSend = text;
+            if (_activeContexts.Count > 0)
+            {
+                var contextStr = string.Join("\n", _activeContexts.Select(c =>
+                {
+                    string fullName = string.IsNullOrEmpty(c.Schema) ? c.Name : $"{c.Schema}.{c.Name}";
+                    return $"- Attached Context {c.Type}: '{fullName}'";
+                }));
+                messageToSend = $"[Attached Context Items:\n{contextStr}]\n\n{text}";
+            }
+
             await Task.Run(async () =>
             {
-                await _controller.SendMessageStreamAsync(text,
+                await _controller.SendMessageStreamAsync(messageToSend,
                     onStart: () => { },
                     onThinkChunk: (chunk) =>
                     {
@@ -640,6 +673,292 @@ namespace sqlSense.UI.Controls.Ai
             }
             dotsBorder.Child = typingPanel;
             return dotsBorder;
+        }
+
+        private void AddContextItem(ChatContextItem item)
+        {
+            if (_activeContexts.Any(c => c.Type == item.Type && c.Name == item.Name && c.Schema == item.Schema))
+                return;
+
+            _activeContexts.Add(item);
+            UpdateContextPillsUI();
+        }
+
+        private void UpdateContextPillsUI()
+        {
+            ContextPillsPanel.Children.Clear();
+            if (_activeContexts.Count == 0)
+            {
+                ContextPillsPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            ContextPillsPanel.Visibility = Visibility.Visible;
+            foreach (var item in _activeContexts)
+            {
+                // Determine colors based on type for a premium, harmonized look
+                Color borderColor;
+                Color bgColor;
+
+                switch (item.Type)
+                {
+                    case "Workbook": // Amber/Orange
+                        borderColor = Color.FromRgb(245, 158, 11);
+                        bgColor = Color.FromArgb(20, 245, 158, 11);
+                        break;
+                    case "Table": // Emerald Green
+                        borderColor = Color.FromRgb(16, 185, 129);
+                        bgColor = Color.FromArgb(20, 16, 185, 129);
+                        break;
+                    case "View": // Amethyst Purple
+                        borderColor = Color.FromRgb(139, 92, 246);
+                        bgColor = Color.FromArgb(20, 139, 92, 246);
+                        break;
+                    case "SP": // Sky Blue / Cyan
+                        borderColor = Color.FromRgb(6, 182, 212);
+                        bgColor = Color.FromArgb(20, 6, 182, 212);
+                        break;
+                    case "Function": // Rose Red
+                        borderColor = Color.FromRgb(244, 63, 94);
+                        bgColor = Color.FromArgb(20, 244, 63, 94);
+                        break;
+                    default: // Default Cool Slate Blue
+                        borderColor = Color.FromRgb(59, 130, 246);
+                        bgColor = Color.FromArgb(20, 59, 130, 246);
+                        break;
+                }
+
+                var pill = new Border
+                {
+                    Background = new SolidColorBrush(bgColor),
+                    BorderBrush = new SolidColorBrush(borderColor),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(0), // Square edge as explicitly requested!
+                    Padding = new Thickness(8, 3, 8, 3),
+                    Margin = new Thickness(0, 0, 6, 6)
+                };
+
+                var stack = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+                
+                string emoji = item.Type switch
+                {
+                    "Workbook" => "📄",
+                    "Table" => "📊",
+                    "View" => "👁️",
+                    "SP" => "⚙️",
+                    "Function" => "ƒ",
+                    _ => "📎"
+                };
+
+                stack.Children.Add(new TextBlock { Text = $"{emoji} ", FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
+                
+                string displayName = string.IsNullOrEmpty(item.Schema) ? item.Name : $"{item.Schema}.{item.Name}";
+                stack.Children.Add(new TextBlock { Text = displayName, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
+
+                var closeBtn = new Button
+                {
+                    Content = "×",
+                    Background = Brushes.Transparent,
+                    Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                    BorderThickness = new Thickness(0),
+                    Cursor = Cursors.Hand,
+                    Margin = new Thickness(6, -2, 0, 0),
+                    Padding = new Thickness(0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold
+                };
+                closeBtn.Click += (s, e) =>
+                {
+                    _activeContexts.Remove(item);
+                    UpdateContextPillsUI();
+                };
+                stack.Children.Add(closeBtn);
+
+                pill.Child = stack;
+                ContextPillsPanel.Children.Add(pill);
+            }
+        }
+
+        private async void AddContextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (Application.Current.MainWindow.DataContext is sqlSense.ViewModels.MainViewModel vm)
+            {
+                ContextPopup.IsOpen = true;
+                ContextSearchTextBox.Text = "";
+                ContextSearchWatermark.Visibility = Visibility.Visible;
+                await RefreshContextListAsync("");
+            }
+        }
+
+        private async Task RefreshContextListAsync(string filter)
+        {
+            ContextListPanel.Children.Clear();
+
+            if (Application.Current.MainWindow.DataContext is not sqlSense.ViewModels.MainViewModel vm)
+                return;
+
+            string dbName = vm.Explorer?.SelectedDatabaseName;
+            var dbService = vm.DbService;
+
+            // 1. Open/Active Workbooks Category
+            var openWorkbooks = vm.OpenWorkbooks.Where(w => w.ViewName != "chat with AI").ToList();
+            if (!string.IsNullOrEmpty(filter))
+            {
+                openWorkbooks = openWorkbooks.Where(w => w.ViewName.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (openWorkbooks.Count > 0)
+            {
+                ContextListPanel.Children.Add(new TextBlock { Text = "Open Workbooks", Foreground = new SolidColorBrush(Color.FromRgb(59, 130, 246)), FontSize = 11, FontWeight = FontWeights.Bold, Margin = new Thickness(8, 8, 8, 4) });
+                foreach (var wb in openWorkbooks)
+                {
+                    var btn = CreateContextItemButton("📄", wb.ViewName, null, "Workbook", wb);
+                    ContextListPanel.Children.Add(btn);
+                }
+            }
+
+            if (dbService == null || string.IsNullOrEmpty(dbName))
+            {
+                ContextListPanel.Children.Add(new TextBlock { Text = "No active database connection for schema search.", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 11, Margin = new Thickness(8, 12, 8, 8), TextWrapping = TextWrapping.Wrap });
+                return;
+            }
+
+            try
+            {
+                // Fetch schema items
+                var tables = await dbService.GetTablesAsync(dbName);
+                var views = await dbService.GetViewsAsync(dbName);
+                var procs = await dbService.GetStoredProceduresAsync(dbName);
+                var funcs = await dbService.GetFunctionsAsync(dbName);
+
+                // Apply filter if present
+                if (!string.IsNullOrEmpty(filter))
+                {
+                    tables = tables.Where(t => t.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) || t.Schema.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+                    views = views.Where(v => v.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) || v.Schema.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+                    procs = procs.Where(p => p.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) || p.Schema.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+                    funcs = funcs.Where(f => f.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) || f.Schema.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                int limit = string.IsNullOrEmpty(filter) ? 10 : 25;
+
+                // 2. Tables
+                if (tables.Count > 0)
+                {
+                    ContextListPanel.Children.Add(new TextBlock { Text = $"Tables ({tables.Count})", Foreground = new SolidColorBrush(Color.FromRgb(59, 130, 246)), FontSize = 11, FontWeight = FontWeights.Bold, Margin = new Thickness(8, 12, 8, 4) });
+                    foreach (var t in tables.Take(limit))
+                    {
+                        var btn = CreateContextItemButton("📊", t.Name, t.Schema, "Table", t);
+                        ContextListPanel.Children.Add(btn);
+                    }
+                    if (tables.Count > limit)
+                    {
+                        ContextListPanel.Children.Add(new TextBlock { Text = $"  ... and {tables.Count - limit} more tables", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 10, Margin = new Thickness(8, 2, 8, 4), FontStyle = FontStyles.Italic });
+                    }
+                }
+
+                // 3. Views
+                if (views.Count > 0)
+                {
+                    ContextListPanel.Children.Add(new TextBlock { Text = $"Views ({views.Count})", Foreground = new SolidColorBrush(Color.FromRgb(59, 130, 246)), FontSize = 11, FontWeight = FontWeights.Bold, Margin = new Thickness(8, 12, 8, 4) });
+                    foreach (var v in views.Take(limit))
+                    {
+                        var btn = CreateContextItemButton("👁️", v.Name, v.Schema, "View", v);
+                        ContextListPanel.Children.Add(btn);
+                    }
+                    if (views.Count > limit)
+                    {
+                        ContextListPanel.Children.Add(new TextBlock { Text = $"  ... and {views.Count - limit} more views", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 10, Margin = new Thickness(8, 2, 8, 4), FontStyle = FontStyles.Italic });
+                    }
+                }
+
+                // 4. Stored Procedures
+                if (procs.Count > 0)
+                {
+                    ContextListPanel.Children.Add(new TextBlock { Text = $"Stored Procedures ({procs.Count})", Foreground = new SolidColorBrush(Color.FromRgb(59, 130, 246)), FontSize = 11, FontWeight = FontWeights.Bold, Margin = new Thickness(8, 12, 8, 4) });
+                    foreach (var p in procs.Take(limit))
+                    {
+                        var btn = CreateContextItemButton("⚙️", p.Name, p.Schema, "SP", p);
+                        ContextListPanel.Children.Add(btn);
+                    }
+                    if (procs.Count > limit)
+                    {
+                        ContextListPanel.Children.Add(new TextBlock { Text = $"  ... and {procs.Count - limit} more procedures", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 10, Margin = new Thickness(8, 2, 8, 4), FontStyle = FontStyles.Italic });
+                    }
+                }
+
+                // 5. Functions
+                if (funcs.Count > 0)
+                {
+                    ContextListPanel.Children.Add(new TextBlock { Text = $"Functions ({funcs.Count})", Foreground = new SolidColorBrush(Color.FromRgb(59, 130, 246)), FontSize = 11, FontWeight = FontWeights.Bold, Margin = new Thickness(8, 12, 8, 4) });
+                    foreach (var f in funcs.Take(limit))
+                    {
+                        var btn = CreateContextItemButton("ƒ", f.Name, f.Schema, "Function", f);
+                        ContextListPanel.Children.Add(btn);
+                    }
+                    if (funcs.Count > limit)
+                    {
+                        ContextListPanel.Children.Add(new TextBlock { Text = $"  ... and {funcs.Count - limit} more functions", Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136)), FontSize = 10, Margin = new Thickness(8, 2, 8, 4), FontStyle = FontStyles.Italic });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ContextListPanel.Children.Add(new TextBlock { Text = $"Error loading schema: {ex.Message}", Foreground = new SolidColorBrush(Color.FromRgb(244, 63, 94)), FontSize = 11, Margin = new Thickness(8) });
+            }
+        }
+
+        private Button CreateContextItemButton(string emoji, string name, string schema, string type, object tag)
+        {
+            var btn = new Button { Style = (Style)FindResource("PopupItemButton"), Margin = new Thickness(0, 1, 0, 1) };
+            
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var emojiTxt = new TextBlock { Text = $"{emoji} ", FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+            Grid.SetColumn(emojiTxt, 0);
+            grid.Children.Add(emojiTxt);
+
+            string displayName = string.IsNullOrEmpty(schema) ? name : $"{schema}.{name}";
+            var label = new TextBlock { Text = displayName, Foreground = new SolidColorBrush(Color.FromRgb(224, 224, 224)), TextTrimming = TextTrimming.CharacterEllipsis, FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(label, 1);
+            grid.Children.Add(label);
+
+            btn.Content = grid;
+            btn.Click += (s, e) =>
+            {
+                AddContextItem(new ChatContextItem
+                {
+                    Type = type,
+                    Name = name,
+                    Schema = schema,
+                    Tag = tag
+                });
+                ContextPopup.IsOpen = false;
+            };
+
+            return btn;
+        }
+
+        private void ContextSearchTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            ContextSearchWatermark.Visibility = Visibility.Collapsed;
+        }
+
+        private void ContextSearchTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ContextSearchTextBox.Text))
+            {
+                ContextSearchWatermark.Visibility = Visibility.Visible;
+            }
+        }
+
+        private async void ContextSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ContextSearchWatermark.Visibility = string.IsNullOrWhiteSpace(ContextSearchTextBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+            await RefreshContextListAsync(ContextSearchTextBox.Text.Trim());
         }
     }
 }

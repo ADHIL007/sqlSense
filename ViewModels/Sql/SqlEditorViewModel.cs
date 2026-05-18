@@ -13,7 +13,7 @@ namespace sqlSense.ViewModels.Modules
 
         private readonly sqlSense.Services.Sql.Indexing.SqlStructuralIndexer _indexer = new();
         private System.Threading.CancellationTokenSource? _indexCts;
-        public sqlSense.Services.Sql.Indexing.SqlFileIndex? CurrentIndex { get; private set; }
+        public sqlSense.Services.Sql.Indexing.SqlFileIndex? CurrentIndex { get; set; }
 
         partial void OnSqlTextChanged(string value)
         {
