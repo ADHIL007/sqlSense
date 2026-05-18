@@ -104,6 +104,21 @@ namespace sqlSense.Services.Ai
             return CurrentSession;
         }
 
+        private static string StripContextPrefix(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return content;
+            if (content.StartsWith("[Attached Context Items:", StringComparison.OrdinalIgnoreCase))
+            {
+                int closeBracket = content.IndexOf(']');
+                if (closeBracket >= 0)
+                {
+                    var rest = content.Substring(closeBracket + 1);
+                    return rest.TrimStart('\r', '\n');
+                }
+            }
+            return content;
+        }
+
         public static void AddMessage(string role, string content, string thinking = null, JArray toolCalls = null, string toolName = null, string toolCallId = null)
         {
             if (CurrentSession == null)
@@ -127,7 +142,8 @@ namespace sqlSense.Services.Ai
 
             if (CurrentSession.Title == "New Chat" && role == "user")
             {
-                CurrentSession.Title = content.Length > 45 ? content.Substring(0, 45) + "..." : content;
+                string cleanContent = StripContextPrefix(content);
+                CurrentSession.Title = cleanContent.Length > 45 ? cleanContent.Substring(0, 45) + "..." : cleanContent;
             }
 
             bool wasCompacted = ContextBuilders.ContextHandler.CheckAndCompactSession(CurrentSession, RewriteSessionFile);

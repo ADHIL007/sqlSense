@@ -87,8 +87,18 @@ namespace sqlSense.ViewModels
 
             SqlEditor.PropertyChanged += (s, e) => {
                 if (e.PropertyName == nameof(SqlEditorViewModel.ViewMode))
+                {
                     if (SqlEditor.ShowChart && ActiveWorkbook != null && !SqlEditor.IsChartDisabled)
                         SyncSqlToChart();
+                }
+                else if (e.PropertyName == nameof(SqlEditorViewModel.SqlText))
+                {
+                    if (ActiveWorkbook != null)
+                    {
+                        ActiveWorkbook.SqlDefinition = SqlEditor.SqlText;
+                        HasUnsavedChanges = true;
+                    }
+                }
             };
         }
 

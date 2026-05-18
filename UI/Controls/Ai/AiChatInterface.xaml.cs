@@ -309,6 +309,21 @@ namespace sqlSense.UI.Controls.Ai
             }
         }
 
+        private string StripContextPrefix(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return content;
+            if (content.StartsWith("[Attached Context Items:", StringComparison.OrdinalIgnoreCase))
+            {
+                int closeBracket = content.IndexOf(']');
+                if (closeBracket >= 0)
+                {
+                    var rest = content.Substring(closeBracket + 1);
+                    return rest.TrimStart('\r', '\n');
+                }
+            }
+            return content;
+        }
+
         private void LoadSessionIntoUI(string sessionId)
         {
             var session = ChatSessionManager.LoadSession(sessionId);
@@ -317,8 +332,9 @@ namespace sqlSense.UI.Controls.Ai
             ChatMessagesPanel.Children.Clear();
             foreach (var msg in session.Messages)
             {
-                var bubble = AiChatRenderer.CreateMessageBubble(msg.Content, msg.Role == "user", ChatScrollViewer, msg.Thinking,
-                    onEdit: (msg.Role == "user") ? new Action<string>(t => { SetInputText(t); InputTextBox.Focus(); }) : null,
+                string displayContent = msg.Role == "user" ? StripContextPrefix(msg.Content) : msg.Content;
+                var bubble = AiChatRenderer.CreateMessageBubble(displayContent, msg.Role == "user", ChatScrollViewer, msg.Thinking,
+                    onEdit: (msg.Role == "user") ? new Action<string>(t => { SetInputText(StripContextPrefix(msg.Content)); InputTextBox.Focus(); }) : null,
                     onRetry: (msg.Role != "user") ? new Action(() => RetryLastMessage()) : null);
                 ChatMessagesPanel.Children.Add(bubble);
             }
@@ -645,7 +661,7 @@ namespace sqlSense.UI.Controls.Ai
             var lastUserMsg = ChatSessionManager.CurrentSession?.Messages.LastOrDefault(m => m.Role == "user");
             if (lastUserMsg != null && !string.IsNullOrWhiteSpace(lastUserMsg.Content))
             {
-                ProcessMessage(lastUserMsg.Content);
+                ProcessMessage(StripContextPrefix(lastUserMsg.Content));
             }
         }
 

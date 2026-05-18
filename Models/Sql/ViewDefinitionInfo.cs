@@ -84,6 +84,11 @@ namespace sqlSense.Models
         /// </summary>
         public string ToSql()
         {
+            if (ReferencedTables.Count == 0 && Columns.Count == 0)
+            {
+                return "";
+            }
+
             var selectCols = string.Join(",\n    ", Columns.Select(c => 
                 (string.IsNullOrEmpty(c.Expression) ? $"{c.SourceTable}.[{c.SourceColumn}]" : c.Expression) +
                 (string.IsNullOrEmpty(c.Alias) || c.Alias == c.ColumnName ? "" : $" AS [{c.Alias}]")));

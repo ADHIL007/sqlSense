@@ -194,6 +194,27 @@ namespace sqlSense.Services.Ai
                     });
                 }
             ));
+
+            _router.RegisterTool(new ExecuteSelectQueryTool(
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.DbService;
+                        }
+                        return null;
+                    });
+                },
+                () => {
+                    return System.Windows.Application.Current?.Dispatcher.Invoke(() => {
+                        if (System.Windows.Application.Current.MainWindow?.DataContext is sqlSense.ViewModels.MainViewModel vm)
+                        {
+                            return vm.Explorer?.SelectedDatabaseName;
+                        }
+                        return null;
+                    });
+                }
+            ));
             
             // Wire up the indexer tools to the actual MainWindow DataContext safely
             _router.RegisterTool(new SearchIndexTool(() => {
